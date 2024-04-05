@@ -11,33 +11,22 @@
   <ion-fab-button>
     <ion-icon name="add"></ion-icon>
   </ion-fab-button>
-  <ion-fab-list side="end">
-    <ion-fab-button>
-      <ion-icon name="chevron-up"></ion-icon>
-    </ion-fab-button>
-  </ion-fab-list>
-  <ion-fab-list side="end">
-    <ion-fab-button>
-      <ion-icon name="chevron-forward"></ion-icon>
-    </ion-fab-button>
-    <ion-fab-button>
-      <ion-icon name="chevron-forward"></ion-icon>
-    </ion-fab-button>
-  </ion-fab-list>
-  <ion-fab-list side="bottom">
-    <ion-fab-button>
-      <ion-icon name="chevron-down"></ion-icon>
-    </ion-fab-button>
-  </ion-fab-list>
   <ion-fab-list side="start">
-    <ion-fab-button>
-      <ion-icon name="chevron-back"></ion-icon>
-    </ion-fab-button>
-    <ion-fab-button>
-      <ion-icon name="chevron-back"></ion-icon>
-    </ion-fab-button>
+    <ion-button fill="clear" style="--border-radius: 69px; --background: #93C572; --box-shadow: none; color: #fff;"
+                 (click)="goToNuevaVentaPage()">
+      <ion-icon slot="icon-only" name="cart-outline" style="color: inherit;"></ion-icon>
+      <ion-label style="font-weight: bold;">Nueva venta</ion-label>
+    </ion-button>
+    <ion-button fill="clear" style="--border-radius: 69px; --background: #D70000; --box-shadow: none; color: #fff;">
+      <ion-icon slot="icon-only" name="cash-outline" style="color: inherit;"></ion-icon>
+      <ion-label style="font-weight: bold;">Nuevo gasto</ion-label>
+    </ion-button>
   </ion-fab-list>
 </ion-fab>
+
+
+
+
 
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">

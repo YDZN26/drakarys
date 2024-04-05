@@ -1,24 +1,20 @@
 <ion-tabs>
-  <ion-tab-bar slot="bottom" color="mycolor">
-    <ion-tab-button tab="balance">
+  <ion-tab-bar slot="bottom" color="mycolor2">
+    <ion-tab-button tab="balance" [class.selected]="isTabSelected('balance')">
       <ion-icon name="cash-outline"></ion-icon>
       <ion-label>Balance</ion-label>
-      
     </ion-tab-button>
-    <ion-tab-button tab="deudas">
+    <ion-tab-button tab="deudas" [class.selected]="isTabSelected('deudas')">
       <ion-icon name="server-outline"></ion-icon>
       <ion-label>Deudas</ion-label>
-
     </ion-tab-button>
-    <ion-tab-button tab="inventario">
+    <ion-tab-button tab="inventario" [class.selected]="isTabSelected('inventario')">
       <ion-icon name="file-tray-stacked-outline"></ion-icon>
       <ion-label>Inventario</ion-label>
-      
     </ion-tab-button>
-    <ion-tab-button tab="opciones">
+    <ion-tab-button tab="opciones" [class.selected]="isTabSelected('opciones')">
       <ion-icon name="settings-outline"></ion-icon>
       <ion-label>Opciones</ion-label>
-      
     </ion-tab-button>
   </ion-tab-bar>
 </ion-tabs>

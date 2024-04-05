@@ -3,8 +3,9 @@
     <ion-title>Inventario</ion-title>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-searchbar color="light" placeholder="Light" show-cancel-button="focus" placeholder="Show on Focus" placeholder="Buscar"></ion-searchbar>
+    <ion-searchbar color="light" placeholder="Buscar"></ion-searchbar>
   </ion-toolbar> 
+</ion-header>
 
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
@@ -12,4 +13,15 @@
       <ion-title size="large">Inventario</ion-title>
     </ion-toolbar>
   </ion-header>
+
+  <!-- Contenido de la página -->
+
+  <!-- Botón "Nuevo Producto" -->
+  <div class="button-container">
+    <ion-button class="nuevo-producto-button" (click)="agregarNuevoProducto()">Nuevo Producto</ion-button>
+  </div>
+
 </ion-content>
+
+
+

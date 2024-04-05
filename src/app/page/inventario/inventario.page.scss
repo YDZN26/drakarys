@@ -1,3 +1,16 @@
 ion-toolbar{
     background-color: var(--ion-color-mycolor);
 }
+
+.button-container {
+    position: absolute;
+    bottom: 80px; /* Ajustar según sea necesario */
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+ion-button {
+    --border-radius: 69px; /* Aplicar radio de 69 */
+    --background: #93C572; /* Color de fondo */
+    --color: #ffffff; /* Color del texto */
+}

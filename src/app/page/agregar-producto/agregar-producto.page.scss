@@ -1,0 +1,59 @@
+ion-toolbar {
+    background-color: var(--ion-color-mycolor);
+}
+
+.button-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+ion-button {
+    --border-radius: 69px;
+    --background: #93C572;
+    --color: #ffffff;
+    font-size: 20px;
+    width: calc(100% - 5px);
+    margin: 0 auto;
+}
+
+.text-container {
+    position: absolute;
+    top: 100px;
+    right: 10px;
+    width: 180px; /* Ancho del contenedor de texto */
+    height: 50px;
+    border:#0000; /*bordes*/
+    border-radius: 69px; /* radio del borde de 69 */
+    background-color: #EDF2FA; /* Color de fondo del contenedor */
+    padding: 10px; /* Espacio interior del contenedor */
+    text-align: center;
+}
+
+.text-container ion-textarea {
+    top: -12px;
+    width: 100%;
+    height: 20px;
+
+}
+
+.camera-container {
+    position: absolute;
+    top: 65px;
+    left: 10px;
+    width: 150px; /* Ancho del botón de la cámara */
+    height: 150px; /* Altura del botón de la cámara */
+    border-radius: 10px; /* Esquinas redondeadas */
+    background-color: #787878;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.camera-container ion-icon {
+    color: #ffffff;
+    font-size: 80px; /* Tamaño del icono de la cámara */
+}

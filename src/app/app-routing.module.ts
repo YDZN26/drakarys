@@ -16,6 +16,14 @@ const routes: Routes = [
     path: 'tab-inicial',
     loadChildren: () => import('./page/tab-inicial/tab-inicial.module').then( m => m.TabInicialPageModule)
   },
+  {
+    path: 'nueva-venta',
+    loadChildren: () => import('./page/nueva-venta/nueva-venta.module').then( m => m.NuevaVentaPageModule)
+  },
+  {
+    path: 'agregar-producto',
+    loadChildren: () => import('./page/agregar-producto/agregar-producto.module').then( m => m.AgregarProductoPageModule)
+  },
 ];
 
 @NgModule({

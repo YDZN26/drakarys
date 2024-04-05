@@ -1,0 +1,32 @@
+<ion-header>
+  <ion-toolbar color="mycolor">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/inventario"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Agregar Productos</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Agregar Productos</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <!-- Botón "Agregar Producto" -->
+  <div class="button-container">
+    <ion-button (click)="agregarProducto()">Agregar Producto</ion-button>
+  </div>
+
+  <!-- Contenedor de texto -->
+  <div class="text-container">
+    <ion-textarea rows="6" placeholder="Agregar código"></ion-textarea>
+  </div>
+
+  <!-- Botón "Cámara" -->
+  <div class="camera-container" (click)="tomarFoto()">
+    <ion-icon name="camera"></ion-icon>
+  </div>
+</ion-content>
+
