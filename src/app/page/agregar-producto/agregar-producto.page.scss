@@ -2,6 +2,34 @@ ion-toolbar {
     background-color: var(--ion-color-mycolor);
 }
 
+.codigo-title-container {
+    position: absolute;
+    top: 80px; /* Ajusta la posición vertical según sea necesario */
+    right: 10px;
+    width: 180px;
+    text-align: start;
+  }
+  
+  .codigo-title-container ion-label {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
+  }
+  
+  .cantidad-title-container {
+    position: absolute;
+    top: 160px; /* Ajusta la posición vertical según sea necesario */
+    right: 10px;
+    width: 180px;
+  }
+  
+  .cantidad-title-container ion-label {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
+  }
+  
+  
 .button-container {
     position: absolute;
     bottom: 20px;
@@ -23,29 +51,143 @@ ion-button {
     position: absolute;
     top: 100px;
     right: 10px;
-    width: 180px; /* Ancho del contenedor de texto */
+    width: 180px;
     height: 50px;
-    border:#0000; /*bordes*/
-    border-radius: 69px; /* radio del borde de 69 */
-    background-color: #EDF2FA; /* Color de fondo del contenedor */
-    padding: 10px; /* Espacio interior del contenedor */
-    text-align: center;
+    border: 1px solid #0000;
+    border-radius: 69px;
+    background-color: #EDF2FA;
+    padding: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.text-container ion-textarea {
-    top: -12px;
-    width: 100%;
-    height: 20px;
+.textarea-centered {
+    width: calc(100% - 65px); /* Restamos el doble del padding */
+    margin: auto;
+    display: block;
+}
 
+.name-text-container {
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 380px;
+    height: 50px;
+    border: 1px solid #0000;
+    border-radius: 69px;
+    background-color: #EDF2FA;
+    padding: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Cambios personalizados para el ion-item */
+.item {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    --background: #EDF2FA; /* Cambia el color de fondo del ion-item a azul */
+    height: 40px; /* Ajusta el tamaño mínimo del ion-item */
+    width: 300px;
+    font-size: 18px; /* Ajusta el tamaño del texto dentro del ion-item */
+    font-weight: bold;
+    justify-content: center;
+  }
+
+  .precio-text-container {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 380px;
+    height: 50px;
+    border: 1px solid #0000;
+    border-radius: 69px;
+    background-color: #EDF2FA;
+    padding: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .costo-text-container {
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 380px;
+    height: 50px;
+    border: 1px solid #0000;
+    border-radius: 69px;
+    background-color: #EDF2FA;
+    padding: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .descripcion-text-container {
+    position: absolute;
+    top: 80%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 380px;
+    height: 200px;
+    border: 1px solid #0000;
+    border-radius: 9px;
+    background-color: #EDF2FA;
+    padding: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+.counter-container {
+    position: absolute;
+    top: 180px;
+    right: 10px;
+    width: 180px;
+    height: 40px;
+    border: 0px;
+    border-radius: 69px;
+    background-color: #EDF2FA;
+    padding: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Alinear los botones al borde del contenedor */
+   
+}
+
+counter-button {
+    width: 10px;
+    height: 40px;
+    font-size: 20px;
+    margin-right: 0px; /* Ajustar la separación entre los botones */
+}
+
+
+.counter-button:first-child {
+    margin-block: -5px; /* Ajustar la separación del primer botón respecto al borde izquierdo */
+}
+.counter-label {
+    font-size: 20px;
+    font-weight: bold;
+    margin:0;
+    margin-right: 20px; /* Ajustar la separación entre el texto y los botones */
+    margin-left: 20px; /* Ajustar la separación entre el borde del contenedor y el texto */
 }
 
 .camera-container {
     position: absolute;
     top: 65px;
     left: 10px;
-    width: 150px; /* Ancho del botón de la cámara */
-    height: 150px; /* Altura del botón de la cámara */
-    border-radius: 10px; /* Esquinas redondeadas */
+    width: 150px;
+    height: 150px;
+    border-radius: 10px;
     background-color: #787878;
     display: flex;
     justify-content: center;
@@ -55,5 +197,6 @@ ion-button {
 
 .camera-container ion-icon {
     color: #ffffff;
-    font-size: 80px; /* Tamaño del icono de la cámara */
+    font-size: 80px;
 }
+

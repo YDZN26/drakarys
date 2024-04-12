@@ -19,9 +19,26 @@
     <ion-button (click)="agregarProducto()">Agregar Producto</ion-button>
   </div>
 
+  <!-- Título "Código" encima del contenedor de texto -->
+  <div class="codigo-title-container">
+    <ion-label>Código</ion-label>
+  </div>
+
+  <!-- Título "Cantidad" encima del contenedor de texto -->
+  <div class="cantidad-title-container">
+    <ion-label>Cantidad</ion-label>
+  </div>
+
   <!-- Contenedor de texto -->
   <div class="text-container">
-    <ion-textarea rows="6" placeholder="Agregar código"></ion-textarea>
+    <ion-textarea rows="1" placeholder="Agregar código" class="textarea-centered"></ion-textarea>
+  </div>
+
+  <!-- Contenedor del contador -->
+  <div class="counter-container">
+    <ion-button class="counter-button" (click)="decreaseCounter()">-</ion-button>
+    <ion-label class="counter-label">{{ counterValue }}</ion-label>
+    <ion-button class="counter-button" (click)="increaseCounter()">+</ion-button>
   </div>
 
   <!-- Botón "Cámara" -->
@@ -30,3 +47,22 @@
   </div>
 </ion-content>
 
+<!-- Contenedor de texto -->
+<div class="name-text-container">
+  <ion-item><ion-input placeholder="Ingrese el nombre del producto"></ion-input></ion-item>
+</div>
+
+<!-- Contenedor de texto -->
+<div class="precio-text-container">
+  <ion-item><ion-input placeholder="Ingrese el precio unitario"></ion-input></ion-item>
+</div>
+
+<!-- Contenedor de texto -->
+<div class="costo-text-container">
+  <ion-item><ion-input placeholder="Ingrese el costo unitario"></ion-input></ion-item>
+</div>
+
+<!-- Contenedor de texto -->
+<div class="descripcion-text-container">
+  <ion-item><ion-input placeholder="Escribir descripcion del producto"></ion-input></ion-item>
+</div>

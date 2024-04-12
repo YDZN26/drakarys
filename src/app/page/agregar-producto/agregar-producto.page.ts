@@ -8,6 +8,8 @@ import { NavController } from '@ionic/angular';
 })
 export class AgregarProductoPage {
 
+  counterValue: number = 0; // Valor inicial del contador
+
   constructor(private navCtrl: NavController) { }
 
   agregarProducto() {
@@ -23,10 +25,17 @@ export class AgregarProductoPage {
     // Lógica para tomar una foto
   }
 
-  accion() {
-    // Lógica para la acción del nuevo botón
+  decreaseCounter() {
+    if (this.counterValue > 0) {
+      this.counterValue--; // Decrementar el contador si es mayor que cero
+    }
+  }
+
+  increaseCounter() {
+    this.counterValue++; // Incrementar el contador
   }
 }
+
 
 
 
