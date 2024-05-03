@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NavController } from '@ionic/angular';
+import { NavController, ActionSheetController } from '@ionic/angular';
 
 @Component({
   selector: 'app-agregar-producto',
@@ -9,20 +9,59 @@ import { NavController } from '@ionic/angular';
 export class AgregarProductoPage {
   counterValue: number = 0; // Valor inicial del contador
   selectedOption: string = ''; // Variable para almacenar la opción seleccionada
+  codigo: string = '';
+  nombre: string = '';
+  precioUnitario: number = 0;
+  costoUnitario: number = 0;
+  descripcion: string = '';
 
-  constructor(private navCtrl: NavController) { }
+  constructor(
+    private navCtrl: NavController,
+    private actionSheetController: ActionSheetController
+  ) {}
+
+  async showActionSheet() {
+    const actionSheet = await this.actionSheetController.create({
+      header: 'Seleccionar una opción',
+      buttons: [
+        {
+          text: 'Tomar foto',
+          handler: () => {
+            // Lógica para tomar una foto
+            console.log('Tomar foto');
+          }
+        },
+        {
+          text: 'Abrir galería',
+          handler: () => {
+            // Lógica para abrir la galería
+            console.log('Abrir galería');
+          }
+        },
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        }
+      ]
+    });
+    await actionSheet.present();
+  }
 
   agregarProducto() {
-    // Lógica para agregar un nuevo producto
+    const payload = {
+      codigo: this.codigo,
+      nombre: this.nombre,
+      precioUnitario: this.precioUnitario,
+      costoUnitario: this.costoUnitario,
+      descripcion: this.descripcion,
+      cantidad: this.counterValue,
+      categoria: this.selectedOption
+    };
   }
 
   retroceder() {
     // Navegar hacia atrás
     this.navCtrl.back();
-  }
-
-  tomarFoto() {
-    // Lógica para tomar una foto
   }
 
   decreaseCounter() {
@@ -44,12 +83,3 @@ export class AgregarProductoPage {
     this.selectedOption = event.detail.value; // Actualizar la opción seleccionada
   }
 }
-
-
-
-
-
-
-
-
-

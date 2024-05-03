@@ -1,321 +1,321 @@
 ion-toolbar {
-    background-color: var(--ion-color-mycolor);
+  background-color: var(--ion-color-mycolor);
 }
 
 
 .codigo-title-container {
-    position: absolute;
-    top: 80px; /* Ajusta la posición vertical según sea necesario */
-    right: 10px;
-    width: 180px;
-    text-align: start;
-  }
-  
-  .codigo-title-container ion-label {
-    font-weight: bold;
-    font-size: 16px;
-    margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
-  }
-  
-  .cantidad-title-container {
-    position: absolute;
-    top: 160px; /* Ajusta la posición vertical según sea necesario */
-    right: 10px;
-    width: 180px;
-  }
-  
-  .cantidad-title-container ion-label {
-    font-weight: bold;
-    font-size: 16px;
-    margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
-  }
+  position: absolute;
+  top: 80px; /* Ajusta la posición vertical según sea necesario */
+  right: 10px;
+  width: 180px;
+  text-align: start;
+}
+
+.codigo-title-container ion-label {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
+}
+
+.cantidad-title-container {
+  position: absolute;
+  top: 160px; /* Ajusta la posición vertical según sea necesario */
+  right: 10px;
+  width: 180px;
+}
+
+.cantidad-title-container ion-label {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
+}
 
 .button-container {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
 }
 
 ion-button {
-    --border-radius: 69px;
-    --background: #93C572;
-    --color: #ffffff;
-    font-size: 20px;
-    width: calc(100% - 5px);
-    margin: 0 auto;
+  --border-radius: 69px;
+  --background: #93C572;
+  --color: #ffffff;
+  font-size: 20px;
+  width: calc(100% - 5px);
+  margin: 0 auto;
 }
 
 .text-container {
-    position: absolute;
-    top: 100px;
-    right: 10px;
-    width: 180px;
-    height: 50px;
-    border: 1px solid #0000;
-    border-radius: 69px;
-    background-color: #EDF2FA;
-    padding: 0px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  position: absolute;
+  top: 100px;
+  right: 10px;
+  width: 180px;
+  height: 50px;
+  border: 1px solid #0000;
+  border-radius: 69px;
+  background-color: #EDF2FA;
+  padding: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .textarea-centered {
-    width: calc(100% - 65px); /* Restamos el doble del padding */
-    margin: auto;
-    display: block;
+  width: calc(100% - 65px); /* Restamos el doble del padding */
+  margin: auto;
+  display: block;
 }
 
 .name-text-container {
-    position: absolute;
-    top: 35%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 380px;
-    height: 50px;
-    border: 1px solid #0000;
-    border-radius: 69px;
-    background-color: #EDF2FA;
-    padding: 0px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 380px;
+  height: 50px;
+  border: 1px solid #0000;
+  border-radius: 69px;
+  background-color: #EDF2FA;
+  padding: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  /* Cambios personalizados para el ion-item */
+/* Cambios personalizados para el ion-item */
 .item {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    --background: #EDF2FA; /* Cambia el color de fondo del ion-item */
-    height: 40px; /* Ajusta el tamaño mínimo del ion-item */
-    width: 300px;
-    font-size: 18px; /* Ajusta el tamaño del texto dentro del ion-item */
-    font-weight: bold;
-    justify-content: center;
-  }
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  --background: #EDF2FA; /* Cambia el color de fondo del ion-item */
+  height: 40px; /* Ajusta el tamaño mínimo del ion-item */
+  width: 300px;
+  font-size: 18px; /* Ajusta el tamaño del texto dentro del ion-item */
+  font-weight: bold;
+  justify-content: center;
+}
 
-  .precio-text-container {
-    position: absolute;
-    top: 45%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 380px;
-    height: 50px;
-    border: 1px solid #0000;
-    border-radius: 69px;
-    background-color: #EDF2FA;
-    padding: 0px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+.precio-text-container {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 380px;
+  height: 50px;
+  border: 1px solid #0000;
+  border-radius: 69px;
+  background-color: #EDF2FA;
+  padding: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  .costo-text-container {
-    position: absolute;
-    top: 55%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 380px;
-    height: 50px;
-    border: 1px solid #0000;
-    border-radius: 69px;
-    background-color: #EDF2FA;
-    padding: 0px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+.costo-text-container {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 380px;
+  height: 50px;
+  border: 1px solid #0000;
+  border-radius: 69px;
+  background-color: #EDF2FA;
+  padding: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  .descripcion-text-container {
-    position: absolute;
-    top: 85%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 380px;
-    height: 150px;
-    border: 1px solid #0000;
-    border-radius: 9px;
-    background-color: #EDF2FA;
-    padding: 0px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+.descripcion-text-container {
+  position: absolute;
+  top: 85%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 380px;
+  height: 150px;
+  border: 1px solid #0000;
+  border-radius: 9px;
+  background-color: #EDF2FA;
+  padding: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .counter-container {
-    position: absolute;
-    top: 180px;
-    right: 10px;
-    width: 180px;
-    height: 40px;
-    border: 0px;
-    border-radius: 69px;
-    background-color: #EDF2FA;
-    padding: 0px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between; /* Alinear los botones al borde del contenedor */
-   
+  position: absolute;
+  top: 180px;
+  right: 10px;
+  width: 180px;
+  height: 40px;
+  border: 0px;
+  border-radius: 69px;
+  background-color: #EDF2FA;
+  padding: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Alinear los botones al borde del contenedor */
+ 
 }
 
 counter-button {
-    width: 10px;
-    height: 40px;
-    font-size: 20px;
-    margin-right: 0px; /* Ajustar la separación entre los botones */
+  width: 10px;
+  height: 40px;
+  font-size: 20px;
+  margin-right: 0px; /* Ajustar la separación entre los botones */
 }
 
 
 .counter-button:first-child {
-    margin-block: -5px; /* Ajustar la separación del primer botón respecto al borde izquierdo */
+  margin-block: -5px; /* Ajustar la separación del primer botón respecto al borde izquierdo */
 }
 .counter-label {
-    font-size: 20px;
-    font-weight: bold;
-    margin:0;
-    margin-right: 20px; /* Ajustar la separación entre el texto y los botones */
-    margin-left: 20px; /* Ajustar la separación entre el borde del contenedor y el texto */
+  font-size: 20px;
+  font-weight: bold;
+  margin:0;
+  margin-right: 20px; /* Ajustar la separación entre el texto y los botones */
+  margin-left: 20px; /* Ajustar la separación entre el borde del contenedor y el texto */
 }
 
 .camera-container {
-    position: absolute;
-    top: 65px;
-    left: 10px;
-    width: 150px;
-    height: 150px;
-    border-radius: 10px;
-    background-color: #787878;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
+  position: absolute;
+  top: 65px;
+  left: 10px;
+  width: 150px;
+  height: 150px;
+  border-radius: 10px;
+  background-color: #787878;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
 }
 
 .camera-container ion-icon {
-    color: #ffffff;
-    font-size: 80px;
+  color: #ffffff;
+  font-size: 80px;
 }
 
 .nombre-title-container {
-  position: absolute;
-  top: 29.5%; /* Ajusta la posición vertical según sea necesario */
-  left: 30px;
-  width: 180px;
+position: absolute;
+top: 29.5%; /* Ajusta la posición vertical según sea necesario */
+left: 30px;
+width: 180px;
 }
 
 .nombre-title-container ion-label {
-  font-weight: bold;
-  font-size: 20px;
-  margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
-  color: black;
+font-weight: bold;
+font-size: 20px;
+margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
+color: black;
 }
 
 .precio-title-container {
-  position: absolute;
-  top: 39.5%; /* Ajusta la posición vertical según sea necesario */
-  left: 30px;
-  width: 180px;
+position: absolute;
+top: 39.5%; /* Ajusta la posición vertical según sea necesario */
+left: 30px;
+width: 180px;
 }
 
 .precio-title-container ion-label {
-  font-weight: bold;
-  font-size: 20px;
-  margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
-  color: black;
+font-weight: bold;
+font-size: 20px;
+margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
+color: black;
 }
 
 .costo-title-container {
-  position: absolute;
-  top: 49.5%; /* Ajusta la posición vertical según sea necesario */
-  left: 30px;
-  width: 180px;
+position: absolute;
+top: 49.5%; /* Ajusta la posición vertical según sea necesario */
+left: 30px;
+width: 180px;
 }
 
 .costo-title-container ion-label {
-  font-weight: bold;
-  font-size: 20px;
-  margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
-  color: black;
+font-weight: bold;
+font-size: 20px;
+margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
+color: black;
 }
 
 .categoria-title-container {
-  position: absolute;
-  top: 59.5%; /* Ajusta la posición vertical según sea necesario */
-  left: 30px;
-  width: 180px;
+position: absolute;
+top: 59.5%; /* Ajusta la posición vertical según sea necesario */
+left: 30px;
+width: 180px;
 }
 
 .categoria-title-container ion-label {
-  font-weight: bold;
-  font-size: 20px;
-  margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
-  color: black;
+font-weight: bold;
+font-size: 20px;
+margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
+color: black;
 }
 
 .descripcion-title-container {
-  position: absolute;
-  top: 74%; /* Ajusta la posición vertical según sea necesario */
-  left: 30px;
-  width: 180px;
+position: absolute;
+top: 74%; /* Ajusta la posición vertical según sea necesario */
+left: 30px;
+width: 180px;
 }
 
 .descripcion-title-container ion-label {
-  font-weight: bold;
-  font-size: 20px;
-  margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
-  color: black;
+font-weight: bold;
+font-size: 20px;
+margin-bottom: 10px; /* Ajusta el margen inferior según sea necesario */
+color: black;
 }
 
 .nombre-icon {
-  position: absolute;
-  top: 35%;
-  left: 12%;
-  transform: translate(-50%, -50%);
-  font-size: 38px; /* Ajusta el tamaño del icono según sea necesario */
-  color: black; /* Cambia el color del icono según sea necesario */
+position: absolute;
+top: 35%;
+left: 12%;
+transform: translate(-50%, -50%);
+font-size: 38px; /* Ajusta el tamaño del icono según sea necesario */
+color: black; /* Cambia el color del icono según sea necesario */
 }
 
 .precio-icon {
-  position: absolute;
-  top: 45%;
-  left: 12%;
-  transform: translate(-50%, -50%);
-  font-size: 38px; /* Ajusta el tamaño del icono según sea necesario */
-  color: black; /* Cambia el color del icono según sea necesario */
+position: absolute;
+top: 45%;
+left: 12%;
+transform: translate(-50%, -50%);
+font-size: 38px; /* Ajusta el tamaño del icono según sea necesario */
+color: black; /* Cambia el color del icono según sea necesario */
 }
 
 .costo-icon {
-  position: absolute;
-  top: 55%;
-  left: 12%;
-  transform: translate(-50%, -50%);
-  font-size: 38px; /* Ajusta el tamaño del icono según sea necesario */
-  color: black; /* Cambia el color del icono según sea necesario */
+position: absolute;
+top: 55%;
+left: 12%;
+transform: translate(-50%, -50%);
+font-size: 38px; /* Ajusta el tamaño del icono según sea necesario */
+color: black; /* Cambia el color del icono según sea necesario */
 }
 
 .dropdown-container {
-  position: absolute;
-  top: 65%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 380px;
-  align-items: center;
-  background-color: #EDF2FA; // Cambia el color de fondo del contenedor
-  border-radius: 69px; // Cambia el radio del borde del contenedor
+position: absolute;
+top: 65%;
+left: 50%;
+transform: translate(-50%, -50%);
+width: 380px;
+align-items: center;
+background-color: #EDF2FA; // Cambia el color de fondo del contenedor
+border-radius: 69px; // Cambia el radio del borde del contenedor
 
-  ion-select {
-    display: block; // Muestra el ion-select
-    font-weight: semi-bold; // Aplica negrita al texto dentro del ion-select
-    font-size: 20px; /* Ajusta el tamaño del icono según sea necesario */
-    left: 35%;
-    width: 130px;
-  }
-  
-  ion-button {
-    display: none; // Oculta el botón
-  }
+ion-select {
+  display: block; // Muestra el ion-select
+  font-weight: semi-bold; // Aplica negrita al texto dentro del ion-select
+  font-size: 20px; /* Ajusta el tamaño del icono según sea necesario */
+  left: 35%;
+  width: 130px;
+}
+
+ion-button {
+  display: none; // Oculta el botón
+}
 }
