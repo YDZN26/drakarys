@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { IonRouterOutlet } from '@ionic/angular';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-tab-inicial',
@@ -9,19 +10,24 @@ import { IonRouterOutlet } from '@ionic/angular';
 })
 export class TabInicialPage implements OnInit {
 
-  selectedTab: string = ''; // inicializar la propiedad selectedTab
+  selectedTab: string = ''; // Inicializar la propiedad selectedTab
 
-  constructor(private routerOutlet: IonRouterOutlet, private route: ActivatedRoute) {}
+  constructor(private routerOutlet: IonRouterOutlet, private route: ActivatedRoute, private router: Router) {}
 
   ngOnInit() {
     this.routerOutlet.swipeGesture = false;
-    this.route.queryParams.subscribe(params => {
-      this.selectedTab = params['tab']; // acceder a 'tab' con corchetes
-    });
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        const currentRoute = this.route.root.firstChild;
+        if (currentRoute && currentRoute.snapshot) {
+          const tab = currentRoute.snapshot.firstChild?.routeConfig?.path ?? ''; // Asegúrate de que siempre sea una cadena
+          this.selectedTab = tab;
+        }
+      });
   }
 
   isTabSelected(tab: string): boolean {
     return this.selectedTab === tab;
   }
 }
-

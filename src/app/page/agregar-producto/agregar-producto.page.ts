@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, ActionSheetController } from '@ionic/angular';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-agregar-producto',
@@ -17,7 +18,8 @@ export class AgregarProductoPage {
 
   constructor(
     private navCtrl: NavController,
-    private actionSheetController: ActionSheetController
+    private actionSheetController: ActionSheetController,
+    private http: HttpClient // Importa el módulo HttpClient
   ) {}
 
   async showActionSheet() {
@@ -48,7 +50,7 @@ export class AgregarProductoPage {
   }
 
   agregarProducto() {
-    const payload = {
+    const producto = {
       codigo: this.codigo,
       nombre: this.nombre,
       precioUnitario: this.precioUnitario,
@@ -58,6 +60,7 @@ export class AgregarProductoPage {
       categoria: this.selectedOption
     };
   }
+  
 
   retroceder() {
     // Navegar hacia atrás

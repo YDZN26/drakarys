@@ -2,26 +2,59 @@
   <ion-toolbar color="mycolor">
     <ion-title>Inventario</ion-title>
   </ion-toolbar>
-  <ion-toolbar>
-    <ion-searchbar color="light" placeholder="Buscar"></ion-searchbar>
-  </ion-toolbar> 
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Inventario</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <!-- Usuario e información general -->
+  <div class="user-info">
+    <div class="user-details">
+      <ion-icon name="person-circle" size="large"></ion-icon>
+      <span>Drakarys Vape Store</span>
+    </div>
+    <div class="info-cards">
+      <div class="card">
+        <p>Total de productos</p>
+        <h2>Bs. 100</h2>
+      </div>
+      <div class="card">
+        <p>Valor total</p>
+        <h2>Bs. 50.000</h2>
+      </div>
+    </div>
+  </div>
 
-  <!-- Contenido de la página -->
+  <!-- Barra de búsqueda -->
+  <ion-toolbar>
+    <ion-searchbar color="light" placeholder="Buscar productos"></ion-searchbar>
+  </ion-toolbar> 
+
+  <!-- Botones de categorías -->
+  <div class="category-buttons">
+    <ion-button>Todos</ion-button>
+    <ion-button>Categoria 1</ion-button>
+    <ion-button>Categoria 2</ion-button>
+    <ion-button>Categoria 3</ion-button>
+    <ion-button>Categoria 4</ion-button>
+    <ion-button>Categoria 5</ion-button>
+    <ion-button>Categoria 6</ion-button>
+  </div>
+
+  <!-- Lista de productos -->
+  <ion-list>
+    <ion-item button *ngFor="let producto of productos" (click)="verDetalleProducto(producto)">
+      <ion-label>
+        <h2>{{ producto.nombre }}</h2>
+        <p>{{ producto.disponibles }} Disponibles</p>
+        <p>Precio unitario Bs {{ producto.precio }}</p>
+      </ion-label>
+      <ion-thumbnail slot="end">
+        <img [src]="producto.imagen" />
+      </ion-thumbnail>
+    </ion-item>
+  </ion-list>
 
   <!-- Botón "Nuevo Producto" -->
   <div class="button-container">
     <ion-button class="nuevo-producto-button" (click)="agregarNuevoProducto()">Nuevo Producto</ion-button>
   </div>
-
 </ion-content>
-
-
-

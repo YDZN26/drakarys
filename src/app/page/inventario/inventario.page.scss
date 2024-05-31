@@ -1,16 +1,108 @@
-ion-toolbar{
-    background-color: var(--ion-color-mycolor);
+ion-toolbar {
+  background-color: var(--ion-color-mycolor);
+}
+
+.user-info {
+  background-color: var(--ion-color-mycolor);
+  color: #fff;
+  padding: 5px;
+  text-align: left; /* Ajuste para alinear a la izquierda */
+}
+
+.user-details {
+  display: flex;
+  align-items: center; /* Ajuste para centrar verticalmente */
+  justify-content: flex-start; /* Ajuste para alinear a la izquierda */
+  margin-bottom: 1px;
+
+  ion-icon {
+    margin-right: 8px;
+  }
+
+  span {
+    font-size: 20px;
+    font-weight: bold;
+  }
+}
+
+.info-cards {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  background-color: var(--ion-color-mycolor); /* Fondo igual al del toolbar */
+  margin-bottom: 16px;
+
+  .card {
+    background-color: #fff;
+    color: var(--ion-color-mycolor); /* Color del texto general en las tarjetas */
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-align: center;
+    margin: 0 8px; /* Espacio entre las tarjetas */
+    width: 45%; /* Ajusta el ancho según sea necesario */
+
+    p {
+      margin: 0;
+      color: #000; /* Color del texto dentro de <p> */
+      font-size: 14px; /* Tamaño del texto en <p> */
+      font-weight: bold; /* Texto en negrilla */
+    }
+
+    h2 {
+      margin: 0;
+      color: #000; /* Color del texto dentro de <h2> */
+      font-size: 18px; /* Tamaño del texto en <h2> */
+      font-weight: bold; /* Texto en negrilla */
+    }
+  }
+}
+
+.category-buttons {
+  display: flex;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 10px 0;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+
+  ion-button {
+    margin: 0 8px;
+    flex: 0 0 auto; /* Evita que los botones se estiren */
+  }
 }
 
 .button-container {
-    position: absolute;
-    bottom: 80px; /* Ajustar según sea necesario */
-    left: 50%;
-    transform: translateX(-50%);
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 ion-button {
-    --border-radius: 69px; /* Aplicar radio de 69 */
-    --background: #93C572; /* Color de fondo */
-    --color: #ffffff; /* Color del texto */
+  --border-radius: 69px;
+  --background: #93C572;
+  --color: #ffffff;
+}
+
+ion-list {
+  margin-top: 16px;
+  height: calc(100vh - 350px); /* Ajusta la altura según sea necesario */
+  overflow-y: auto;
+}
+
+ion-item {
+  --background: #fff;
+  --border-radius: 20px;
+  margin: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para la barra de búsqueda */
+ion-searchbar {
+  --background: #edf2fa; /* Cambia el color de fondo */
+  --border-radius: 10px; /* Cambia el radio del borde */
 }
