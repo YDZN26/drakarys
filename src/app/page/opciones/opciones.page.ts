@@ -12,4 +12,9 @@ export class OpcionesPage implements OnInit {
   ngOnInit() {
   }
 
+  cerrarSesion() {
+    console.log('Cerrar sesión');
+    // Añadir la lógica para cerrar sesión
+  }
+
 }

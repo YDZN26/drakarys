@@ -24,6 +24,10 @@ const routes: Routes = [
     path: 'agregar-producto',
     loadChildren: () => import('./page/agregar-producto/agregar-producto.module').then( m => m.AgregarProductoPageModule)
   },
+  {
+    path: 'nuevo-gasto',
+    loadChildren: () => import('./page/nuevo-gasto/nuevo-gasto.module').then( m => m.NuevoGastoPageModule)
+  },
 ];
 
 @NgModule({

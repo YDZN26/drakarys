@@ -21,7 +21,7 @@ export class TabInicialPage implements OnInit {
       .subscribe(() => {
         const currentRoute = this.route.root.firstChild;
         if (currentRoute && currentRoute.snapshot) {
-          const tab = currentRoute.snapshot.firstChild?.routeConfig?.path ?? ''; // Asegúrate de que siempre sea una cadena
+          const tab = currentRoute.snapshot.firstChild?.routeConfig?.path ?? '';
           this.selectedTab = tab;
         }
       });

@@ -1,4 +1,102 @@
-ion-toolbar{
-    background-color: var(--ion-color-mycolor);
+ion-toolbar {
+  background-color: var(--ion-color-mycolor);
 }
 
+.user-info {
+  padding: 16px;
+  background-color: var(--ion-color-mycolor);
+  color: white;
+
+  .user-details {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+
+    ion-icon {
+      margin-right: 8px;
+    }
+
+    span {
+      font-size: 20px;
+      font-weight: bold; // Añadir negrita al texto del usuario
+    }
+  }
+
+  .info-cards {
+    display: flex;
+    justify-content: space-between;
+    height: 110px; // Ajusta la altura según necesites
+    margin-top: 10px; // Añadir margen superior para bajar las tarjetas
+
+    .card {
+      background: white;
+      padding: 16px;
+      border-radius: 22px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 48%;
+
+      p {
+        margin: 0;
+        color: black;
+        font-weight: bold; // Añadir negrita al texto dentro de las tarjetas
+      }
+
+      h2 {
+        margin: 8px 0;
+        color: red;
+        font-weight: bold; // Añadir negrita al texto dentro de las tarjetas
+      }
+    }
+  }
+}
+
+ion-searchbar {
+  --border-radius: 20px; // Cambia esto al valor que desees
+  --placeholder-color: #BDBDBD; // Color del texto placeholder
+  text-align: center;
+
+  input {
+    font-weight: 600; // Semibold para el texto del input
+    color: #BDBDBD; // Color del texto input
+  }
+}
+
+.cliente-lista-scroll {
+  max-height: calc(100vh - 300px); // Ajusta según la altura de los elementos anteriores
+  overflow-y: auto;
+}
+
+.cliente-avatar {
+  width: 70px;
+  height: 70px;
+
+  ion-icon {
+    font-size: 50px; // Ajusta el tamaño del ícono
+    color: #787878; // Color del ícono
+  }
+}
+
+.menu-desplegable {
+  padding: 16px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  margin: 16px 0; // Añadir margen vertical para separar el menú de los demás elementos
+
+  p {
+    margin: 0 0 8px;
+    color: black;
+    font-weight: bold;
+  }
+
+  ion-input {
+    margin-bottom: 8px;
+  }
+
+  ion-button {
+    --background: #4caf50;
+    color: white;
+    width: 100%;
+  }
+}

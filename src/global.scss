@@ -24,3 +24,16 @@
 @import "@ionic/angular/css/text-alignment.css";
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
+
+
+ion-header {
+    ion-toolbar {
+      --background: #001E87 !important; /* Forzar el color del header */
+      --color: white !important; /* Forzar el color del texto */
+    }
+  }
+  
+  ion-content {
+    --background: white !important; /* Forzar el color de fondo */
+  }
+  

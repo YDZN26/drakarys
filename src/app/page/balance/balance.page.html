@@ -1,32 +1,32 @@
 <ion-header>
   <ion-toolbar color="mycolor">
-    <ion-title>Balance</ion-title>
+    <ion-buttons slot="start">
+      <ion-icon name="person-circle" size="large"></ion-icon>
+      <ion-title>Drakarys</ion-title>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button>
+        <ion-icon slot="icon-only" name="search-outline"></ion-icon>
+      </ion-button>
+      <ion-button>
+        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
-  <ion-toolbar>
-    <ion-searchbar color="light" placeholder="Light" show-cancel-button="focus" placeholder="Show on Focus" placeholder="Buscar"></ion-searchbar>
-  </ion-toolbar>    
+
+  <ion-toolbar color="mycolor">
+    <ion-segment scrollable>
+      <ion-segment-button *ngFor="let day of days" [value]="day">
+        {{ day }}
+      </ion-segment-button>
+    </ion-segment>
+    <ion-buttons slot="end">
+      <ion-button>
+        <ion-icon slot="icon-only" name="calendar-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
 </ion-header>
-
-<ion-fab slot="fixed" horizontal="end" vertical="bottom">
-  <ion-fab-button>
-    <ion-icon name="add"></ion-icon>
-  </ion-fab-button>
-  <ion-fab-list side="start">
-    <ion-button fill="clear" style="--border-radius: 69px; --background: #93C572; --box-shadow: none; color: #fff;"
-                 (click)="goToNuevaVentaPage()">
-      <ion-icon slot="icon-only" name="cart-outline" style="color: inherit;"></ion-icon>
-      <ion-label style="font-weight: bold;">Nueva venta</ion-label>
-    </ion-button>
-    <ion-button fill="clear" style="--border-radius: 69px; --background: #D70000; --box-shadow: none; color: #fff;">
-      <ion-icon slot="icon-only" name="cash-outline" style="color: inherit;"></ion-icon>
-      <ion-label style="font-weight: bold;">Nuevo gasto</ion-label>
-    </ion-button>
-  </ion-fab-list>
-</ion-fab>
-
-
-
-
 
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
@@ -34,4 +34,67 @@
       <ion-title size="large">Balance</ion-title>
     </ion-toolbar>
   </ion-header>
+
+  <div class="balance-container">
+    <div class="balance-card">
+      <div class="balance-header">
+        <span>BALANCE</span>
+        <span>BS. 205</span>
+      </div>
+      <div class="balance-details">
+        <div class="balance-income">
+          <ion-icon name="wallet-outline"></ion-icon>
+          <span>INGRESOS</span>
+          <span>BS. 255</span>
+        </div>
+        <div class="balance-divider"></div> <!-- Divisor -->
+        <div class="balance-expense">
+          <ion-icon name="cash-outline" color="danger"></ion-icon>
+          <span>EGRESOS</span>
+          <span>BS. 50</span>
+        </div>
+      </div>
+    </div>
+    <ion-segment class="balance-segment">
+      <ion-segment-button class="balance-segment-button" (click)="mostrarIngresos()">
+        <ion-label>Ingresos</ion-label>
+      </ion-segment-button>
+      <ion-segment-button class="balance-segment-button" (click)="mostrarEgresos()">
+        <ion-label>Egresos</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </div>
+
+  <ion-list>
+    <ion-item *ngFor="let item of filteredItems">
+      <ion-avatar slot="start">
+        <ion-icon name="bag-handle-outline" style="color: #6A5ACD;"></ion-icon>
+      </ion-avatar>
+      <ion-label>
+        <h2>{{ item.nombre }}</h2>
+        <p *ngIf="item.descripcion">{{ item.descripcion }}</p>
+      </ion-label>
+      <div slot="end">
+        <strong>Bs. {{ item.precio }}</strong>
+      </div>
+    </ion-item>
+  </ion-list>
+
+  <ion-fab slot="fixed" horizontal="end" vertical="bottom">
+    <ion-fab-button>
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+    <ion-fab-list side="start">
+      <ion-button fill="clear" style="--border-radius: 69px; --background: #93C572; --box-shadow: none; color: #fff;"
+                 (click)="goToNuevaVentaPage()">
+        <ion-icon slot="icon-only" name="cart-outline" style="color: inherit;"></ion-icon>
+        <ion-label style="font-weight: bold;">Nueva venta</ion-label>
+      </ion-button>
+      <ion-button fill="clear" style="--border-radius: 69px; --background: #D70000; --box-shadow: none; color: #fff;"
+                 (click)="goToNuevoGastoPage()">
+        <ion-icon slot="icon-only" name="cash-outline" style="color: inherit;"></ion-icon>
+        <ion-label style="font-weight: bold;">Nuevo gasto</ion-label>
+      </ion-button>
+    </ion-fab-list>
+  </ion-fab>
 </ion-content>

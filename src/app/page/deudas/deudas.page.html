@@ -2,15 +2,54 @@
   <ion-toolbar color="mycolor">
     <ion-title>Deudas</ion-title>
   </ion-toolbar>
-  <ion-toolbar>
-    <ion-searchbar color="light" placeholder="Light" show-cancel-button="focus" placeholder="Show on Focus" placeholder="Buscar"></ion-searchbar>
-  </ion-toolbar>    
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Deudas</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <!-- Usuario e información general -->
+  <div class="user-info">
+    <div class="user-details">
+      <ion-icon name="person-circle" size="large"></ion-icon>
+      <span>Drakarys</span>
+    </div>
+    <div class="info-cards">
+      <div class="card">
+        <p>Por cobrar</p>
+        <h2>Bs 20</h2>
+        <p>2 clientes</p>
+      </div>
+      <div class="card">
+        <p>Por pagar</p>
+        <h2>Bs 25</h2>
+        <p>2 proveedores</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de búsqueda -->
+  <ion-toolbar>
+    <ion-searchbar color="light" placeholder="Buscar deudas"></ion-searchbar>
+  </ion-toolbar>
+
+  <!-- Lista de clientes con scroll -->
+  <div class="cliente-lista-scroll">
+    <ion-list>
+      <div *ngFor="let cliente of clientes">
+        <ion-item button (click)="toggleMenu(cliente.id)">
+          <ion-avatar slot="start" class="cliente-avatar">
+            <ion-icon name="person-circle"></ion-icon>
+          </ion-avatar>
+          <ion-label>
+            <h2>Cliente {{ cliente.id }}</h2>
+            <p>Bs. {{ cliente.deuda }}</p>
+          </ion-label>
+        </ion-item>
+        <div class="menu-desplegable" *ngIf="selectedCliente === cliente.id">
+          <p>Monto Pagado: {{ cliente.montoPagado }} Bs.</p>
+          <p>Monto Faltante: {{ cliente.montoFaltante }} Bs.</p>
+          <ion-input [(ngModel)]="pago" type="number" placeholder="Agregar monto a pagar"></ion-input>
+          <ion-button (click)="pagar()">Pagar</ion-button>
+        </div>
+      </div>
+    </ion-list>
+  </div>
 </ion-content>
