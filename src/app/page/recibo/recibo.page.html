@@ -1,0 +1,40 @@
+<ion-content>
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Recibo</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <ion-item>
+        <ion-label>Nombre del Producto</ion-label>
+        <ion-note slot="end">{{ recibo.nombreProducto }}</ion-note>
+      </ion-item>
+      <ion-item>
+        <ion-label>Cantidad</ion-label>
+        <ion-note slot="end">{{ recibo.cantidad }}</ion-note>
+      </ion-item>
+      <ion-item>
+        <ion-label>Precio</ion-label>
+        <ion-note slot="end">Bs. {{ recibo.precio }}</ion-note>
+      </ion-item>
+      <ion-item>
+        <ion-label>Descuento</ion-label>
+        <ion-note slot="end">Bs. {{ recibo.descuento }}</ion-note>
+      </ion-item>
+      <ion-item>
+        <ion-label>Hora</ion-label>
+        <ion-note slot="end">{{ recibo.hora }}</ion-note>
+      </ion-item>
+      <ion-item>
+        <ion-label>Total de Venta</ion-label>
+        <ion-note slot="end">Bs. {{ recibo.totalVenta }}</ion-note>
+      </ion-item>
+      <ion-item>
+        <ion-label>Método de Pago</ion-label>
+        <ion-note slot="end">{{ recibo.metodoPago }}</ion-note>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-button expand="full" (click)="irABalance()">Listo</ion-button>
+</ion-content>

@@ -1,21 +1,12 @@
-<ion-header>
-  <ion-toolbar color="mycolor">
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/tab-inicial"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Nueva Venta</ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content [fullscreen]="true">
   <div class="info-cards">
     <div class="card">
       <p>Total de productos</p>
-      <h2>100</h2>
+      <h2>{{ totalProductosSeleccionados }}</h2> <!-- Muestra el total de productos seleccionados -->
     </div>
     <div class="card">
       <p>Valor total</p>
-      <h2>Bs. 50.000</h2>
+      <h2>Bs. {{ valorTotalSeleccionado | number: '1.2-2' }}</h2> <!-- Muestra el valor total seleccionado -->
     </div>
   </div>
 
@@ -38,11 +29,15 @@
         <img [src]="producto.imagen" />
       </ion-avatar>
       <ion-label>
-        <h2>{{producto.nombre}}</h2>
-        <p>{{producto.disponibles}} Disponibles</p>
-        <p>Precio unitario Bs {{producto.precio}}</p>
+        <h2>{{ producto.nombre }}</h2>
+        <p>Disponibles: {{ producto.disponibles }}</p>
+        <p>Precio unitario: Bs {{ producto.precio }}</p>
+        <p>Seleccionados: {{ producto.cantidadSeleccionada }}</p>
       </ion-label>
-      <ion-button fill="clear" slot="end" (click)="agregarProducto(producto)">
+      <ion-button fill="clear" (click)="disminuirCantidad(producto)" [disabled]="producto.cantidadSeleccionada === 0">
+        <ion-icon name="remove-circle-outline"></ion-icon>
+      </ion-button>
+      <ion-button fill="clear" (click)="aumentarCantidad(producto)" [disabled]="producto.cantidadSeleccionada === producto.disponibles">
         <ion-icon name="add-circle-outline"></ion-icon>
       </ion-button>
     </ion-item>
@@ -50,6 +45,7 @@
 
   <!-- Botón "Agregar Venta" -->
   <div class="button-container">
-    <ion-button class="nuevo-producto-button" (click)="agregarVenta()">Agregar Venta</ion-button>
+    <ion-button class="nuevo-producto-button" [disabled]="totalProductosSeleccionados === 0" (click)="agregarVenta()">Agregar Venta</ion-button>
   </div>
 </ion-content>
+

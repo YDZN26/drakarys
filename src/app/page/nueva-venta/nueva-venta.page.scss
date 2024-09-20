@@ -1,84 +1,103 @@
 ion-toolbar {
-    background-color: var(--ion-color-mycolor);
-  }
-  
-  .info-cards {
-    display: flex;
-    justify-content: center;
-    padding: 16px;
-    background-color: var(--ion-color-mycolor); /* Fondo igual al del toolbar */
-    margin-bottom: 16px;
-  
-    .card {
-      background-color: #fff;
-      color: var(--ion-color-mycolor); /* Color del texto general en las tarjetas */
-      padding: 8px 16px;
-      border-radius: 20px;
-      text-align: center;
-      margin: 0 8px; /* Espacio entre las tarjetas */
-      width: 45%; /* Ajusta el ancho según sea necesario */
-  
-      p {
-        margin: 0;
-        color: #000; /* Color del texto dentro de <p> */
-        font-size: 14px; /* Tamaño del texto en <p> */
-        font-weight: bold; /* Texto en negrilla */
-      }
-  
-      h2 {
-        margin: 0;
-        color: #000; /* Color del texto dentro de <h2> */
-        font-size: 18px; /* Tamaño del texto en <h2> */
-        font-weight: bold; /* Texto en negrilla */
-      }
+  background-color: var(--ion-color-mycolor);
+}
+
+.info-cards {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  background-color: var(--ion-color-mycolor); /* Fondo igual al del toolbar */
+  margin-bottom: 16px;
+
+  .card {
+    background-color: #fff;
+    color: var(--ion-color-mycolor); /* Color del texto general en las tarjetas */
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-align: center;
+    margin: 0 8px; /* Espacio entre las tarjetas */
+    width: 45%; /* Ajusta el ancho según sea necesario */
+
+    p {
+      margin: 0;
+      color: #000; /* Color del texto dentro de <p> */
+      font-size: 14px; /* Tamaño del texto en <p> */
+      font-weight: bold; /* Texto en negrilla */
+    }
+
+    h2 {
+      margin: 0;
+      color: #000; /* Color del texto dentro de <h2> */
+      font-size: 18px; /* Tamaño del texto en <h2> */
+      font-weight: bold; /* Texto en negrilla */
     }
   }
-  
-  .category-buttons {
+}
+
+.category-buttons {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+
+  ion-button {
+    margin: 0 8px;
+  }
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+ion-button.nuevo-producto-button {
+  --border-radius: 69px;
+  --background: #93C572;
+  --color: #ffffff;
+}
+
+ion-list {
+  margin-top: 16px;
+
+  ion-item {
+    --background: white;
+    margin: 8px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    ion-label h2 {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    ion-label p {
+      font-size: 14px;
+      color: gray;
+    }
+
+    strong {
+      font-size: 16px;
+      font-weight: bold;
+    }
+  }
+
+  /* Estilo para los botones de incremento y decremento */
+  ion-item {
     display: flex;
-    justify-content: center;
-    margin: 16px 0;
-  
+    align-items: center;
+
     ion-button {
-      margin: 0 8px;
+      --color: #3880ff;
+      margin-left: 8px; /* Ajuste de espacio entre los botones */
+    }
+
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+    }
+
+    .quantity-controls ion-button {
+      --color: #f04141;
     }
   }
-  
-  .button-container {
-    display: flex;
-    justify-content: center;
-    margin: 16px 0;
-  }
-  
-  ion-button.nuevo-producto-button {
-    --border-radius: 69px;
-    --background: #93C572;
-    --color: #ffffff;
-  }
-  
-  ion-list {
-    margin-top: 16px;
-  
-    ion-item {
-      --background: white;
-      margin: 8px;
-      border-radius: 10px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  
-      ion-label h2 {
-        font-size: 16px;
-        font-weight: bold;
-      }
-  
-      ion-label p {
-        font-size: 14px;
-        color: gray;
-      }
-  
-      strong {
-        font-size: 16px;
-        font-weight: bold;
-      }
-    }
-  }
-  
+}

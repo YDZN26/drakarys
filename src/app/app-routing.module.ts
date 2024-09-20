@@ -28,6 +28,24 @@ const routes: Routes = [
     path: 'nuevo-gasto',
     loadChildren: () => import('./page/nuevo-gasto/nuevo-gasto.module').then( m => m.NuevoGastoPageModule)
   },
+  {
+    path: 'login',
+    loadChildren: () => import('./page/login/login.module').then( m => m.LoginPageModule)
+  },
+
+  {
+    path: 'balance',
+    loadChildren: () => import('./page/balance/balance.module').then( m => m.BalancePageModule)
+  },
+  {
+    path: 'recibo',
+    loadChildren: () => import('./page/recibo/recibo.module').then( m => m.ReciboPageModule)
+  },
+  {
+    path: 'cuotas-modal',
+    loadChildren: () => import('./page/cuotas-modal/cuotas-modal.module').then( m => m.CuotasModalPageModule)
+  },
+  
 ];
 
 @NgModule({

@@ -1,0 +1,40 @@
+<ion-header>
+  <ion-toolbar color="mycolor">
+    <ion-title>Cuotas</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancelar()">Cerrar</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>{{ producto.nombre }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="floating">Comprador</ion-label>
+        <ion-input [(ngModel)]="comprador"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="floating">Monto Pagado</ion-label>
+        <ion-input [(ngModel)]="montoPagado" type="number"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="floating">Monto Faltante</ion-label>
+        <ion-input [(ngModel)]="montoFaltante" type="number"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="floating">Teléfono</ion-label>
+        <ion-input [(ngModel)]="telefono"></ion-input>
+      </ion-item>
+
+      <ion-button expand="full" (click)="confirmarCuotas()">Realizar Venta</ion-button>
+      <ion-button expand="full" color="danger" (click)="cancelar()">Cancelar</ion-button>
+    </ion-card-content>
+  </ion-card>
+</ion-content>
