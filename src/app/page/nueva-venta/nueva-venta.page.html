@@ -12,7 +12,7 @@
 
   <!-- Barra de búsqueda -->
   <ion-toolbar>
-    <ion-searchbar color="light" placeholder="Buscar productos"></ion-searchbar>
+    <ion-searchbar color="light" placeholder="Buscar productos" (ionInput)="buscarProductos($event)"></ion-searchbar>
   </ion-toolbar> 
 
   <!-- Botones de categorías -->
@@ -22,9 +22,9 @@
     <ion-button>Categoria 2</ion-button>
   </div>
 
-  <!-- Lista de productos -->
+  <!-- Lista de productos filtrados -->
   <ion-list>
-    <ion-item *ngFor="let producto of productos">
+    <ion-item *ngFor="let producto of productosFiltrados">
       <ion-avatar slot="start">
         <img [src]="producto.imagen" />
       </ion-avatar>
@@ -48,4 +48,3 @@
     <ion-button class="nuevo-producto-button" [disabled]="totalProductosSeleccionados === 0" (click)="agregarVenta()">Agregar Venta</ion-button>
   </div>
 </ion-content>
-

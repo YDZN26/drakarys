@@ -8,14 +8,10 @@ import { NavController } from '@ionic/angular';
   styleUrls: ['./recibo.page.scss'],
 })
 export class ReciboPage implements OnInit {
-  recibo = {
-    nombreProducto: 'Producto 1',
-    cantidad: 2,
-    precio: 100,
-    descuento: 10,
-    hora: new Date().toLocaleTimeString(),
-    totalVenta: 190, 
-    metodoPago: 'Efectivo' 
+  recibo: any = {
+    productos: [],  // Inicializamos productos como un array vacío
+    metodoPago: '',
+    totalVenta: 0
   };
 
   constructor(private route: ActivatedRoute, private navCtrl: NavController) {}
@@ -24,6 +20,12 @@ export class ReciboPage implements OnInit {
     this.route.queryParams.subscribe(params => {
       if (params['metodoPago']) {
         this.recibo.metodoPago = params['metodoPago'];
+      }
+      if (params['productos']) {
+        this.recibo.productos = JSON.parse(params['productos']);  // Asegúrate de que los productos son un array
+      }
+      if (params['totalVenta']) {
+        this.recibo.totalVenta = params['totalVenta'];
       }
     });
   }

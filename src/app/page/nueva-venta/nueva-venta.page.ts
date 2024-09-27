@@ -10,16 +10,29 @@ import { CuotasModalPage } from '../cuotas-modal/cuotas-modal.page';
 export class NuevaVentaPage {
 
   productos = [
-    { nombre: 'Producto 1', disponibles: 10, precio: 8, imagen: 'assets/Images/producto1.png', cantidadSeleccionada: 0 },
-    { nombre: 'Producto 2', disponibles: 5, precio: 10, imagen: 'assets/Images/producto2.png', cantidadSeleccionada: 0 },
-    { nombre: 'Producto 3', disponibles: 3, precio: 15, imagen: 'assets/Images/producto3.png', cantidadSeleccionada: 0 },
-    { nombre: 'Producto 4', disponibles: 7, precio: 12, imagen: 'assets/Images/producto4.png', cantidadSeleccionada: 0 }
+    { codigo: 'P001', nombre: 'Producto 1', disponibles: 10, precio: 8, imagen: 'assets/Images/producto1.png', cantidadSeleccionada: 0 },
+    { codigo: 'P002', nombre: 'Producto 2', disponibles: 5, precio: 10, imagen: 'assets/Images/producto2.png', cantidadSeleccionada: 0 },
+    { codigo: 'P003', nombre: 'Producto 3', disponibles: 3, precio: 15, imagen: 'assets/Images/producto3.png', cantidadSeleccionada: 0 },
+    { codigo: 'P004', nombre: 'Producto 4', disponibles: 7, precio: 12, imagen: 'assets/Images/producto4.png', cantidadSeleccionada: 0 }
   ];
 
+  productosFiltrados = [...this.productos]; // Inicialmente muestra todos los productos
   totalProductosSeleccionados: number = 0;
   valorTotalSeleccionado: number = 0;
 
   constructor(private actionSheetCtrl: ActionSheetController, private navCtrl: NavController, private modalCtrl: ModalController) {}
+
+  // Buscar productos por nombre o código
+  buscarProductos(event: any) {
+    const textoBusqueda = event.target.value.toLowerCase(); // Obtiene el texto en minúsculas
+    if (textoBusqueda.trim() !== '') {
+      this.productosFiltrados = this.productos.filter(producto => 
+        producto.nombre.toLowerCase().includes(textoBusqueda) || producto.codigo.toLowerCase().includes(textoBusqueda)
+      );
+    } else {
+      this.productosFiltrados = [...this.productos]; // Si no hay búsqueda, muestra todos los productos
+    }
+  }
 
   // Incrementar la cantidad seleccionada
   aumentarCantidad(producto: any) {
@@ -44,6 +57,7 @@ export class NuevaVentaPage {
   }
 
   async agregarVenta() {
+    console.log(this.productos)
     const actionSheet = await this.actionSheetCtrl.create({
       header: 'Selecciona el método de pago',
       buttons: [
