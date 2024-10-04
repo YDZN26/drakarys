@@ -57,26 +57,26 @@ export class NuevaVentaPage {
   }
 
   async agregarVenta() {
-    console.log(this.productos)
+    const productosSeleccionados = this.productos.filter(producto => producto.cantidadSeleccionada > 0); // Filtrar productos seleccionados
     const actionSheet = await this.actionSheetCtrl.create({
       header: 'Selecciona el método de pago',
       buttons: [
         {
           text: 'Efectivo',
           handler: () => {
-            this.goToRecibo('Efectivo');
+            this.goToRecibo('Efectivo', productosSeleccionados);
           }
         },
         {
           text: 'Transferencia Bancaria',
           handler: () => {
-            this.goToRecibo('Transferencia Bancaria');
+            this.goToRecibo('Transferencia Bancaria', productosSeleccionados);
           }
         },
         {
           text: 'Tarjeta',
           handler: () => {
-            this.goToRecibo('Tarjeta');
+            this.goToRecibo('Tarjeta', productosSeleccionados);
           }
         },
         {
@@ -104,16 +104,23 @@ export class NuevaVentaPage {
 
     modal.onDidDismiss().then((data) => {
       if (data.data && data.data.confirmed) {
-        this.goToRecibo('Cuotas', data.data); 
+        const productosSeleccionados = this.productos.filter(producto => producto.cantidadSeleccionada > 0); // Filtrar productos seleccionados
+        this.goToRecibo('Cuotas', productosSeleccionados, data.data); 
       }
     });
 
     await modal.present();
   }
 
-  goToRecibo(metodoPago: string, cuotaData?: any) {
+  // Enviar los productos seleccionados y el método de pago a la página de recibo
+  goToRecibo(metodoPago: string, productosSeleccionados: any[], cuotaData?: any) {
     this.navCtrl.navigateForward('/recibo', {
-      queryParams: { metodoPago: metodoPago, ...cuotaData }
+      queryParams: { 
+        metodoPago: metodoPago,
+        productos: JSON.stringify(productosSeleccionados), // Enviar productos seleccionados como JSON
+        totalVenta: this.valorTotalSeleccionado,  // Enviar el total de la venta
+        ...cuotaData // Enviar datos de cuotas si existen
+      }
     });
   }
 }
