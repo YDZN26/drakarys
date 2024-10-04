@@ -9,7 +9,7 @@ import { NavController } from '@ionic/angular';
 })
 export class ReciboPage implements OnInit {
   recibo: any = {
-    productos: [],  // Inicializamos productos como un array vacío
+    productos: [],
     metodoPago: '',
     totalVenta: 0
   };
@@ -22,7 +22,7 @@ export class ReciboPage implements OnInit {
         this.recibo.metodoPago = params['metodoPago'];
       }
       if (params['productos']) {
-        this.recibo.productos = JSON.parse(params['productos']);  // Asegúrate de que los productos son un array
+        this.recibo.productos = JSON.parse(params['productos']);
       }
       if (params['totalVenta']) {
         this.recibo.totalVenta = params['totalVenta'];
