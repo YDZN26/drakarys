@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { ActionSheetController, NavController, ModalController } from '@ionic/angular';
 import { CuotasModalPage } from '../cuotas-modal/cuotas-modal.page'; 
+import { SupabaseService } from '../../supabase.service';
 
 @Component({
   selector: 'app-nueva-venta',
@@ -16,7 +17,7 @@ export class NuevaVentaPage {
     { codigo: 'P004', nombre: 'Producto 4', disponibles: 7, precio: 12, imagen: 'assets/Images/producto4.png', cantidadSeleccionada: 0 }
   ];
 
-  productosFiltrados = [...this.productos]; // Inicialmente muestra todos los productos
+  productosFiltrados = [...this.productos]; // muestra todos los productos
   totalProductosSeleccionados: number = 0;
   valorTotalSeleccionado: number = 0;
 
