@@ -17,7 +17,7 @@ export class NuevaVentaPage {
     { codigo: 'P004', nombre: 'Producto 4', disponibles: 7, precio: 12, imagen: 'assets/Images/producto4.png', cantidadSeleccionada: 0 }
   ];
 
-  productosFiltrados = [...this.productos]; // muestra todos los productos
+  productosFiltrados = [...this.productos];
   totalProductosSeleccionados: number = 0;
   valorTotalSeleccionado: number = 0;
 
@@ -31,11 +31,10 @@ export class NuevaVentaPage {
         producto.nombre.toLowerCase().includes(textoBusqueda) || producto.codigo.toLowerCase().includes(textoBusqueda)
       );
     } else {
-      this.productosFiltrados = [...this.productos]; // Si no hay búsqueda, muestra todos los productos
+      this.productosFiltrados = [...this.productos]; 
     }
   }
 
-  // Incrementar la cantidad seleccionada
   aumentarCantidad(producto: any) {
     if (producto.cantidadSeleccionada < producto.disponibles) {
       producto.cantidadSeleccionada++;
@@ -43,7 +42,6 @@ export class NuevaVentaPage {
     }
   }
 
-  // Decrementar la cantidad seleccionada
   disminuirCantidad(producto: any) {
     if (producto.cantidadSeleccionada > 0) {
       producto.cantidadSeleccionada--;
@@ -51,7 +49,6 @@ export class NuevaVentaPage {
     }
   }
 
-  // Calcular el total de productos seleccionados y el valor total
   actualizarTotales() {
     this.totalProductosSeleccionados = this.productos.reduce((total, producto) => total + producto.cantidadSeleccionada, 0);
     this.valorTotalSeleccionado = this.productos.reduce((total, producto) => total + (producto.cantidadSeleccionada * producto.precio), 0);
@@ -105,7 +102,7 @@ export class NuevaVentaPage {
 
     modal.onDidDismiss().then((data) => {
       if (data.data && data.data.confirmed) {
-        const productosSeleccionados = this.productos.filter(producto => producto.cantidadSeleccionada > 0); // Filtrar productos seleccionados
+        const productosSeleccionados = this.productos.filter(producto => producto.cantidadSeleccionada > 0);
         this.goToRecibo('Cuotas', productosSeleccionados, data.data); 
       }
     });
@@ -113,7 +110,6 @@ export class NuevaVentaPage {
     await modal.present();
   }
 
-  // Enviar los productos seleccionados y el método de pago a la página de recibo
   goToRecibo(metodoPago: string, productosSeleccionados: any[], cuotaData?: any) {
     this.navCtrl.navigateForward('/recibo', {
       queryParams: { 

@@ -81,13 +81,12 @@
     <ion-label>Categoría</ion-label>
   </div>
 
-  <!-- Dropdown para seleccionar la categoría del producto -->
-  <div class="dropdown-container">
-    <ion-select interface="action-sheet" [(ngModel)]="selectedOption" (ionChange)="onOptionChange($event)">
-      <ion-select-option value="1">Recargable</ion-select-option>
-      <ion-select-option value="2">Desechable</ion-select-option>
-      <ion-select-option value="3">Repuesto</ion-select-option>
-      <ion-select-option value="4">Tabaqueria</ion-select-option>
-    </ion-select>
-  </div>
+ <!-- Dropdown para seleccionar la categoría del producto -->
+ <div class="dropdown-container">
+  <ion-select interface="action-sheet" [(ngModel)]="selectedOption" (ionChange)="onOptionChange($event)">
+    <ion-select-option *ngFor="let categoria of categorias" [value]="categoria.id"> 
+      {{ categoria.nombre }}
+    </ion-select-option> 
+  </ion-select>
+</div>
 </ion-content>
