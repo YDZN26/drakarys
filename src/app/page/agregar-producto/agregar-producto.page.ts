@@ -17,6 +17,7 @@ export class AgregarProductoPage {
   costoUnitario: number = 0;
   descripcion: string = '';
   imagenUrl: string = '';
+  categorias: any[] = [];
 
   constructor(
     private navCtrl: NavController,
@@ -24,6 +25,19 @@ export class AgregarProductoPage {
     private http: HttpClient,
     private supabaseService: SupabaseService // Inyecta el servicio de Supabase
   ) {}
+
+  ngOnInit(){
+    this.cargarCategorias();
+  }
+
+  async cargarCategorias() {
+    try {
+      this.categorias = await this.supabaseService.obtenerCategorias();
+      console.log('Categorias Obtenidas',  this.categorias);
+      } catch (error) {
+        console.error('Error al obtener categorias', error);
+      }
+    }
 
   async showActionSheet() {
     const actionSheet = await this.actionSheetController.create({
