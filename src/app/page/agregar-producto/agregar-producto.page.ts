@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController, ActionSheetController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
+import { SupabaseService } from '../../supabase.service'; // Asegúrate de que la ruta esté correcta
 
 @Component({
   selector: 'app-agregar-producto',
@@ -15,12 +16,28 @@ export class AgregarProductoPage {
   precioUnitario: number = 0;
   costoUnitario: number = 0;
   descripcion: string = '';
+  imagenUrl: string = '';
+  categorias: any[] = [];
 
   constructor(
     private navCtrl: NavController,
     private actionSheetController: ActionSheetController,
-    private http: HttpClient // Importa el módulo HttpClient
+    private http: HttpClient,
+    private supabaseService: SupabaseService // Inyecta el servicio de Supabase
   ) {}
+
+  ngOnInit(){
+    this.cargarCategorias();
+  }
+
+  async cargarCategorias() {
+    try {
+      this.categorias = await this.supabaseService.obtenerCategorias();
+      console.log('Categorias Obtenidas',  this.categorias);
+      } catch (error) {
+        console.error('Error al obtener categorias', error);
+      }
+    }
 
   async showActionSheet() {
     const actionSheet = await this.actionSheetController.create({
@@ -29,14 +46,12 @@ export class AgregarProductoPage {
         {
           text: 'Tomar foto',
           handler: () => {
-            // Lógica para tomar una foto
             console.log('Tomar foto');
           }
         },
         {
           text: 'Abrir galería',
           handler: () => {
-            // Lógica para abrir la galería
             console.log('Abrir galería');
           }
         },
@@ -53,36 +68,37 @@ export class AgregarProductoPage {
     const producto = {
       codigo: this.codigo,
       nombre: this.nombre,
-      precioUnitario: this.precioUnitario,
-      costoUnitario: this.costoUnitario,
+      precio: this.precioUnitario,
+      costo: this.costoUnitario,
       descripcion: this.descripcion,
       cantidad: this.counterValue,
-      categoria: this.selectedOption
+      categoria_id: this.selectedOption,
+      imagen_url: this.imagenUrl
     };
+
+    this.supabaseService.agregarProducto(producto).then((data) => {
+      console.log('Producto agregado:', data);
+      this.navCtrl.back();
+    }).catch((error) => {
+      console.error('Error al agregar producto:', error);
+    });
   }
-  
 
   retroceder() {
-    // Navegar hacia atrás
     this.navCtrl.back();
   }
 
   decreaseCounter() {
     if (this.counterValue > 0) {
-      this.counterValue--; // Decrementar el contador si es mayor que cero
+      this.counterValue--; // Decrementa el contador si es mayor que cero
     }
   }
 
   increaseCounter() {
-    this.counterValue++; // Incrementar el contador
-  }
-
-  toggleDropdown() {
-    // Cambiar el estado del dropdown al hacer clic en el botón
+    this.counterValue++; // Incrementa el contador
   }
 
   onOptionChange(event: any) {
-    // Método que se ejecuta cuando cambia la opción seleccionada en el dropdown
-    this.selectedOption = event.detail.value; // Actualizar la opción seleccionada
+    this.selectedOption = event.detail.value; // Actualiza la opción seleccionada
   }
 }

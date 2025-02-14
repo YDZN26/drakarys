@@ -2,11 +2,11 @@
   <div class="info-cards">
     <div class="card">
       <p>Total de productos</p>
-      <h2>{{ totalProductosSeleccionados }}</h2> <!-- Muestra el total de productos seleccionados -->
+      <h2>{{ totalProductosSeleccionados }}</h2>
     </div>
     <div class="card">
       <p>Valor total</p>
-      <h2>Bs. {{ valorTotalSeleccionado | number: '1.2-2' }}</h2> <!-- Muestra el valor total seleccionado -->
+      <h2>Bs. {{ valorTotalSeleccionado | number: '1.2-2' }}</h2>
     </div>
   </div>
 
@@ -30,7 +30,7 @@
       </ion-avatar>
       <ion-label>
         <h2>{{ producto.nombre }}</h2>
-        <p>Disponibles: {{ producto.disponibles }}</p>
+        <p>Disponibles: {{ producto.cantidad }}</p>
         <p>Precio unitario: Bs {{ producto.precio }}</p>
         <p>Seleccionados: {{ producto.cantidadSeleccionada }}</p>
       </ion-label>

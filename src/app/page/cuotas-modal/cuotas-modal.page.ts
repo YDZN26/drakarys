@@ -34,4 +34,3 @@ export class CuotasModalPage implements OnInit {
     this.modalController.dismiss();
   }
 }
-

@@ -26,6 +26,10 @@ ion-header {
   }
 }
 
+body{
+  padding: 20px;
+}
+
 .balance-container {
   padding: 16px;
   .balance-card {
@@ -81,11 +85,12 @@ ion-list {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     ion-label h2 {
       font-size: 16px;
-      font-weight: bold;
+      font-weight: semi-bold;
     }
     ion-label p {
       font-size: 14px;
-      color: white;
+      color: #607389;
+      font-weight: bold;
     }
     strong {
       font-size: 16px;
@@ -149,4 +154,21 @@ ion-fab-list {
   .balance-expense {
     color: red;
   }
+}
+
+.balance-segment-button-ingresos{
+  border-radius: 15px;
+  background-color: green;
+  color: white;
+  font-weight: bold;
+  display: flex;
+  margin: 0 8px;
+}
+
+.balance-segment-button-egresos{
+  border-radius: 15px;
+  background-color: red;
+  color: white;
+  font-weight: bold;
+  margin: 0 8px;
 }

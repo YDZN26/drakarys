@@ -1,26 +1,67 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
 import { ActionSheetController, NavController, ModalController } from '@ionic/angular';
 import { CuotasModalPage } from '../cuotas-modal/cuotas-modal.page'; 
+import { SupabaseService } from '../../supabase.service';
+
 
 @Component({
   selector: 'app-nueva-venta',
   templateUrl: './nueva-venta.page.html',
   styleUrls: ['./nueva-venta.page.scss'],
 })
-export class NuevaVentaPage {
 
-  productos = [
-    { codigo: 'P001', nombre: 'Producto 1', disponibles: 10, precio: 8, imagen: 'assets/Images/producto1.png', cantidadSeleccionada: 0 },
-    { codigo: 'P002', nombre: 'Producto 2', disponibles: 5, precio: 10, imagen: 'assets/Images/producto2.png', cantidadSeleccionada: 0 },
-    { codigo: 'P003', nombre: 'Producto 3', disponibles: 3, precio: 15, imagen: 'assets/Images/producto3.png', cantidadSeleccionada: 0 },
-    { codigo: 'P004', nombre: 'Producto 4', disponibles: 7, precio: 12, imagen: 'assets/Images/producto4.png', cantidadSeleccionada: 0 }
-  ];
+export class NuevaVentaPage implements OnInit {
 
-  productosFiltrados = [...this.productos]; // Inicialmente muestra todos los productos
+  productos: any[] = [];
+  productosFiltrados: any[] = [];
+  tiposDePago: any[] = [];
   totalProductosSeleccionados: number = 0;
   valorTotalSeleccionado: number = 0;
 
-  constructor(private actionSheetCtrl: ActionSheetController, private navCtrl: NavController, private modalCtrl: ModalController) {}
+  constructor (
+    private actionSheetCtrl: ActionSheetController,
+    private navCtrl: NavController,
+    private modalCtrl: ModalController,
+    private supabaseService: SupabaseService,
+    
+    private zone: NgZone
+  ) {}
+
+  productosCargando: boolean = false; // Bandera para evitar duplicados
+  tiposDePagoCargando: boolean = false;
+
+  ngOnInit() {
+    setTimeout(() => {
+      this.cargarProductos();
+    }, 0);
+  
+    setTimeout(() => {
+      this.cargarTiposDePago();
+    }, 100); // Delay de 100ms para evitar conflictos simultáneos
+  }
+
+  async cargarProductos() {
+    try {
+      this.productos = await this.supabaseService.obtenerProductos();
+      this.productosFiltrados = this.productos.map((producto) => ({
+        ...producto,
+        cantidadSeleccionada: 0, // Inicializa seleccionados en 0
+        disponibles: typeof producto.cantidad === 'number' ? producto.cantidad : 0,
+        precio: typeof producto.precio === 'number' ? producto.precio : 0,
+      }));
+      console.log(this.productosFiltrados);
+    } catch (error) {
+      console.error('Error al cargar productos:', error);
+    }
+  }
+
+  async cargarTiposDePago() {
+    try {
+      this.tiposDePago = await this.supabaseService.obtenerTiposDePago();
+    } catch (error) {
+      console.error('Error al cargar tipos de pago:', error);
+    }
+  }
 
   // Buscar productos por nombre o código
   buscarProductos(event: any) {
@@ -30,31 +71,50 @@ export class NuevaVentaPage {
         producto.nombre.toLowerCase().includes(textoBusqueda) || producto.codigo.toLowerCase().includes(textoBusqueda)
       );
     } else {
-      this.productosFiltrados = [...this.productos]; // Si no hay búsqueda, muestra todos los productos
+      this.productosFiltrados = [...this.productos]; 
     }
   }
 
-  // Incrementar la cantidad seleccionada
   aumentarCantidad(producto: any) {
+    const index = this.productos.findIndex(p => p.id === producto.id);
     if (producto.cantidadSeleccionada < producto.disponibles) {
       producto.cantidadSeleccionada++;
+      if (index !== -1) {
+        this.productos[index].cantidadSeleccionada = producto.cantidadSeleccionada;
+      }
       this.actualizarTotales();
     }
   }
-
-  // Decrementar la cantidad seleccionada
+  
   disminuirCantidad(producto: any) {
+    const index = this.productos.findIndex(p => p.id === producto.id);
     if (producto.cantidadSeleccionada > 0) {
       producto.cantidadSeleccionada--;
+      if (index !== -1) {
+        this.productos[index].cantidadSeleccionada = producto.cantidadSeleccionada;
+      }
       this.actualizarTotales();
     }
   }
 
-  // Calcular el total de productos seleccionados y el valor total
   actualizarTotales() {
-    this.totalProductosSeleccionados = this.productos.reduce((total, producto) => total + producto.cantidadSeleccionada, 0);
-    this.valorTotalSeleccionado = this.productos.reduce((total, producto) => total + (producto.cantidadSeleccionada * producto.precio), 0);
+    this.zone.run(() => {
+      this.totalProductosSeleccionados = this.productos.reduce((total, producto) => {
+        const seleccionados = producto.cantidadSeleccionada || 0;
+        return total + seleccionados;
+      }, 0);
+  
+      this.valorTotalSeleccionado = this.productos.reduce((total, producto) => {
+        const seleccionados = producto.cantidadSeleccionada || 0;
+        const precio = producto.precio || 0;
+        return total + seleccionados * precio;
+      }, 0);
+  
+      console.log('Total productos seleccionados:', this.totalProductosSeleccionados);
+      console.log('Valor total:', this.valorTotalSeleccionado);
+    });
   }
+  
 
   async agregarVenta() {
     const productosSeleccionados = this.productos.filter(producto => producto.cantidadSeleccionada > 0); // Filtrar productos seleccionados
@@ -91,7 +151,7 @@ export class NuevaVentaPage {
         }
       ]
     });
-
+    console.log("Aqui llamare a la funcion que muestra el recibo");
     await actionSheet.present();
   }
 
@@ -104,7 +164,7 @@ export class NuevaVentaPage {
 
     modal.onDidDismiss().then((data) => {
       if (data.data && data.data.confirmed) {
-        const productosSeleccionados = this.productos.filter(producto => producto.cantidadSeleccionada > 0); // Filtrar productos seleccionados
+        const productosSeleccionados = this.productos.filter(producto => producto.cantidadSeleccionada > 0);
         this.goToRecibo('Cuotas', productosSeleccionados, data.data); 
       }
     });
@@ -112,7 +172,6 @@ export class NuevaVentaPage {
     await modal.present();
   }
 
-  // Enviar los productos seleccionados y el método de pago a la página de recibo
   goToRecibo(metodoPago: string, productosSeleccionados: any[], cuotaData?: any) {
     this.navCtrl.navigateForward('/recibo', {
       queryParams: { 

@@ -21,17 +21,19 @@
 
   <!-- Título "Código" encima del contenedor de texto -->
   <div class="codigo-title-container">
-    <ion-label>Código</ion-label>
+    <ion-label>Código Barras</ion-label>
   </div>
 
-  <!-- Título "Cantidad" encima del contenedor de texto -->
-  <div class="cantidad-title-container">
-    <ion-label>Cantidad</ion-label>
-  </div>
-
-  <!-- Contenedor de texto -->
+  <!-- Campo para ingresar el código del producto -->
   <div class="text-container">
-    <ion-textarea rows="1" placeholder="Agregar código" class="textarea-centered"></ion-textarea>
+    <ion-item>
+      <ion-input placeholder="Agregar código" [(ngModel)]="codigo"></ion-input>
+    </ion-item>
+  </div>
+
+  <!-- Título "Cantidad" encima del contador -->
+  <div class="cantidad-title-container">
+    <ion-label>Stock</ion-label>
   </div>
 
   <!-- Contenedor del contador -->
@@ -41,74 +43,50 @@
     <ion-button class="counter-button" (click)="increaseCounter()">+</ion-button>
   </div>
 
-    <!-- Botón "Cámara" -->
-    <div class="camera-container" (click)="showActionSheet()">
-      <ion-icon name="camera"></ion-icon>
-    </div>
+  <!-- Botón "Cámara" -->
+  <div class="camera-container" (click)="showActionSheet()">
+    <ion-icon name="camera"></ion-icon>
+  </div>
 
-<!-- Contenedor de texto -->
-<div class="name-text-container">
-  <ion-item><ion-input placeholder="Ingrese el nombre del producto"></ion-input></ion-item>
-</div>
+  <!-- Campo para ingresar el nombre del producto -->
+  <div class="name-text-container">
+    <ion-item>
+      <ion-input placeholder="Ingrese el nombre del producto" [(ngModel)]="nombre"></ion-input>
+    </ion-item>
+  </div>
 
-<!-- Contenedor de texto -->
-<div class="precio-text-container">
-  <ion-item><ion-input placeholder="Ingrese el precio unitario"></ion-input></ion-item>
-</div>
+  <!-- Campo para ingresar el precio unitario -->
+  <div class="precio-text-container">
+    <ion-item>
+      <ion-input type="number" placeholder="Ingrese el precio unitario" [(ngModel)]="precioUnitario"></ion-input>
+    </ion-item>
+  </div>
 
+  <!-- Campo para ingresar el costo unitario -->
+  <div class="costo-text-container">
+    <ion-item>
+      <ion-input type="number" placeholder="Ingrese el costo unitario" [(ngModel)]="costoUnitario"></ion-input>
+    </ion-item>
+  </div>
 
-<!-- Contenedor de texto -->
-<div class="costo-text-container">
-  <ion-item><ion-input placeholder="Ingrese el costo unitario"></ion-input></ion-item>
-</div>
+  <!-- Campo para ingresar la descripción del producto -->
+  <div class="descripcion-text-container">
+    <ion-item>
+      <ion-textarea placeholder="Escribir descripción del producto" [(ngModel)]="descripcion"></ion-textarea>
+    </ion-item>
+  </div>
 
-<!-- Contenedor de texto -->
-<div class="descripcion-text-container">
-  <ion-item><ion-input placeholder="Escribir descripcion del producto"></ion-input></ion-item>
-</div>
+  <!-- Título "Categoría" encima del dropdown -->
+  <div class="categoria-title-container">
+    <ion-label>Categoría</ion-label>
+  </div>
 
-<!-- Título "Nombre" encima del contenedor de texto -->
-<div class="nombre-title-container">
-  <ion-label>Nombre</ion-label>
-</div>
-
-<!-- Título "Precio Unitario" encima del contenedor de texto -->
-<div class="precio-title-container">
-  <ion-label>Precio</ion-label>
-</div>
-
-<!-- Título "Costo Unitario" encima del contenedor de texto -->
-<div class="costo-title-container">
-  <ion-label>Costo</ion-label>
-</div>
-
-<!-- Título "Categoria" encima del contenedor de texto -->
-<div class="categoria-title-container">
-  <ion-label>Categoria</ion-label>
-</div>
-
-<!-- Título "Descripcion" encima del contenedor de texto -->
-<div class="descripcion-title-container">
-  <ion-label>Descripcion</ion-label>
-</div>
-
-<div class="nombre-icon-container">
-  <ion-icon name="pricetag-outline" class="nombre-icon"></ion-icon>
-</div>
-
-<div class="precio-icon-container">
-  <ion-icon name="cash-outline" class="precio-icon"></ion-icon>
-</div>
-
-<div class="costo-icon-container">
-  <ion-icon name="cash-outline" class="costo-icon"></ion-icon>
-</div>
-
-<div class="dropdown-container">
+ <!-- Dropdown para seleccionar la categoría del producto -->
+ <div class="dropdown-container">
   <ion-select interface="action-sheet" [(ngModel)]="selectedOption" (ionChange)="onOptionChange($event)">
-    <ion-select-option value="option1">Categoria 1</ion-select-option>
-    <ion-select-option value="option2">Categoria 2</ion-select-option>
-    <ion-select-option value="option3">Categoria 3</ion-select-option>
+    <ion-select-option *ngFor="let categoria of categorias" [value]="categoria.id"> 
+      {{ categoria.nombre }}
+    </ion-select-option> 
   </ion-select>
 </div>
-
+</ion-content>
