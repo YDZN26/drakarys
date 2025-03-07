@@ -34,6 +34,10 @@ ion-header {
   }
   
   ion-content {
-    --background: white !important; /* Forzar el color de fondo */
+    --background: #EDF2FA !important; /* Forzar el color de fondo */
   }
-  
+
+  ion-button{
+    --background: #93C572;
+    --border-radius:10px;
+  }

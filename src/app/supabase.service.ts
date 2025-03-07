@@ -20,6 +20,31 @@ export class SupabaseService {
     return data;
   }
 
+  async obtenerProductoPorId(productoId: number) {
+    const { data, error } = await this.supabase
+      .from('producto')
+      .select('*')
+      .eq('producto_id', productoId)
+      .single();
+    if (error) {
+      console.error('Error al obtener producto:', error);
+      return null;
+    }
+    return data;
+  }
+  
+  async actualizarProducto(producto: any) {
+    const { data, error } = await this.supabase
+      .from('producto')
+      .update(producto)
+      .eq('producto_id', producto.producto_id);
+    if (error) {
+      console.error('Error al actualizar producto:', error);
+      return null;
+    }
+    return data;
+  }
+
   // Método para obtener categorías
   async obtenerCategorias() {
     const { data, error } = await this.supabase.from('categoria').select('*');
