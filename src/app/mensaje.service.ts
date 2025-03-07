@@ -5,10 +5,10 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root'
 })
 export class MensajeService {
-  private mensajeSource = new BehaviorSubject<string>(''); // Estado inicial vacío
-  mensaje$ = this.mensajeSource.asObservable(); // Observable para escuchar cambios
+  private mensajeSource = new BehaviorSubject<string>('');
+  mensaje$ = this.mensajeSource.asObservable(); 
 
   enviarMensaje(mensaje: string) {
-    this.mensajeSource.next(mensaje); // Enviar mensaje
+    this.mensajeSource.next(mensaje); 
   }
 }
