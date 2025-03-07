@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { NavController, ActionSheetController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
 import { SupabaseService } from '../../supabase.service'; // Asegúrate de que la ruta esté correcta
 import { ActivatedRoute } from '@angular/router';
+import { MensajeService } from 'src/app/mensaje.service';
 
 @Component({
   selector: 'app-agregar-producto',
@@ -23,13 +24,15 @@ export class AgregarProductoPage {
   isEditMode: boolean = false;
   productoId: number | null = null;
 
+  @Output() emisorMensajes = new EventEmitter<string>();
+
   constructor(
     private navCtrl: NavController,
     private actionSheetController: ActionSheetController,
     private http: HttpClient,
     private supabaseService: SupabaseService, // Inyecta el servicio de Supabase
     private route: ActivatedRoute,
-  ) {}
+    private mensajeService: MensajeService  ) {}
 
   ngOnInit(){
     this.cargarCategorias();
@@ -58,7 +61,6 @@ export class AgregarProductoPage {
       if (this.productoId !== null) {
         const producto = await this.supabaseService.obtenerProductoPorId(this.productoId);
         if (producto) {
-          // Rellenar el formulario con los datos del producto
           this.codigo = producto.codigo_barras.toString();
           this.nombre = producto.nombre;
           this.precioUnitario = producto.precio;
@@ -86,6 +88,7 @@ export class AgregarProductoPage {
       try {
       const data = await this.supabaseService.agregarProducto(producto);
       console.log('Producto agregado:', data);
+      this.mensajeService.enviarMensaje('agregado');
       this.navCtrl.back();
     } catch (error) {
       console.error('Error al agregar producto:', error);
@@ -109,6 +112,7 @@ export class AgregarProductoPage {
     try {
       const data = await this.supabaseService.actualizarProducto(producto);
       console.log('Producto actualizado:', data);
+      this.mensajeService.enviarMensaje('actualizado');
       this.navCtrl.back();
     } catch (error) {
       console.error('Error al actualizar producto:', error);

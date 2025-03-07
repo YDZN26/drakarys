@@ -69,7 +69,7 @@ export class NuevaVentaPage implements OnInit {
   if (!searchTerm) {
     this.cargarProductos();
   } else {
-    this.productosFiltrados = this.productosFiltrados.filter((producto) => {
+    this.productosFiltrados = this.productosFiltrados.filter(function(producto) {
       const nombre = producto.nombre.toLowerCase();
       const codigoBarras = producto.codigo_barras ? producto.codigo_barras.toString().toLowerCase() : '';
       return nombre.includes(searchTerm) || codigoBarras.includes(searchTerm);

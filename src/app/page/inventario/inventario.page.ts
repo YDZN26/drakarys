@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { NavController } from '@ionic/angular';
 import { SupabaseService } from '../../supabase.service';
+import { MensajeService } from 'src/app/mensaje.service';
+import { Subscription } from 'rxjs';
+
 
 @Component({
   selector: 'app-inventario',
@@ -9,14 +12,24 @@ import { SupabaseService } from '../../supabase.service';
 })
 export class InventarioPage implements OnInit {
   productos: any[] = [];
+  mensaje: string = '';
+  private mensajeSub!: Subscription
 
   constructor(
     private navCtrl: NavController,
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private mensajeService: MensajeService,
+    
   ) { }
 
   ngOnInit() {
-    this.cargarProductos();
+    // this.cargarProductos();
+    this.mensajeSub = this.mensajeService.mensaje$.subscribe((mensaje: string) => {
+      if (mensaje) {
+        console.log('Mensaje recibido:', mensaje);
+        this.mensaje = mensaje; // Puedes actualizar la UI o refrescar la lista de productos
+      }
+    });
   }
 
   ionViewWillEnter() {
