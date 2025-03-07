@@ -44,13 +44,14 @@
     <ion-item button *ngFor="let producto of productos" (click)="verDetalleProducto(producto)">
       <ion-label>
         <h2>{{ producto.nombre }}</h2>
-        <p>{{ producto.disponibles }} Disponibles</p>
+        <p>{{ producto.stock }} Disponibles</p>
         <p>Precio unitario Bs {{ producto.precio }}</p>
       </ion-label>
       <ion-thumbnail slot="end">
         <img [src]="producto.imagen" />
       </ion-thumbnail>
     </ion-item>
+    
   </ion-list>
 
   <!-- Botón "Nuevo Producto" -->

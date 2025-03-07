@@ -65,14 +65,16 @@ export class NuevaVentaPage implements OnInit {
 
   // Buscar productos por nombre o código
   buscarProductos(event: any) {
-    const textoBusqueda = event.target.value.toLowerCase(); // Obtiene el texto en minúsculas
-    if (textoBusqueda.trim() !== '') {
-      this.productosFiltrados = this.productos.filter(producto => 
-        producto.nombre.toLowerCase().includes(textoBusqueda) || producto.codigo.toLowerCase().includes(textoBusqueda)
-      );
-    } else {
-      this.productosFiltrados = [...this.productos]; 
-    }
+    const searchTerm = event.target.value.toLowerCase();
+  if (!searchTerm) {
+    this.cargarProductos();
+  } else {
+    this.productosFiltrados = this.productosFiltrados.filter(function(producto) {
+      const nombre = producto.nombre.toLowerCase();
+      const codigoBarras = producto.codigo_barras ? producto.codigo_barras.toString().toLowerCase() : '';
+      return nombre.includes(searchTerm) || codigoBarras.includes(searchTerm);
+    });
+  }
   }
 
   aumentarCantidad(producto: any) {
