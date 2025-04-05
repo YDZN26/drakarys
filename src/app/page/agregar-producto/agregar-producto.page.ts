@@ -109,14 +109,16 @@ export class AgregarProductoPage {
       imagen: this.imagenUrl
     };
 
-    try {
-      const data = await this.supabaseService.actualizarProducto(producto);
-      console.log('Producto actualizado:', data);
-      this.mensajeService.enviarMensaje('actualizado');
-      this.navCtrl.back();
-    } catch (error) {
-      console.error('Error al actualizar producto:', error);
-    }
+    
+      this.supabaseService.actualizarProducto(producto).then(data => {
+        console.log('Producto actualizado:', data);
+        this.mensajeService.enviarMensaje('actualizado');
+        this.navCtrl.back();
+      }).catch(error => {
+        console.error('Error al actualizar producto:', error);
+      });
+      
+    
   }
 
   // Método que decide si se agrega o actualiza el producto según el modo

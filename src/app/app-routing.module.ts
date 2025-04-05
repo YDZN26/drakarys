@@ -38,13 +38,18 @@ const routes: Routes = [
     loadChildren: () => import('./page/balance/balance.module').then( m => m.BalancePageModule)
   },
   {
-    path: 'recibo',
+    path: 'recibo/:ventaId',
     loadChildren: () => import('./page/recibo/recibo.module').then( m => m.ReciboPageModule)
   },
   {
     path: 'cuotas-modal',
     loadChildren: () => import('./page/cuotas-modal/cuotas-modal.module').then( m => m.CuotasModalPageModule)
   },
+  {
+    path: 'preview',
+    loadChildren: () => import('./page/preview/preview.module').then( m => m.PreviewPageModule)
+  },
+
   
 ];
 

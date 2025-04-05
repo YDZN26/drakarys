@@ -65,7 +65,7 @@ export class SupabaseService {
   }
 
   async obtenerTiposDePago() {
-    const { data, error } = await this.supabase.from('tipo_pago').select('*');
+    const { data, error } = await this.supabase.from('tipo_de_pago').select('*');
     if (error) {
       console.error('Error al obtener tipos de pago:', error);
       return [];
@@ -73,23 +73,105 @@ export class SupabaseService {
     return data;
   }
 
-  async agregarVenta(productos: any[], tipoPagoId: number) {
-    const ventas = productos.map(producto => ({
-      producto_id: producto.id,
+  async obtenerClientes() {
+    const { data, error } = await this.supabase.from('cliente').select('*');
+    if (error) {
+      console.error('Error al obtener clientes:', error);
+      return [];
+    }
+    return data;
+  }
+
+  async registrarVenta(total: number, tipoPagoId: number, clienteId: number, usuarioId?: number) {
+    const ventaData = {
+      total: total,
       tipo_pago_id: tipoPagoId,
+      cliente_id: clienteId,
+      usuario_id: usuarioId || null,
+    };
+
+    const { data, error } = await this.supabase
+      .from('venta')
+      .insert([ventaData])
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error al registrar la cabecera de la venta:', error);
+      return null;
+    }
+    return data; // Data contendrá la venta insertada, incluyendo venta_id
+  }
+
+  // Registra los detalles de la venta (tabla "venta_detallada")
+  async registrarVentaDetalles(ventaId: number, productos: any[]) {
+    const detalles = productos.map(producto => ({
+      venta_id: ventaId,
+      producto_id: producto.producto_id,
       cantidad: producto.cantidadSeleccionada,
       precio_unitario: producto.precio,
+      subtotal: producto.precio * producto.cantidadSeleccionada
     }));
-  
-    const { data, error } = await this.supabase.from('venta').insert(ventas);
+    
+    const { data, error } = await this.supabase
+      .from('venta_detallada')
+      .insert(detalles)
+      .select('*');
     if (error) {
-      console.error('Error al registrar la venta:', error);
+      console.error('Error al registrar los detalles de la venta:', error);
       return null;
     }
     return data;
   }
 
+
+  async registrarVentaCompleta(productos: any[], tipoPagoId: number, clienteId:number, usuarioId?: number) {
+
+    const total = productos.reduce((sum, producto) => {
+      return sum + (producto.precio * producto.cantidadSeleccionada);
+    }, 0);
+
+    const venta = await this.registrarVenta(total, tipoPagoId, clienteId, usuarioId);
+    if (!venta) {
+      return null;
+    }
+
+    
+    // Registrar los detalles de la venta
+    const detalles = await this.registrarVentaDetalles(venta.venta_id, productos);
+    
+    if (!detalles) {
+      return null;
+    }
+    
+    return { venta, detalles };
   }
-  
+
+async obtenerVentaPorId(ventaId: number) {
+  const { data, error } = await this.supabase
+    .from('venta')
+    .select('*')
+    .eq('venta_id', ventaId)
+    .single();
+  if (error) {
+    console.error("Error al obtener la venta:", error);
+    return null;
+  }
+  return data;
+}
+
+async obtenerVentaDetalles(ventaId: number) {
+  const { data, error } = await this.supabase
+    .from('venta_detallada')
+    .select(`*, producto(nombre)`)
+    .eq('venta_id', ventaId);
+  if (error) {
+    console.error("Error al obtener los detalles de la venta:", error);
+    return [];
+  }
+  return data;
+}
+
+}
 
 
