@@ -69,6 +69,14 @@ export class PreviewPage implements OnInit {
       return;
       }
 
+    const usuarioGuardado = localStorage.getItem('usuario_id');
+    const usuario_id = usuarioGuardado ? parseInt(usuarioGuardado) : null;
+
+    if (!usuario_id) {
+      console.error('No se encontró el usuario_id en localStorage');
+      return;
+    }
+
     try {
       const tipoPagoId = this.obtenerTipoPagoId(this.venta.metodoPago);
 
@@ -76,6 +84,7 @@ export class PreviewPage implements OnInit {
         this.venta.productos,
         tipoPagoId,
         this.clienteSeleccionado.cliente_id,
+        usuario_id
       );
 
       if (!resultado){

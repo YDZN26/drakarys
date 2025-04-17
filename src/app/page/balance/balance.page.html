@@ -1,32 +1,52 @@
 <ion-header>
   <ion-toolbar color="mycolor">
     <ion-buttons slot="start">
-      <ion-icon name="person-circle" size="large"></ion-icon>
-      <ion-title>Drakarys</ion-title>
+      <ion-button [id]="'usuarioPopoverTrigger'">
+        <ion-icon name="person-circle" slot="start" size="large"></ion-icon>
+        <ion-label>{{ nombreUsuario }}</ion-label>
+      </ion-button>
     </ion-buttons>
     <ion-buttons slot="end">
-      <ion-button>
+      <ion-button fill="clear" (click)="mostrarCampoBusqueda = !mostrarCampoBusqueda">
         <ion-icon slot="icon-only" name="search-outline"></ion-icon>
-      </ion-button>
-      <ion-button>
-        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 
-  <ion-toolbar color="mycolor">
-    <ion-segment scrollable>
+<ion-toolbar color="mycolor">
+    <ion-segment scrollable [(ngModel)]="selectedDay" (ionChange)="onDaySelected(selectedDay)">
       <ion-segment-button *ngFor="let day of days" [value]="day">
         {{ day }}
       </ion-segment-button>
-    </ion-segment>
+    </ion-segment>    
     <ion-buttons slot="end">
-      <ion-button>
+      <ion-button id="abrirCalendario">
         <ion-icon slot="icon-only" name="calendar-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
+
+  <ion-toolbar *ngIf="mostrarCampoBusqueda" color="light">
+    <ion-searchbar
+      placeholder="Buscar ventas o gastos..."
+      [(ngModel)]="textoBusqueda"
+      (ionInput)="filtrarItems()"
+      debounce="300">
+    </ion-searchbar>
+  </ion-toolbar>
+  
 </ion-header>
+
+<ion-popover trigger="usuarioPopoverTrigger" triggerAction="click">
+  <ng-template>
+    <ion-content class="ion-padding">
+      <ion-item button (click)="cerrarSesion()">
+        <ion-icon slot="start" name="log-out-outline"></ion-icon>
+        <ion-label>Cerrar sesión</ion-label>
+      </ion-item>
+    </ion-content>
+  </ng-template>
+</ion-popover>
 
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
@@ -39,19 +59,21 @@
     <div class="balance-card">
       <div class="balance-header">
         <span>BALANCE</span>
-        <span>BS. 205</span>
+        <span [ngStyle]="{ color: balance < 0 ? 'red' : 'black' }">
+        BS. {{ balance | number: '1.2-2' }}
+      </span>
       </div>
       <div class="balance-details">
         <div class="balance-income">
           <ion-icon name="wallet-outline"></ion-icon>
           <span>INGRESOS</span>
-          <span>BS. 255</span>
+          <span>BS. {{ totalIngresos | number: '1.2-2' }}</span>
         </div>
         <div class="balance-divider"></div> <!-- Divisor -->
         <div class="balance-expense">
           <ion-icon name="cash-outline" color="danger"></ion-icon>
           <span>EGRESOS</span>
-          <span>BS. 50</span>
+          <span>BS. {{ totalEgresos | number: '1.2-2' }}</span>
         </div>
       </div>
     </div>
@@ -66,7 +88,7 @@
   </div>
 
   <ion-list>
-    <ion-item *ngFor="let item of filteredItems">
+    <ion-item *ngFor="let item of filteredItems" (click)="verRecibo(item)">
       <ion-avatar slot="start">
         <ion-icon name="bag-handle-outline" style="color: #6A5ACD;"></ion-icon>
       </ion-avatar>
@@ -97,4 +119,28 @@
       </ion-button>
     </ion-fab-list>
   </ion-fab>
+  
 </ion-content>
+
+<ion-modal #modalCalendario trigger="abrirCalendario" [presentingElement]="presentingElement">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="mycolor">
+        <ion-title>Selecciona una fecha</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="modalCalendario.dismiss()">Cerrar</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content>
+      <ion-datetime
+        presentation="date"
+        [value]="fechaActualISO"
+        (ionChange)="seleccionarFechaDesdeCalendario($event); modalCalendario.dismiss();"
+        class="ion-padding"
+        style="width: 100%; max-width: 100%; height: 100%;">
+      </ion-datetime>
+    </ion-content>
+  </ng-template>
+</ion-modal>

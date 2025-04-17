@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar color="mycolor">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/tab-inicial"></ion-back-button>
+      <ion-back-button defaultHref="/tab-inicial/balance"></ion-back-button>
     </ion-buttons>
     <ion-title>Nuevo Gasto</ion-title>
   </ion-toolbar>
@@ -17,20 +17,20 @@
       <ion-card-content>
         <ion-item>
           <ion-label position="stacked">Monto</ion-label>
-          <ion-input placeholder="Agregar un valor"></ion-input>
+          <ion-input type="number" [(ngModel)]="monto" placeholder="Agregar un valor"></ion-input>
         </ion-item>
 
         <ion-item>
-          <ion-label position="stacked">Descripcion</ion-label>
-          <ion-input placeholder="Agregar un nombre"></ion-input>
+          <ion-label position="stacked">Descripción</ion-label>
+          <ion-input [(ngModel)]="descripcion" placeholder="Agregar una descripción"></ion-input>
         </ion-item>
 
         <ion-item>
           <ion-label position="stacked">Método de pago</ion-label>
-          <ion-select placeholder="Seleccionar método">
-            <ion-select-option value="efectivo">Efectivo</ion-select-option>
-            <ion-select-option value="tarjeta">Tarjeta</ion-select-option>
-            <ion-select-option value="transferencia">Transferencia Bancaria</ion-select-option>
+          <ion-select placeholder="Seleccionar método" [(ngModel)]="tipoPago">
+            <ion-select-option [value]="2">Efectivo</ion-select-option>
+            <ion-select-option [value]="3">Transferencia</ion-select-option>
+            <ion-select-option [value]="4">Tarjeta</ion-select-option>
           </ion-select>
         </ion-item>
       </ion-card-content>
@@ -38,6 +38,6 @@
   </div>
 
   <div class="button-container">
-    <ion-button class="nuevo-producto-button" expand="full" (click)="agregarGasto()">Agregar Gasto</ion-button>
+    <ion-button class="nuevo-producto-button" expand="full" [disabled]="!esFormularioValido()" (click)="agregarGasto()">Agregar Gasto</ion-button>
   </div>
 </ion-content>

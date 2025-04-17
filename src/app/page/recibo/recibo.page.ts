@@ -34,6 +34,27 @@ export class ReciboPage implements OnInit {
   ) {}
 
   ngOnInit() {
+    const navigation = history.state;
+  
+  if (navigation && navigation.venta) {
+    const venta = navigation.venta;
+    
+    // Si viene del balance, ya tiene los datos agrupados
+    this.recibo = {
+      venta_id: 0,
+      fechaVenta: venta.fechaCompleta ?? venta.descripcion.split(' - ')[1] ?? '',
+      totalVenta: venta.precio,
+      metodoPago: venta.descripcion.split(' - ')[0],
+      cliente: {}, // No tenemos cliente, lo dejamos vacío
+      productos: venta.productosOriginales?.map((p: any) => ({
+        descripcion: p.descripcion,
+        cantidad: p.cantidad,
+        precio: '',
+        subtotal: ''
+      })) || [],      
+      detalles: []
+    };
+  } else {
     const ventaParam = this.route.snapshot.paramMap.get('ventaId');
     if (ventaParam) {
       const ventaId = Number(ventaParam);
@@ -43,6 +64,7 @@ export class ReciboPage implements OnInit {
       console.error("No se recibió un ventaId en la URL.");
     }
   }
+}
 
   async cargarVenta(ventaId: number) {
     try {

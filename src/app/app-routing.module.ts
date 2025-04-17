@@ -8,7 +8,7 @@ const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'tab-inicial',
+    redirectTo: 'login',
     pathMatch: 'full'
   },
   
@@ -41,6 +41,12 @@ const routes: Routes = [
     path: 'recibo/:ventaId',
     loadChildren: () => import('./page/recibo/recibo.module').then( m => m.ReciboPageModule)
   },
+
+  {
+    path: 'recibo',
+    loadChildren: () => import('./page/recibo/recibo.module').then(m => m.ReciboPageModule)
+  },
+  
   {
     path: 'cuotas-modal',
     loadChildren: () => import('./page/cuotas-modal/cuotas-modal.module').then( m => m.CuotasModalPageModule)

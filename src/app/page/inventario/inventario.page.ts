@@ -12,6 +12,9 @@ import { Subscription } from 'rxjs';
 })
 export class InventarioPage implements OnInit {
   productos: any[] = [];
+  categorias: any[] = [];
+  categoriaSeleccionada: number | null = null;
+  textoBusqueda: string = '';
   mensaje: string = '';
   private mensajeSub!: Subscription
 
@@ -24,6 +27,7 @@ export class InventarioPage implements OnInit {
 
   ngOnInit() {
     this.cargarProductos();
+    this.cargarCategorias();
     this.mensajeSub = this.mensajeService.mensaje$.subscribe((mensaje: string) => {
       if (mensaje) {
         console.log('Mensaje recibido:', mensaje);
@@ -33,14 +37,30 @@ export class InventarioPage implements OnInit {
     });
   }
 
-  async cargarProductos() {
+  async cargarCategorias() {
     try {
-      this.productos = await this.supabaseService.obtenerProductos();
-      console.log('Productos obtenidos:', this.productos);
+      this.categorias = await this.supabaseService.obtenerCategorias();
+    } catch (error) {
+      console.error('Error al cargar categorías:', error);
+    }
+  }
+
+  async cargarProductos(categoriaId: number | null = null) {
+    try {
+      const todos = await this.supabaseService.obtenerProductos();
+      this.productos = categoriaId
+        ? todos.filter(p => p.categoria_id === categoriaId)
+        : todos;
     } catch (error) {
       console.error('Error al cargar productos:', error);
     }
   }
+
+  filtrarPorCategoria(categoriaId: number | null) {
+    this.categoriaSeleccionada = categoriaId;
+    this.cargarProductos(categoriaId);
+  }
+
   agregarNuevoProducto() {
     this.navCtrl.navigateForward('/agregar-producto');
   }
@@ -49,5 +69,16 @@ export class InventarioPage implements OnInit {
     console.log('Detalle del producto:', producto);
     this.navCtrl.navigateForward(`/agregar-producto/${producto.producto_id}`);
   }
+
+  calcularValorTotal(): number {
+    return this.productos.reduce((total, p) => {
+      const precio = p.precio || 0;
+      const stock = p.stock || 0;
+      return total + precio * stock;
+    }, 0);
+  }
+  
+
+  
 }
 

@@ -14,11 +14,11 @@
     <div class="info-cards">
       <div class="card">
         <p>Total de productos</p>
-        <h2>100</h2>
+        <h2>{{ productos.length }}</h2>
       </div>
       <div class="card">
         <p>Valor total</p>
-        <h2>Bs. 50.000</h2>
+        <h2>Bs. {{ calcularValorTotal() }}</h2>
       </div>
     </div>
   </div>
@@ -29,14 +29,15 @@
   </ion-toolbar> 
 
   <!-- Botones de categorías -->
-  <div class="category-buttons">
-    <ion-button>Todos</ion-button>
-    <ion-button>Categoria 1</ion-button>
-    <ion-button>Categoria 2</ion-button>
-    <ion-button>Categoria 3</ion-button>
-    <ion-button>Categoria 4</ion-button>
-    <ion-button>Categoria 5</ion-button>
-    <ion-button>Categoria 6</ion-button>
+  <div class="category-buttons" style="padding: 10px; display: flex; flex-wrap: wrap; gap: 6px;">
+    <ion-button [color]="categoriaSeleccionada === null ? 'primary' : 'light'" (click)="filtrarPorCategoria(null)">
+      Todos
+    </ion-button>
+    <ion-button *ngFor="let cat of categorias"
+                [color]="categoriaSeleccionada === cat.categoria_id ? 'primary' : 'light'"
+                (click)="filtrarPorCategoria(cat.categoria_id)">
+      {{ cat.nombre }}
+    </ion-button>
   </div>
 
   <!-- Lista de productos -->

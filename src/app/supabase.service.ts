@@ -124,7 +124,6 @@ export class SupabaseService {
     return data;
   }
 
-
   async registrarVentaCompleta(productos: any[], tipoPagoId: number, clienteId:number, usuarioId?: number) {
 
     const total = productos.reduce((sum, producto) => {
@@ -171,6 +170,43 @@ async obtenerVentaDetalles(ventaId: number) {
   }
   return data;
 }
+
+async obtenerDetallesVentasPorFecha(fechaInicio: string, fechaFin: string) {
+  const { data, error } = await this.supabase
+    .from('venta_detallada')
+    .select(`
+      venta_id,
+      cantidad,
+      precio_unitario,
+      subtotal,
+      producto:producto_id(nombre),
+      venta:venta_id!inner(fecha, tipo_de_pago:tipo_pago_id(nombre))
+    `)
+    .gte('venta.fecha', fechaInicio)
+    .lte('venta.fecha', fechaFin);
+
+  if (error) {
+    console.error('Error al obtener detalles de ventas:', error);
+    return [];
+  }
+  return data;
+}
+async obtenerGastos(fechaInicio?: string, fechaFin?: string) {
+  let query = this.supabase.from('gasto').select('*');
+
+  if (fechaInicio && fechaFin) {
+    query = query.gte('fecha', fechaInicio).lte('fecha', fechaFin);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    console.error('Error al obtener gastos:', error);
+    return [];
+  }
+  return data;
+}
+
+
 
 }
 
