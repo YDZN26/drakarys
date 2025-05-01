@@ -54,6 +54,19 @@ export class SupabaseService {
     }
     return data;
   }
+async obtenerLogin(username: string, password: string) {
+  const { data, error } = await this.supabase.from('usuario').select('*')
+  .eq('username', username) 
+  .eq('passwrd', password)
+  .maybeSingle();
+  if (error) {
+    console.error('Error al autenticar:', error);
+    return {error};
+  } else {
+    console.error('Usuario o contraseña incorrectos');
+    return {data};
+  }
+}
 
   async obtenerProductos() {
     const { data, error } = await this.supabase.from('producto').select('*');
@@ -183,7 +196,9 @@ async obtenerDetallesVentasPorFecha(fechaInicio: string, fechaFin: string) {
       venta:venta_id!inner(fecha, tipo_de_pago:tipo_pago_id(nombre))
     `)
     .gte('venta.fecha', fechaInicio)
-    .lte('venta.fecha', fechaFin);
+    .lte('venta.fecha', fechaFin)
+    .order('venta_id', { ascending: false });
+
 
   if (error) {
     console.error('Error al obtener detalles de ventas:', error);
@@ -192,7 +207,7 @@ async obtenerDetallesVentasPorFecha(fechaInicio: string, fechaFin: string) {
   return data;
 }
 async obtenerGastos(fechaInicio?: string, fechaFin?: string) {
-  let query = this.supabase.from('gasto').select('*');
+  let query = this.supabase.from('gasto').select('*').order('fecha', { ascending: false });
 
   if (fechaInicio && fechaFin) {
     query = query.gte('fecha', fechaInicio).lte('fecha', fechaFin);
@@ -205,8 +220,22 @@ async obtenerGastos(fechaInicio?: string, fechaFin?: string) {
   }
   return data;
 }
-
-
+async agregarCliente(cliente: {
+  nombre: string;
+  apellido: string;
+  telefono: string;
+}) {
+  const { data, error } = await this.supabase
+    .from('cliente')
+    .insert([cliente])
+    .select('*')
+    .single();
+  if (error) {
+    console.error('Error al agregar cliente:', error);
+    return null;
+  }
+  return data;
+}
 
 }
 

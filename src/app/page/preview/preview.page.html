@@ -30,24 +30,24 @@
         <ion-label>Total Venta</ion-label>
         <ion-note slot="end">Bs. {{ venta.totalVenta }}</ion-note>
       </ion-item>
-
       <ion-item>
         <ion-label>Método de Pago</ion-label>
         <ion-note slot="end">{{ venta.metodoPago }}</ion-note>
       </ion-item>
-
       <ion-item>
         <ion-label>Fecha de Venta</ion-label>
         <ion-note slot="end">{{ venta.fechaVenta }}</ion-note>
       </ion-item>
 
-      <!-- Dropdown para seleccionar cliente -->
-      <ion-item>
-        <ion-select label = "Cliente" [(ngModel)]="clienteSeleccionado" placeholder="Selecciona un cliente" (ionChange)="onClienteOk()">
-          <ion-select-option *ngFor="let cliente of clientes" [value]="cliente">
-            {{ cliente.nombre }}
-          </ion-select-option>
-        </ion-select>
+      <!-- Selector de cliente personalizado -->
+      <ion-item button (click)="openClienteAlert()">
+        <ion-label>Cliente</ion-label>
+        <ion-note slot="end">
+          {{ clienteSeleccionado
+             ? (clienteSeleccionado.nombre + ' ' + clienteSeleccionado.apellido)
+             : 'Selecciona un cliente…' }}
+        </ion-note>
+        <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
       </ion-item>
     </ion-card-content>
   </ion-card>

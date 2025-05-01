@@ -3,6 +3,8 @@ import { ActivatedRoute } from '@angular/router';
 import { NavController } from '@ionic/angular';
 import { SupabaseService } from '../../supabase.service';
 import { Location } from '@angular/common';
+import { Router } from '@angular/router';
+import { MensajeService } from 'src/app/mensaje.service';
 
 @Component({
   selector: 'app-recibo',
@@ -31,6 +33,7 @@ export class ReciboPage implements OnInit {
     private navCtrl: NavController,
     private supabaseService: SupabaseService,
     private location: Location,
+    private mensajeService: MensajeService
   ) {}
 
   ngOnInit() {
@@ -98,6 +101,7 @@ export class ReciboPage implements OnInit {
   }
 
     irABalance(){
+      this.mensajeService.enviarMensaje('actualizar ingresos');
       this.navCtrl.navigateBack('/tab-inicial/balance');
     }
 }

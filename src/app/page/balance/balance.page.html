@@ -101,6 +101,22 @@
       </div>
     </ion-item>
   </ion-list>
+  
+  <ion-item
+  *ngIf="vistaActual === 'ingresos' && filteredItems.length === 0"
+  lines="none"
+  class="ion-text-center ion-padding">
+  <strong>No se registraron ventas</strong>
+</ion-item>
+
+<ion-item
+  *ngIf="vistaActual === 'egresos' && filteredItems.length === 0"
+  lines="none"
+  class="ion-text-center ion-padding"
+>
+  <strong>No se registraron gastos</strong>
+</ion-item>
+
 
   <ion-fab slot="fixed" horizontal="end" vertical="bottom">
     <ion-fab-button>

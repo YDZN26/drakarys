@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController } from '@ionic/angular';
 import { createClient } from '@supabase/supabase-js';
+import { MensajeService } from 'src/app/mensaje.service';
 import { environment } from 'src/environments/environment';
 
 const supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
@@ -15,7 +16,9 @@ export class NuevoGastoPage {
   descripcion: string = '';
   tipoPago: number | null = null;
 
-  constructor(private navCtrl: NavController) {}
+  constructor(private navCtrl: NavController,
+    private mensajeService: MensajeService
+  ) {}
 
   async agregarGasto() {
     const usuarioGuardado = localStorage.getItem('usuario_id');
@@ -48,6 +51,7 @@ export class NuevoGastoPage {
       alert('No se pudo guardar el gasto.');
     } else {
       alert('Gasto guardado correctamente');
+      this.mensajeService.enviarMensaje('actualizar gastos');
       this.navCtrl.navigateBack('/tab-inicial/balance');
     }
   }

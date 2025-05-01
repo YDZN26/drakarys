@@ -2,6 +2,9 @@ import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import { IonModal, NavController } from '@ionic/angular';
 import { SupabaseService } from '../../supabase.service';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { MensajeService } from 'src/app/mensaje.service';
+
 
 
 @Component({
@@ -23,17 +26,22 @@ export class BalancePage implements AfterViewInit {
   egresos: any[] = [];
   filteredItems: any[] = [];
 
+  private mensajeSub!: Subscription;
+
+  mensaje: string = '';
+
  
   constructor(
     private navCtrl: NavController,
     private supabaseService: SupabaseService,
-    private router: Router
+    private router: Router,
+    private mensajeService: MensajeService
   ) {}
 
   ngAfterViewInit() {
     setTimeout(() => {
       this.presentingElement = document.querySelector('ion-content');
-    }, 100); // da tiempo a renderizar
+    }, 100); // da tiempo a rende
   }
   
   async ngOnInit() {
@@ -46,10 +54,21 @@ export class BalancePage implements AfterViewInit {
     
     const fecha = new Date();
     const day = fecha.getDate();
-    const mes = fecha.toLocaleString('default', { month: 'long' });
+    const mes = fecha.toLocaleString('es-BO', { month: 'long' });
 
     this.selectedDay = `${day} de ${mes}`;
     this.onDaySelected(this.selectedDay);
+
+    this.mensajeSub = this.mensajeService.mensaje$.subscribe((mensaje: string) => {
+      if (mensaje) {
+        console.log('Mensaje recibido:', mensaje);
+        this.mensaje = mensaje; 
+        if (mensaje === 'actualizar ingresos'|| mensaje === 'actualizar gastos')  {
+          this.onDaySelected(this.selectedDay);
+        }
+      }
+      
+    });
   }
 
   capitalize(nombre: string): string {
@@ -63,12 +82,11 @@ export class BalancePage implements AfterViewInit {
 
   generarDiasDelMesActual() {
     const fecha = new Date();
-    const mes = fecha.toLocaleString('default', { month: 'long' }); // Ej: 'Apr'
+    const mes = fecha.toLocaleString('es-BO', { month: 'long' }); // Ej: 'Abril'
     const year = fecha.getFullYear();
     const monthIndex = fecha.getMonth();
-    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-
-    this.days = Array.from({ length: daysInMonth }, (_, i) => `${i + 1} de ${mes}`);
+    const today = fecha.getDate();
+    this.days = Array.from({ length: today }, (_, i) => `${i + 1} de ${mes}`);
   }
 
   async onDaySelected(dayString: string | null) {
@@ -114,30 +132,30 @@ export class BalancePage implements AfterViewInit {
   
     // Agrupar ingresos por venta_id
     const agrupadas: { [key: number]: any[] } = {};
-  
-    for (const d of detalles) {
-      if (!d.venta) continue; // Evita datos huérfanos
-  
-      const ventaId = d.venta_id;
-      if (!agrupadas[ventaId]) agrupadas[ventaId] = [];
-      agrupadas[ventaId].push(d);
+      for (const d of detalles) {
+        if (!d.venta) continue; // Evita datos huérfanos
+        const ventaId = d.venta_id;
+        if (!agrupadas[ventaId]) agrupadas[ventaId] = [];
+        agrupadas[ventaId].push(d);
     }
   
-    console.log('Ejemplo de venta:', detalles[0].venta);
+
+    const agrupadasArray = Object.values(agrupadas);
+    agrupadasArray.sort((a, b) => {
+      const tA = new Date(a[0].venta.fecha + 'Z').getTime();
+      const tB = new Date(b[0].venta.fecha + 'Z').getTime();
+      return tB - tA;  // la última venta queda al pincipio
+    });
   
-    this.ingresos = Object.values(agrupadas).map((items: any[]) => {
+    this.ingresos = agrupadasArray.map((items: any[]) => {
       const venta = items[0].venta;
       const tipoPago = venta?.tipo_de_pago?.nombre ?? '-';
-
-      const fecha = venta?.fecha
+      const fechaObj = venta?.fecha
         ? new Date(venta.fecha + 'Z')
         : new Date();
-
-        const hora = fecha.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
-        const fechaLocal = fecha.toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' });
-
+      const hora = fechaObj.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
+      const fechaLocal = fechaObj.toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' });
       const descripcion = `${tipoPago} - ${hora}`;
-
       const productos = items.map(i => `${i.cantidad} ${i.producto?.nombre}`);
       const total = items.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
 
@@ -156,13 +174,29 @@ export class BalancePage implements AfterViewInit {
     });
   
     const gastos = await this.supabaseService.obtenerGastos(fechaInicio, fechaFin);
+    const gastosOrdenados = gastos.sort((a, b) => {
+      const tA = new Date(a.fecha + 'Z').getTime();
+      const tB = new Date(b.fecha + 'Z').getTime();
+      return tB - tA;
+    });
+    
     this.egresos = gastos.map((g: any) => ({
       nombre: 'Gasto',
       descripcion: g.descripcion,
       precio: parseFloat(g.monto),
     }));
+
+    if (this.mensaje === 'actualizar ingresos'){
+      this.mostrarIngresos();
+    }
+    if (this.mensaje === 'actualizar gastos'){
+      this.mostrarEgresos();
+    } 
+    if (!this.mensaje) {
+      this.mostrarIngresos();
+    }
   
-    this.mostrarIngresos(); // Por defecto mostrar ingresos
+    // this.mostrarIngresos(); // Por defecto mostrar ingresos
   }
 
   mostrarCampoBusqueda = false;
@@ -193,10 +227,12 @@ filtrarItems() {
 vistaActual: 'ingresos' | 'egresos' = 'ingresos';
   
   mostrarIngresos() {
+    this.vistaActual = 'ingresos';
     this.filteredItems = this.ingresos;
   }
 
   mostrarEgresos() {
+    this.vistaActual = 'egresos'; 
     this.filteredItems = this.egresos;
   }
 
@@ -220,11 +256,11 @@ vistaActual: 'ingresos' | 'egresos' = 'ingresos';
     this.navCtrl.navigateForward('/nuevo-gasto');
   }
   verRecibo(item: any) {
-    // Asegúrate de pasar la fecha y hora real
+    // Asegura pasar la fecha y hora real
     const venta = {
       ...item,
       descripcion: `${item.descripcion}`, // ya contiene la hora
-      fechaCompleta: item.fechaCompleta || new Date().toISOString() // por si quieres usarla
+      fechaCompleta: item.fechaCompleta || new Date().toISOString()
     };
   
     this.router.navigate(['/recibo'], {
@@ -237,7 +273,7 @@ vistaActual: 'ingresos' | 'egresos' = 'ingresos';
   async seleccionarFechaDesdeCalendario(event: any) {
     const fechaSeleccionada = new Date(event.detail.value);
     const dia = fechaSeleccionada.getDate();
-    const mes = fechaSeleccionada.toLocaleString('default', { month: 'long' });
+    const mes = fechaSeleccionada.toLocaleString('es-BO', { month: 'long' }); 
 
     this.selectedDay = `${dia} de ${mes}`;
 

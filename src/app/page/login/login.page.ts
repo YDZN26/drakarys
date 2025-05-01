@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { createClient } from '@supabase/supabase-js';
 import { environment } from 'src/environments/environment';
+import { SupabaseService } from 'src/app/supabase.service';
 
-const supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
 
 @Component({
   selector: 'app-login',
@@ -13,27 +12,26 @@ const supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
 export class LoginPage {
   usuario: string = '';
   contrasena: string = '';
+  errorMsg: string = '';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router,
+    private supabaseService: SupabaseService,
+  ) {}
 
   async login() {
+    this.errorMsg = '';
     const username = this.usuario.trim();
     const password = this.contrasena.trim();
 
-    const { data, error } = await supabase
-      .from('usuario')
-      .select('*')
-      .eq('username', username)
-      .eq('passwrd', password)
-      .maybeSingle();
-
+  const { data, error } = await this.supabaseService.obtenerLogin(username, password);
+      
     if (error) {
-      window.alert('Ocurrió un error al autenticar');
+      this.errorMsg = 'Ocurrió un error al autenticar';
       return;
     }
 
     if (!data) {
-      window.alert('Usuario o contraseña incorrectos');
+      this.errorMsg ='Usuario o contraseña incorrectos';
       return;
     }
     
