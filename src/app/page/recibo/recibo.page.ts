@@ -2,8 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NavController } from '@ionic/angular';
 import { SupabaseService } from '../../supabase.service';
-import { Location } from '@angular/common';
-import { Router } from '@angular/router';
 import { MensajeService } from 'src/app/mensaje.service';
 
 @Component({
@@ -14,12 +12,11 @@ import { MensajeService } from 'src/app/mensaje.service';
 export class ReciboPage implements OnInit {
   recibo: any = {
     venta_id: 0,
-    fechaVenta:'',
+    fechaVenta: '',
     productos: [],
     totalVenta: 0,
     metodoPago: '',
-    cliente: {},
-    detalles: []
+    cliente: '',   // ahora guardamos un string
   };
 
   tiposPago: { [key: number]: string } = {
@@ -29,79 +26,78 @@ export class ReciboPage implements OnInit {
     4: 'Tarjeta'
   };
 
-  constructor( private route: ActivatedRoute,
+  constructor(
+    private route: ActivatedRoute,
     private navCtrl: NavController,
-    private supabaseService: SupabaseService,
-    private location: Location,
+    private supabase: SupabaseService,
     private mensajeService: MensajeService
   ) {}
 
   ngOnInit() {
-    const navigation = history.state;
-  
-  if (navigation && navigation.venta) {
-    const venta = navigation.venta;
-    
-    // Si viene del balance, ya tiene los datos agrupados
+    const state = history.state;
+    if (state?.venta) {
+      this.mapearDesdeBalance(state.venta);
+    } else {
+      const ventaParam = this.route.snapshot.paramMap.get('ventaId');
+      if (ventaParam) {
+        this.cargarVenta(Number(ventaParam));
+      }
+    }
+  }
+
+  private mapearDesdeBalance(venta: any) {
+    // venta.cliente ya viene como objeto { nombre, apellido }
+    const clienteStr =
+    typeof venta.cliente === 'string'
+      ? venta.cliente
+      : `${venta.cliente?.nombre || ''} ${venta.cliente?.apellido || ''}`.trim();
     this.recibo = {
-      venta_id: 0,
-      fechaVenta: venta.fechaCompleta ?? venta.descripcion.split(' - ')[1] ?? '',
+      venta_id: venta.venta_id || 0,
+      fechaVenta: venta.fechaCompleta || '',
       totalVenta: venta.precio,
       metodoPago: venta.descripcion.split(' - ')[0],
-      cliente: {}, // No tenemos cliente, lo dejamos vacío
+      cliente: clienteStr,
       productos: venta.productosOriginales?.map((p: any) => ({
         descripcion: p.descripcion,
         cantidad: p.cantidad,
-        precio: '',
-        subtotal: ''
-      })) || [],      
-      detalles: []
+        precio_unitario: p.precio_unitario,
+        subtotal: p.subtotal
+      })) ?? []
     };
-  } else {
-    const ventaParam = this.route.snapshot.paramMap.get('ventaId');
-    if (ventaParam) {
-      const ventaId = Number(ventaParam);
-      // this.location.replaceState(`/recibo/${ventaId}`);
-      this.cargarVenta(ventaId);
-    } else {
-      console.error("No se recibió un ventaId en la URL.");
-    }
-  }
-}
-
-  async cargarVenta(ventaId: number) {
-    try {
-      const venta = await this.supabaseService.obtenerVentaPorId(ventaId);
-      // Obtener los detalles de la venta (productos)
-      const detalles = await this.supabaseService.obtenerVentaDetalles(ventaId);
-      
-      if (venta) {
-
-        const fecha = new Date(venta.fecha + 'Z');
-
-        const fechaLocal = fecha.toLocaleDateString('es-BO');
-        const horaLocal  = fecha.toLocaleTimeString('es-BO')
-
-        this.recibo = {
-          venta_id: venta.venta_id,
-          fechaVenta: `${fechaLocal} ${horaLocal}`,
-          totalVenta: venta.total,
-          // Convierte el ID de tipo de pago a su nombre legible usando el mapeo:
-          metodoPago: this.tiposPago[venta.tipo_pago_id] || venta.tipo_pago_id,
-          cliente: venta.cliente_id, // Si deseas más datos del cliente, deberás hacer otra consulta.
-          productos: detalles || []
-        };
-        console.log('Recibo cargado:', this.recibo);
-      } else {
-        console.error("No se encontró la venta con ID:", ventaId);
-      }
-    } catch (error) {
-      console.error("Error al cargar la venta:", error);
-    }
   }
 
-    irABalance(){
-      this.mensajeService.enviarMensaje('actualizar ingresos');
-      this.navCtrl.navigateBack('/tab-inicial/balance');
+  private async cargarVenta(ventaId: number) {
+    const venta = await this.supabase.obtenerVentaPorId(ventaId);
+    const detalles = await this.supabase.obtenerVentaDetalles(ventaId);
+    if (!venta) return console.error('Venta no encontrada');
+
+    // Formatear fecha
+    const fechaObj = new Date(venta.fecha + 'Z');
+    const fechaLocal = fechaObj.toLocaleDateString('es-BO');
+    const horaLocal  = fechaObj.toLocaleTimeString('es-BO');
+
+    // Obtener nombre legible del tipo de pago
+    const tipoPago = this.tiposPago[venta.tipo_pago_id] || '';
+
+    // Traer cliente de Supabase
+    let clienteStr = '';
+    if (venta.cliente_id) {
+      const cli = await this.supabase.obtenerClientePorId(venta.cliente_id);
+      if (cli) clienteStr = `${cli.nombre} ${cli.apellido}`.trim();
     }
+
+    this.recibo = {
+      venta_id: venta.venta_id,
+      fechaVenta: `${fechaLocal} ${horaLocal}`,
+      totalVenta: venta.total,
+      metodoPago: tipoPago,
+      cliente: clienteStr,
+      productos: detalles || []
+    };
+  }
+
+  irABalance() {
+    this.mensajeService.enviarMensaje('actualizar ingresos');
+    this.navCtrl.navigateBack('/tab-inicial/balance');
+  }
 }

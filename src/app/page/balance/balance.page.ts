@@ -5,8 +5,6 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { MensajeService } from 'src/app/mensaje.service';
 
-
-
 @Component({
   selector: 'app-balance',
   templateUrl: './balance.page.html',
@@ -50,7 +48,7 @@ export class BalancePage implements AfterViewInit {
       this.nombreUsuario = this.capitalize(nombreGuardado);
     }
     // Al iniciar la página, carga el balance del día actual
-    this.generarDiasDelMesActual();
+    this.generarDiasHistoricos(365);
     
     const fecha = new Date();
     const day = fecha.getDate();
@@ -80,13 +78,16 @@ export class BalancePage implements AfterViewInit {
     this.router.navigate(['/login']);
   }
 
-  generarDiasDelMesActual() {
-    const fecha = new Date();
-    const mes = fecha.toLocaleString('es-BO', { month: 'long' }); // Ej: 'Abril'
-    const year = fecha.getFullYear();
-    const monthIndex = fecha.getMonth();
-    const today = fecha.getDate();
-    this.days = Array.from({ length: today }, (_, i) => `${i + 1} de ${mes}`);
+  generarDiasHistoricos(cantidadDias: number = 360) {
+    const dias: string[] = [];
+    for (let i = cantidadDias - 1; i >= 0; i--) {
+      const f = new Date();
+      f.setDate(f.getDate() - i);
+      const d = f.getDate();
+      const m = f.toLocaleString('es-BO', { month: 'long' });
+      dias.push(`${d} de ${m}`);
+    }
+    this.days = dias;
   }
 
   async onDaySelected(dayString: string | null) {
@@ -127,7 +128,7 @@ export class BalancePage implements AfterViewInit {
   }
   
   async cargarBalance(fechaInicio: string, fechaFin: string) {
-    const detalles = await this.supabaseService.obtenerDetallesVentasPorFecha(fechaInicio, fechaFin);
+    const detalles = await this.supabaseService.obtenerDetallesVentasPorFecha(fechaInicio, fechaFin); //TODO observacion orden de venta
     console.log('Detalles:', detalles);
   
     // Agrupar ingresos por venta_id
@@ -139,7 +140,8 @@ export class BalancePage implements AfterViewInit {
         agrupadas[ventaId].push(d);
     }
   
-
+    // Convertir el objeto agrupadas a un array y ordenarlo por fecha
+    // Agrupar por fecha y ordenar desde la última venta a la primera (Descendente)
     const agrupadasArray = Object.values(agrupadas);
     agrupadasArray.sort((a, b) => {
       const tA = new Date(a[0].venta.fecha + 'Z').getTime();
@@ -149,6 +151,10 @@ export class BalancePage implements AfterViewInit {
   
     this.ingresos = agrupadasArray.map((items: any[]) => {
       const venta = items[0].venta;
+      const clienteObj = venta.cliente; 
+      const clienteStr = clienteObj
+    ? `${clienteObj.nombre} ${clienteObj.apellido}`
+    : '-';
       const tipoPago = venta?.tipo_de_pago?.nombre ?? '-';
       const fechaObj = venta?.fecha
         ? new Date(venta.fecha + 'Z')
@@ -161,6 +167,7 @@ export class BalancePage implements AfterViewInit {
 
       return {
         nombre: productos.length > 1 ? productos.slice(0, 1).join(', ') + ', ...' : productos.join(', '),
+        cliente: clienteStr,
         descripcion,
         precio: total,
         fechaCompleta: `${fechaLocal} ${hora}`,
@@ -179,7 +186,6 @@ export class BalancePage implements AfterViewInit {
       const tB = new Date(b.fecha + 'Z').getTime();
       return tB - tA;
     });
-    
     this.egresos = gastos.map((g: any) => ({
       nombre: 'Gasto',
       descripcion: g.descripcion,
@@ -222,8 +228,6 @@ filtrarItems() {
     );
   }
 }
-
-
 vistaActual: 'ingresos' | 'egresos' = 'ingresos';
   
   mostrarIngresos() {
@@ -259,6 +263,7 @@ vistaActual: 'ingresos' | 'egresos' = 'ingresos';
     // Asegura pasar la fecha y hora real
     const venta = {
       ...item,
+      cliente: item.cliente,
       descripcion: `${item.descripcion}`, // ya contiene la hora
       fechaCompleta: item.fechaCompleta || new Date().toISOString()
     };

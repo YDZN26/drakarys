@@ -20,25 +20,17 @@ export class LoginPage {
 
   async login() {
     this.errorMsg = '';
-    const username = this.usuario.trim();
-    const password = this.contrasena.trim();
-
-  const { data, error } = await this.supabaseService.obtenerLogin(username, password);
-      
+    const { data, error } = await this.supabaseService.obtenerLogin(this.usuario.trim(), this.contrasena.trim());
+  
     if (error) {
-      this.errorMsg = 'Ocurrió un error al autenticar';
+      // Aquí engloba tanto fallo en conexión como credenciales inválidas
+      this.errorMsg = error.message || 'Ocurrió un error al autenticar';
       return;
     }
-
-    if (!data) {
-      this.errorMsg ='Usuario o contraseña incorrectos';
-      return;
-    }
-    
-    // Guardar el usuario
+  
+    // data ahora es el objeto usuario real
     localStorage.setItem('usuario_id', data.usuario_id.toString());
     localStorage.setItem('usuario', data.username);
-
     this.router.navigate(['tab-inicial/balance']);
   }
 }

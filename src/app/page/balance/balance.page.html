@@ -14,8 +14,11 @@
   </ion-toolbar>
 
 <ion-toolbar color="mycolor">
-    <ion-segment scrollable [(ngModel)]="selectedDay" (ionChange)="onDaySelected(selectedDay)">
-      <ion-segment-button *ngFor="let day of days" [value]="day">
+  <ion-segment scrollable [(ngModel)]="selectedDay" (ionChange)="onDaySelected(selectedDay)">
+    <ion-segment-button
+      *ngFor="let day of days"
+      [value]="day"
+      [ngClass]="{ 'selected-date': day === selectedDay }">
         {{ day }}
       </ion-segment-button>
     </ion-segment>    
@@ -88,13 +91,11 @@
   </div>
 
   <ion-list>
-    <ion-item *ngFor="let item of filteredItems" (click)="verRecibo(item)">
-      <ion-avatar slot="start">
-        <ion-icon name="bag-handle-outline" style="color: #6A5ACD;"></ion-icon>
-      </ion-avatar>
+    <ion-item button detail *ngFor="let item of filteredItems"(click)="verRecibo(item)">
       <ion-label>
         <h2>{{ item.nombre }}</h2>
-        <p *ngIf="item.descripcion">{{ item.descripcion }}</p>
+        <p><strong>{{ item.cliente }}</strong></p>
+        <p>{{ item.descripcion }}</p>
       </ion-label>
       <div slot="end">
         <strong>Bs. {{ item.precio }}</strong>

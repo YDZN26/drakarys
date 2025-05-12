@@ -2,11 +2,19 @@ import { Injectable } from '@angular/core';
 import { createClient } from '@supabase/supabase-js';
 import { environment } from '../environments/environment';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class SupabaseService {
-  private supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
+  private supabase = createClient(
+    environment.supabaseUrl,
+    environment.supabaseKey,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false
+      }
+    }
+  );
 
   constructor() {}
 
@@ -54,19 +62,25 @@ export class SupabaseService {
     }
     return data;
   }
-async obtenerLogin(username: string, password: string) {
-  const { data, error } = await this.supabase.from('usuario').select('*')
-  .eq('username', username) 
-  .eq('passwrd', password)
-  .maybeSingle();
-  if (error) {
-    console.error('Error al autenticar:', error);
-    return {error};
-  } else {
-    console.error('Usuario o contraseña incorrectos');
-    return {data};
+  async obtenerLogin(username: string, password: string) {
+    const { data, error } = await this.supabase
+      .from('usuario')
+      .select('*')
+      .eq('username', username)
+      .eq('passwrd', password)
+      .maybeSingle();
+  
+    if (error) {
+      console.error('Error al autenticar:', error);
+      return { data: null, error };
+    }
+    if (!data) {
+      // No hubo error técnico, pero no se encontró usuario
+      return { data: null, error: new Error('Usuario o contraseña incorrectos') };
+    }
+    // Login exitoso
+    return { data, error: null };
   }
-}
 
   async obtenerProductos() {
     const { data, error } = await this.supabase.from('producto').select('*');
@@ -193,19 +207,20 @@ async obtenerDetallesVentasPorFecha(fechaInicio: string, fechaFin: string) {
       precio_unitario,
       subtotal,
       producto:producto_id(nombre),
-      venta:venta_id!inner(fecha, tipo_de_pago:tipo_pago_id(nombre))
+      venta:venta_id!inner(
+        fecha,
+        tipo_de_pago:tipo_pago_id(nombre),
+        cliente:cliente_id(nombre,apellido)
+      )
     `)
     .gte('venta.fecha', fechaInicio)
     .lte('venta.fecha', fechaFin)
     .order('venta_id', { ascending: false });
 
-
-  if (error) {
-    console.error('Error al obtener detalles de ventas:', error);
-    return [];
-  }
+  if (error) { console.error(error); return []; }
   return data;
 }
+
 async obtenerGastos(fechaInicio?: string, fechaFin?: string) {
   let query = this.supabase.from('gasto').select('*').order('fecha', { ascending: false });
 
@@ -236,6 +251,20 @@ async agregarCliente(cliente: {
   }
   return data;
 }
+
+async obtenerClientePorId(clienteId: number) {
+  const { data, error } = await this.supabase
+    .from('cliente')
+    .select('nombre, apellido')
+    .eq('cliente_id', clienteId)
+    .single();
+  if (error) {
+    console.error('Error al obtener cliente:', error);
+    return null;
+  }
+  return data;
+}
+
 
 }
 

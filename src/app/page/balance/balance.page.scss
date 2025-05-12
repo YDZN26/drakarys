@@ -181,3 +181,10 @@ iion-modal.calendar-modal {
   align-items: center;
   justify-content: center;
 }
+
+ion-segment-button.selected-date {
+  font-weight: bold;
+    background-color: #0327aa;
+    border-radius: 15px;
+    height: 5px;
+}
