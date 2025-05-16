@@ -208,6 +208,7 @@ async obtenerDetallesVentasPorFecha(fechaInicio: string, fechaFin: string) {
       subtotal,
       producto:producto_id(nombre),
       venta:venta_id!inner(
+        venta_id,
         fecha,
         tipo_de_pago:tipo_pago_id(nombre),
         cliente:cliente_id(nombre,apellido)

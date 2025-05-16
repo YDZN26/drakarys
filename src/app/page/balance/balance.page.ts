@@ -166,6 +166,7 @@ export class BalancePage implements AfterViewInit {
       const total = items.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
 
       return {
+        venta_id: venta.venta_id,
         nombre: productos.length > 1 ? productos.slice(0, 1).join(', ') + ', ...' : productos.join(', '),
         cliente: clienteStr,
         descripcion,
@@ -259,20 +260,9 @@ vistaActual: 'ingresos' | 'egresos' = 'ingresos';
   goToNuevoGastoPage() {
     this.navCtrl.navigateForward('/nuevo-gasto');
   }
-  verRecibo(item: any) {
-    // Asegura pasar la fecha y hora real
-    const venta = {
-      ...item,
-      cliente: item.cliente,
-      descripcion: `${item.descripcion}`, // ya contiene la hora
-      fechaCompleta: item.fechaCompleta || new Date().toISOString()
-    };
-  
-    this.router.navigate(['/recibo'], {
-      state: {
-        venta
-      }
-    });
+ verRecibo(item: any) {
+  console.log('ITEM al hacer clic:', item);
+  this.router.navigate(['/recibo', item.venta_id]);
   }
  
   async seleccionarFechaDesdeCalendario(event: any) {

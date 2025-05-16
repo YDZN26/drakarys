@@ -34,37 +34,16 @@ export class ReciboPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    const state = history.state;
-    if (state?.venta) {
-      this.mapearDesdeBalance(state.venta);
-    } else {
-      const ventaParam = this.route.snapshot.paramMap.get('ventaId');
-      if (ventaParam) {
-        this.cargarVenta(Number(ventaParam));
-      }
-    }
-  }
+  const ventaParam = this.route.snapshot.paramMap.get('ventaId');
+    console.log('Recibo cargando con ID:', ventaParam);
 
-  private mapearDesdeBalance(venta: any) {
-    // venta.cliente ya viene como objeto { nombre, apellido }
-    const clienteStr =
-    typeof venta.cliente === 'string'
-      ? venta.cliente
-      : `${venta.cliente?.nombre || ''} ${venta.cliente?.apellido || ''}`.trim();
-    this.recibo = {
-      venta_id: venta.venta_id || 0,
-      fechaVenta: venta.fechaCompleta || '',
-      totalVenta: venta.precio,
-      metodoPago: venta.descripcion.split(' - ')[0],
-      cliente: clienteStr,
-      productos: venta.productosOriginales?.map((p: any) => ({
-        descripcion: p.descripcion,
-        cantidad: p.cantidad,
-        precio_unitario: p.precio_unitario,
-        subtotal: p.subtotal
-      })) ?? []
-    };
+  if (ventaParam) {
+    const ventaId = Number(ventaParam);
+    this.cargarVenta(ventaId);
+  } else {
+    console.error('No se recibió ventaId en la URL.');
   }
+}
 
   private async cargarVenta(ventaId: number) {
     const venta = await this.supabase.obtenerVentaPorId(ventaId);
