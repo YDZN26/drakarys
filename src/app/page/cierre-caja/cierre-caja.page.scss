@@ -1,0 +1,71 @@
+ion-header {
+  ion-toolbar {
+    --background: #001E87;
+    --color: white;
+  }
+
+  ion-title {
+    color: white;
+    font-weight: bold;
+  }
+}
+
+.balance-container {
+  padding: 16px;
+
+  .balance-card {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    padding: 16px;
+    margin-bottom: 24px;
+
+    .balance-header {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    .balance-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      .section-title {
+        font-weight: bold;
+        margin-top: 12px;
+        margin-bottom: 4px;
+      }
+
+      .ingresos {
+        color: #001E87; // azul ingresos
+      }
+
+      .egresos {
+        color: #D70000; // rojo egresos
+      }
+
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 15px;
+
+        span:last-child {
+          font-weight: bold;
+        }
+      }
+    }
+  }
+
+  ion-item {
+    margin-bottom: 24px;
+  }
+
+  ion-button {
+    --background: #001E87;
+    --border-radius: 10px;
+    font-weight: bold;
+  }
+}

@@ -1,0 +1,33 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/balance"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Venta Libre</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-item>
+    <ion-label position="floating">Monto total (Bs.)</ion-label>
+    <ion-input type="number" [(ngModel)]="montoTotal"></ion-input>
+  </ion-item>
+
+  <ion-item>
+    <ion-label position="floating">Descripción</ion-label>
+    <ion-textarea [(ngModel)]="descripcion"></ion-textarea>
+  </ion-item>
+
+  <ion-item>
+    <ion-label position="floating">Tipo de pago</ion-label>
+    <ion-select [(ngModel)]="tipoPagoId">
+      <ion-select-option *ngFor="let tipo of tiposDePago" [value]="tipo.tipo_pago_id">
+        {{ tipo.nombre }}
+      </ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <ion-button expand="block" color="success" (click)="registrarVentaLibre()">
+    Registrar venta
+  </ion-button>
+</ion-content>

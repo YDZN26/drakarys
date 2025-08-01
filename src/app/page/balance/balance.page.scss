@@ -188,3 +188,16 @@ ion-segment-button.selected-date {
     border-radius: 15px;
     height: 5px;
 }
+
+.cierre-caja-container {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.cierre-caja-container ion-button {
+  --background: #001E87; /* Puedes cambiarlo por el color que uses */
+  color: white;
+  font-weight: bold;
+  border-radius: 10px;
+  padding: 8px 16px;
+}
