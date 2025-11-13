@@ -11,7 +11,7 @@ const routes: Routes = [
     redirectTo: 'login',
     pathMatch: 'full'
   },
-  
+
   {
     path: 'tab-inicial',
     loadChildren: () => import('./page/tab-inicial/tab-inicial.module').then( m => m.TabInicialPageModule)
@@ -46,7 +46,7 @@ const routes: Routes = [
     path: 'recibo',
     loadChildren: () => import('./page/recibo/recibo.module').then(m => m.ReciboPageModule)
   },
-  
+
   {
     path: 'cuotas-modal',
     loadChildren: () => import('./page/cuotas-modal/cuotas-modal.module').then( m => m.CuotasModalPageModule)
@@ -55,8 +55,15 @@ const routes: Routes = [
     path: 'preview',
     loadChildren: () => import('./page/preview/preview.module').then( m => m.PreviewPageModule)
   },
+  {
+    path: 'cierre-caja',
+    loadChildren: () => import('./page/cierre-caja/cierre-caja.module').then( m => m.CierreCajaPageModule)
+  },  {
+    path: 'venta-libre',
+    loadChildren: () => import('./page/venta-libre/venta-libre.module').then( m => m.VentaLibrePageModule)
+  },
 
-  
+
 ];
 
 @NgModule({

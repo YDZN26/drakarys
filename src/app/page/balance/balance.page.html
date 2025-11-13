@@ -13,15 +13,15 @@
     </ion-buttons>
   </ion-toolbar>
 
-<ion-toolbar color="mycolor">
-  <ion-segment scrollable [(ngModel)]="selectedDay" (ionChange)="onDaySelected(selectedDay)">
-    <ion-segment-button
-      *ngFor="let day of days"
-      [value]="day"
-      [ngClass]="{ 'selected-date': day === selectedDay }">
+  <ion-toolbar color="mycolor">
+    <ion-segment scrollable [(ngModel)]="selectedDay" (ionChange)="onDaySelected(selectedDay)">
+      <ion-segment-button
+        *ngFor="let day of days"
+        [value]="day"
+        [ngClass]="{ 'selected-date': day === selectedDay }">
         {{ day }}
       </ion-segment-button>
-    </ion-segment>    
+    </ion-segment>
     <ion-buttons slot="end">
       <ion-button id="abrirCalendario">
         <ion-icon slot="icon-only" name="calendar-outline"></ion-icon>
@@ -37,7 +37,6 @@
       debounce="300">
     </ion-searchbar>
   </ion-toolbar>
-  
 </ion-header>
 
 <ion-popover trigger="usuarioPopoverTrigger" triggerAction="click">
@@ -63,8 +62,8 @@
       <div class="balance-header">
         <span>BALANCE</span>
         <span [ngStyle]="{ color: balance < 0 ? 'red' : 'black' }">
-        BS. {{ balance | number: '1.2-2' }}
-      </span>
+          BS. {{ balance | number: '1.2-2' }}
+        </span>
       </div>
       <div class="balance-details">
         <div class="balance-income">
@@ -72,14 +71,18 @@
           <span>INGRESOS</span>
           <span>BS. {{ totalIngresos | number: '1.2-2' }}</span>
         </div>
-        <div class="balance-divider"></div> <!-- Divisor -->
+        <div class="balance-divider"></div>
         <div class="balance-expense">
           <ion-icon name="cash-outline" color="danger"></ion-icon>
           <span>EGRESOS</span>
           <span>BS. {{ totalEgresos | number: '1.2-2' }}</span>
         </div>
       </div>
+      <div class="cierre-caja-container">
+        <ion-button size="small" (click)="goToCierreCaja()">Cierre de Caja</ion-button>
+      </div>
     </div>
+
     <ion-segment class="balance-segment">
       <ion-segment-button class="balance-segment-button-ingresos" (click)="mostrarIngresos()">
         <ion-label>Ingresos</ion-label>
@@ -91,7 +94,7 @@
   </div>
 
   <ion-list>
-    <ion-item button detail *ngFor="let item of filteredItems"(click)="verRecibo(item)">
+    <ion-item button detail *ngFor="let item of filteredItems" (click)="verRecibo(item)">
       <ion-label>
         <h2>{{ item.nombre }}</h2>
         <p><strong>{{ item.cliente }}</strong></p>
@@ -102,43 +105,64 @@
       </div>
     </ion-item>
   </ion-list>
-  
+
   <ion-item
-  *ngIf="vistaActual === 'ingresos' && filteredItems.length === 0"
-  lines="none"
-  class="ion-text-center ion-padding">
-  <strong>No se registraron ventas</strong>
-</ion-item>
+    *ngIf="vistaActual === 'ingresos' && filteredItems.length === 0"
+    lines="none"
+    class="ion-text-center ion-padding">
+    <strong>No se registraron ventas</strong>
+  </ion-item>
 
-<ion-item
-  *ngIf="vistaActual === 'egresos' && filteredItems.length === 0"
-  lines="none"
-  class="ion-text-center ion-padding"
->
-  <strong>No se registraron gastos</strong>
-</ion-item>
-
+  <ion-item
+    *ngIf="vistaActual === 'egresos' && filteredItems.length === 0"
+    lines="none"
+    class="ion-text-center ion-padding">
+    <strong>No se registraron gastos</strong>
+  </ion-item>
 
   <ion-fab slot="fixed" horizontal="end" vertical="bottom">
     <ion-fab-button>
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
     <ion-fab-list side="start">
-      <ion-button fill="clear" style="--border-radius: 69px; --background: #93C572; --box-shadow: none; color: #fff;"
-                 (click)="goToNuevaVentaPage()">
+      <!-- NUEVA VENTA CON MENÚ -->
+      <ion-button
+        fill="clear"
+        style="--border-radius: 69px; --background: #93C572; --box-shadow: none; color: #fff;"
+        id="btnNuevaVentaPopover">
         <ion-icon slot="icon-only" name="cart-outline" style="color: inherit;"></ion-icon>
         <ion-label style="font-weight: bold;">Nueva venta</ion-label>
       </ion-button>
-      <ion-button fill="clear" style="--border-radius: 69px; --background: #D70000; --box-shadow: none; color: #fff;"
-                 (click)="goToNuevoGastoPage()">
+
+      <!-- GASTO -->
+      <ion-button
+        fill="clear"
+        style="--border-radius: 69px; --background: #D70000; --box-shadow: none; color: #fff;"
+        (click)="goToNuevoGastoPage()">
         <ion-icon slot="icon-only" name="cash-outline" style="color: inherit;"></ion-icon>
         <ion-label style="font-weight: bold;">Nuevo gasto</ion-label>
       </ion-button>
     </ion-fab-list>
   </ion-fab>
-  
 </ion-content>
 
+<!-- POPOVER de opciones de venta -->
+<ion-popover trigger="btnNuevaVentaPopover" triggerAction="click" side="top" alignment="center">
+  <ng-template>
+    <ion-content class="ion-padding">
+      <ion-item button (click)="irAVentaProductos()">
+        <ion-icon slot="start" name="pricetags-outline"></ion-icon>
+        <ion-label>Venta con productos</ion-label>
+      </ion-item>
+      <ion-item button (click)="irAVentaLibre()">
+        <ion-icon slot="start" name="create-outline"></ion-icon>
+        <ion-label>Venta libre</ion-label>
+      </ion-item>
+    </ion-content>
+  </ng-template>
+</ion-popover>
+
+<!-- MODAL DE CALENDARIO -->
 <ion-modal #modalCalendario trigger="abrirCalendario" [presentingElement]="presentingElement">
   <ng-template>
     <ion-header>
@@ -149,7 +173,6 @@
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
-
     <ion-content>
       <ion-datetime
         presentation="date"

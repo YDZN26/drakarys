@@ -1,3 +1,12 @@
+<ion-header>
+  <ion-toolbar color="mycolor">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/balance"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Nueva Venta</ion-title>
+  </ion-toolbar>
+</ion-header>
+
 <ion-content [fullscreen]="true">
   <div class="info-cards">
     <div class="card">
@@ -13,7 +22,7 @@
   <!-- Barra de búsqueda -->
   <ion-toolbar>
     <ion-searchbar color="light" placeholder="Buscar productos" (ionInput)="buscarProductos($event)"></ion-searchbar>
-  </ion-toolbar> 
+  </ion-toolbar>
 
   <!-- Botones de categorías -->
   <div class="category-buttons">
@@ -45,6 +54,8 @@
 
   <!-- Botón "Agregar Venta" -->
   <div class="button-container">
-    <ion-button class="nuevo-producto-button" [disabled]="totalProductosSeleccionados === 0" (click)="agregarVenta()">Agregar Venta</ion-button>
+    <ion-button class="nuevo-producto-button" [disabled]="totalProductosSeleccionados === 0" (click)="agregarVenta()">
+      Agregar Venta
+    </ion-button>
   </div>
 </ion-content>
