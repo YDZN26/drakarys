@@ -38,7 +38,7 @@ export class VentaLibrePage implements OnInit {
       return;
     }
 
-    const venta = await this.supabaseService.registrarVentaLibre({
+    const venta = await this.supabaseService.registrarVentaLibreConIngreso({
       monto: this.montoTotal,
       descripcion: this.descripcion,
       tipo_pago_id: this.tipoPagoId,

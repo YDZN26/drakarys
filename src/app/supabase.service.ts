@@ -343,4 +343,108 @@ async obtenerIngresosLibres(fechaInicio: string, fechaFin: string) {
   return data;
 }
 
+async crearIngreso(ingreso: {
+    tipo_pago_id: number;
+    usuario_id: number;
+    cliente_id?: number | null;
+    total: number;
+    tipo_ingreso: 'venta' | 'venta_libre' | 'ajuste_positivo';
+    descripcion?: string;
+  }) {
+    const { data, error } = await this.supabase
+      .from('ingreso')
+      .insert([{
+        ...ingreso,
+        fecha: new Date().toISOString()
+      }])
+      .select('ingreso_id')
+      .single();
+    
+    if (error) {
+      console.error('Error al crear ingreso:', error);
+      return null;
+    }
+    return data;
+  }
+
+  async obtenerTotalIngresosDia(fecha: string) {
+    const { data, error } = await this.supabase
+      .rpc('obtener_total_ingresos_dia', { fecha_dia: fecha });
+    
+    if (error) {
+      console.error('Error al obtener total de ingresos:', error);
+      return 0;
+    }
+    return data || 0;
+  }
+
+  async obtenerTotalEgresosDia(fecha: string) {
+    const { data, error } = await this.supabase
+      .rpc('obtener_total_egresos_dia', { fecha_dia: fecha });
+    
+    if (error) {
+      console.error('Error al obtener total de egresos:', error);
+      return 0;
+    }
+    return data || 0;
+  }
+
+  async obtenerBalanceDia(fecha: string) {
+    const fechaAnterior = new Date(fecha);
+    fechaAnterior.setDate(fechaAnterior.getDate() - 1);
+    
+    const { data: cierreAnterior } = await this.supabase
+      .from('cierre')
+      .select('saldo_final')
+      .lte('fecha', fechaAnterior.toISOString())
+      .order('fecha', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    const saldoInicial = cierreAnterior?.saldo_final || 0;
+    const totalIngresos = await this.obtenerTotalIngresosDia(fecha);
+    const totalEgresos = await this.obtenerTotalEgresosDia(fecha);
+    const saldoFinal = saldoInicial + totalIngresos - totalEgresos;
+    
+    return {
+      saldo_inicial: saldoInicial,
+      total_ingresos: totalIngresos,
+      total_egresos: totalEgresos,
+      saldo_final: saldoFinal
+    };
+  }
+
+  async registrarVentaLibreConIngreso(venta: {
+    monto: number;
+    descripcion: string;
+    tipo_pago_id: number;
+    usuario_id: number;
+  }) {
+    const ingreso = await this.crearIngreso({
+      tipo_pago_id: venta.tipo_pago_id,
+      usuario_id: venta.usuario_id,
+      total: venta.monto,
+      tipo_ingreso: 'venta_libre',
+      descripcion: venta.descripcion
+    });
+    
+    if (!ingreso) return null;
+    
+    const { data, error } = await this.supabase
+      .from('venta_libre')
+      .insert([{
+        ...venta,
+        ingreso_id: ingreso.ingreso_id,
+        fecha: new Date().toISOString()
+      }])
+      .select('*')
+      .single();
+    
+    if (error) {
+      console.error('Error al registrar venta libre:', error);
+      return null;
+    }
+    return data;
+  }
+
 }
