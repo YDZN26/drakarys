@@ -52,8 +52,9 @@ export class CierreCajaPage implements OnInit {
     finDelDia.setHours(23, 59, 59, 999);
 
     const { data: ingresos } = await this.supabaseService.getSupabase()
-      .from('venta')
-      .select(`total, tipo_pago_id`)
+      .from('ingreso')
+      .select(`total, tipo_pago_id, tipo_ingreso`)
+      .in('tipo_ingreso', ['venta', 'venta_libre', 'ingresos_varios'])
       .gte('fecha', inicioDelDia.toISOString())
       .lte('fecha', finDelDia.toISOString());
 

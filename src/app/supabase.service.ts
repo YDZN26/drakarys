@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { createClient } from '@supabase/supabase-js';
 import { environment } from '../environments/environment';
 
-type TipoIngreso = 'venta' | 'venta_libre' | 'ajuste_positivo';
+type TipoIngreso = 'venta' | 'venta_libre' | 'ajuste_positivo' | 'pago_deuda' | 'ingresos_varios';
 
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
@@ -145,7 +145,8 @@ export class SupabaseService {
     total: number;
     tipo_ingreso: TipoIngreso;
     descripcion?: string;
-    fecha?: string; // opcional, si quieres forzar
+    fecha?: string;
+    id_deuda?: number | null;
   }) {
     const payload = {
       tipo_pago_id: ingreso.tipo_pago_id,
@@ -154,7 +155,8 @@ export class SupabaseService {
       total: ingreso.total,
       tipo_ingreso: ingreso.tipo_ingreso,
       descripcion: ingreso.descripcion ?? null,
-      fecha: ingreso.fecha ?? new Date().toISOString()
+      fecha: ingreso.fecha ?? new Date().toISOString(),
+      id_deuda: ingreso.id_deuda ?? null
     };
 
     const { data, error } = await this.supabase
@@ -173,7 +175,7 @@ export class SupabaseService {
   async registrarVentaConIngreso(total: number, tipoPagoId: number, clienteId: number, usuarioId?: number) {
     const userId = usuarioId ?? 0;
 
-    // 1) PADRE
+    // 1) PADRE (único registro)
     const ingreso = await this.crearIngreso({
       tipo_pago_id: tipoPagoId,
       usuario_id: userId,
@@ -185,33 +187,18 @@ export class SupabaseService {
 
     if (!ingreso) return null;
 
-    // 2) HIJO
-    const ventaData = {
-      ingreso_id: ingreso.ingreso_id,
-      total,
-      tipo_pago_id: tipoPagoId,
-      cliente_id: clienteId,
-      usuario_id: usuarioId ?? null,
-      fecha: new Date().toISOString()
-    };
-
-    const { data, error } = await this.supabase
-      .from('venta')
-      .insert([ventaData])
-      .select('*')
-      .single();
-
-    if (error) {
-      console.error('Error al registrar venta (hijo):', error);
-      return null;
-    }
-
-    return { ingreso, venta: data };
+    // Ya no existe tabla "venta"
+    return { ingreso };
   }
 
+  // Nota: el parámetro ventaId se mantiene para no romper llamadas,
+  // pero ahora representa el ingresoId.
   async registrarVentaDetalles(ventaId: number, productos: any[]) {
+    const ingresoId = ventaId;
+
     const detalles = productos.map(p => ({
-      venta_id: ventaId,
+      venta_id: null,
+      ingreso_id: ingresoId,
       producto_id: p.producto_id,
       cantidad: p.cantidadSeleccionada,
       precio_unitario: p.precio,
@@ -236,31 +223,37 @@ export class SupabaseService {
     const res = await this.registrarVentaConIngreso(total, tipoPagoId, clienteId, usuarioId);
     if (!res) return null;
 
-    const detalles = await this.registrarVentaDetalles(res.venta.venta_id, productos);
+    const detalles = await this.registrarVentaDetalles(res.ingreso.ingreso_id, productos);
     if (!detalles) return null;
 
-    return { ingreso: res.ingreso, venta: res.venta, detalles };
+    return { ingreso: res.ingreso, detalles };
   }
 
+  // Antes era "venta", ahora se obtiene el ingreso por ingreso_id
   async obtenerVentaPorId(ventaId: number) {
+    const ingresoId = ventaId;
+
     const { data, error } = await this.supabase
-      .from('venta')
+      .from('ingreso')
       .select('*')
-      .eq('venta_id', ventaId)
+      .eq('ingreso_id', ingresoId)
       .single();
 
     if (error) {
-      console.error('Error al obtener la venta:', error);
+      console.error('Error al obtener el ingreso (venta):', error);
       return null;
     }
     return data;
   }
 
+  // Nota: el parámetro ventaId se mantiene, pero ahora representa ingresoId.
   async obtenerVentaDetalles(ventaId: number) {
+    const ingresoId = ventaId;
+
     const { data, error } = await this.supabase
       .from('venta_detallada')
       .select(`*, producto(nombre)`)
-      .eq('venta_id', ventaId);
+      .eq('ingreso_id', ingresoId);
 
     if (error) {
       console.error('Error al obtener los detalles de la venta:', error);
@@ -273,21 +266,22 @@ export class SupabaseService {
     const { data, error } = await this.supabase
       .from('venta_detallada')
       .select(`
-        venta_id,
+        ingreso_id,
         cantidad,
         precio_unitario,
         subtotal,
         producto:producto_id(nombre),
-        venta:venta_id!inner(
-          venta_id,
+        ingreso:ingreso_id!inner(
+          ingreso_id,
           fecha,
+          tipo_ingreso,
           tipo_de_pago:tipo_pago_id(nombre),
           cliente:cliente_id(nombre,apellido)
         )
       `)
-      .gte('venta.fecha', fechaInicio)
-      .lte('venta.fecha', fechaFin)
-      .order('venta_id', { ascending: false });
+      .gte('ingreso.fecha', fechaInicio)
+      .lte('ingreso.fecha', fechaFin)
+      .order('ingreso_id', { ascending: false });
 
     if (error) {
       console.error(error);
@@ -295,7 +289,6 @@ export class SupabaseService {
     }
     return data;
   }
-
 
   async obtenerGastos(fechaInicio?: string, fechaFin?: string) {
     let query = this.supabase.from('gasto').select('*').order('fecha', { ascending: false });
@@ -312,7 +305,6 @@ export class SupabaseService {
     return data;
   }
 
-
   async registrarCierre(cierre: any) {
     const { data, error } = await this.supabase
       .from('cierre')
@@ -326,7 +318,6 @@ export class SupabaseService {
     }
     return data;
   }
-
 
   async obtenerIngresosPorTipoPago(fechaInicio: string, fechaFin: string) {
     const { data, error } = await this.supabase
@@ -365,7 +356,6 @@ export class SupabaseService {
     return data;
   }
 
-
   async obtenerVentasLibresDelDia(fecha: string) {
     const { data, error } = await this.supabase
       .from('ingreso')
@@ -383,8 +373,16 @@ export class SupabaseService {
 
   async obtenerIngresosLibres(fechaInicio: string, fechaFin: string) {
     const { data, error } = await this.supabase
-      .from('venta_libre')
-      .select('monto, descripcion, fecha, tipo_de_pago(nombre)')
+      .from('ingreso')
+      .select(`
+        ingreso_id,
+        total,
+        descripcion,
+        fecha,
+        tipo_de_pago:tipo_pago_id(nombre),
+        tipo_ingreso
+      `)
+      .in('tipo_ingreso', ['venta_libre', 'ingresos_varios'])
       .gte('fecha', fechaInicio)
       .lte('fecha', fechaFin)
       .order('fecha', { ascending: false });
@@ -449,25 +447,7 @@ export class SupabaseService {
     tipo_pago_id: number;
     usuario_id: number;
   }) {
-    const { data, error } = await this.supabase
-      .from('venta_libre')
-      .insert([venta])
-      .select('*')
-      .single();
-
-    if (error) {
-      console.error('Error al registrar venta libre:', error);
-      return null;
-    }
-    return data;
-  }
-
-  async registrarVentaLibreConIngreso(venta: {
-    monto: number;
-    descripcion: string;
-    tipo_pago_id: number;
-    usuario_id: number;
-  }) {
+    // Ya no existe tabla "venta_libre": se registra directamente en ingreso
     const ingreso = await this.crearIngreso({
       tipo_pago_id: venta.tipo_pago_id,
       usuario_id: venta.usuario_id,
@@ -478,22 +458,29 @@ export class SupabaseService {
 
     if (!ingreso) return null;
 
-    const { data, error } = await this.supabase
-      .from('venta_libre')
-      .insert([{
-        ...venta,
-        ingreso_id: ingreso.ingreso_id,
-        fecha: new Date().toISOString()
-      }])
-      .select('*')
-      .single();
-
-    if (error) {
-      console.error('Error al registrar venta libre:', error);
-      return null;
-    }
-    return data;
+    return ingreso;
   }
+
+  async registrarVentaLibreConIngreso(venta: {
+    monto: number;
+    descripcion: string;
+    tipo_pago_id: number;
+    usuario_id: number;
+  }) {
+    // Ya no existe tabla "venta_libre": se registra solo en ingreso
+    const ingreso = await this.crearIngreso({
+      tipo_pago_id: venta.tipo_pago_id,
+      usuario_id: venta.usuario_id,
+      total: venta.monto,
+      tipo_ingreso: 'venta_libre',
+      descripcion: venta.descripcion
+    });
+
+    if (!ingreso) return null;
+
+    return ingreso;
+  }
+
   getSupabase() {
     return this.supabase;
   }

@@ -16,7 +16,7 @@ export class ReciboPage implements OnInit {
     productos: [],
     totalVenta: 0,
     metodoPago: '',
-    cliente: '',   // ahora guardamos un string
+    cliente: '',
   };
 
   tiposPago: { [key: number]: string } = {
@@ -34,20 +34,20 @@ export class ReciboPage implements OnInit {
   ) {}
 
   ngOnInit() {
-  const ventaParam = this.route.snapshot.paramMap.get('ventaId');
+    const ventaParam = this.route.snapshot.paramMap.get('ventaId');
     console.log('Recibo cargando con ID:', ventaParam);
 
-  if (ventaParam) {
-    const ventaId = Number(ventaParam);
-    this.cargarVenta(ventaId);
-  } else {
-    console.error('No se recibió ventaId en la URL.');
+    if (ventaParam) {
+      const ingresoId = Number(ventaParam);
+      this.cargarVenta(ingresoId);
+    } else {
+      console.error('No se recibió ventaId en la URL.');
+    }
   }
-}
 
-  private async cargarVenta(ventaId: number) {
-    const venta = await this.supabase.obtenerVentaPorId(ventaId);
-    const detalles = await this.supabase.obtenerVentaDetalles(ventaId);
+  private async cargarVenta(ingresoId: number) {
+    const venta = await this.supabase.obtenerVentaPorId(ingresoId);
+    const detalles = await this.supabase.obtenerVentaDetalles(ingresoId);
     if (!venta) return console.error('Venta no encontrada');
 
     // Formatear fecha
@@ -66,7 +66,7 @@ export class ReciboPage implements OnInit {
     }
 
     this.recibo = {
-      venta_id: venta.venta_id,
+      venta_id: venta.ingreso_id,
       fechaVenta: `${fechaLocal} ${horaLocal}`,
       totalVenta: venta.total,
       metodoPago: tipoPago,

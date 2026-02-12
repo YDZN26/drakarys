@@ -112,34 +112,39 @@ export class BalancePage implements AfterViewInit {
 
   async cargarBalance(fechaInicio: string, fechaFin: string) {
     const detalles = await this.supabaseService.obtenerDetallesVentasPorFecha(fechaInicio, fechaFin);
+
+    // (CAMBIO) Agrupar por ingreso_id, no por venta_id
     const agrupadas: { [key: number]: any[] } = {};
     for (const d of detalles) {
-      if (!d.venta) continue;
-      const ventaId = d.venta_id;
-      if (!agrupadas[ventaId]) agrupadas[ventaId] = [];
-      agrupadas[ventaId].push(d);
+      if (!d.ingreso) continue; // (CAMBIO) antes d.venta
+      const ingresoId = d.ingreso_id;
+      if (!agrupadas[ingresoId]) agrupadas[ingresoId] = [];
+      agrupadas[ingresoId].push(d);
     }
 
     const agrupadasArray = Object.values(agrupadas);
     agrupadasArray.sort((a, b) => {
-      const tA = new Date(a[0].venta.fecha + 'Z').getTime();
-      const tB = new Date(b[0].venta.fecha + 'Z').getTime();
+      const tA = new Date(a[0].ingreso.fecha + 'Z').getTime(); //
+      const tB = new Date(b[0].ingreso.fecha + 'Z').getTime(); //
       return tB - tA;
     });
 
     this.ingresos = agrupadasArray.map((items: any[]) => {
-      const venta = items[0].venta;
-      const clienteObj = venta.cliente;
+      const ingreso = items[0].ingreso;
+
+      const clienteObj = ingreso.cliente;
       const clienteStr = clienteObj ? `${clienteObj.nombre} ${clienteObj.apellido}` : '-';
-      const tipoPago = venta?.tipo_de_pago?.nombre ?? '-';
-      const fechaObj = venta?.fecha ? new Date(venta.fecha + 'Z') : new Date();
+
+      const tipoPago = ingreso?.tipo_de_pago?.nombre ?? '-';
+      const fechaObj = ingreso?.fecha ? new Date(ingreso.fecha + 'Z') : new Date();
       const hora = fechaObj.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
       const fechaLocal = fechaObj.toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' });
+
       const productos = items.map(i => `${i.cantidad} ${i.producto?.nombre}`);
       const total = items.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
 
       return {
-        venta_id: venta.venta_id,
+        venta_id: ingreso.ingreso_id, // (CAMBIO) ahora es ingreso_id
         nombre: productos.length > 1
           ? productos.slice(0, 1).join(', ') + ', ...'
           : productos.join(', '),
@@ -157,17 +162,16 @@ export class BalancePage implements AfterViewInit {
 
     const ingresosLibres = await this.supabaseService.obtenerIngresosLibres(fechaInicio, fechaFin);
 
-    // Venta Libre
     const ingresosLibresFormateados = ingresosLibres.map((v: any) => {
       const fechaObj = new Date(v.fecha + 'Z');
       const hora = fechaObj.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
       const fechaLocal = fechaObj.toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' });
       return {
-        venta_id: null,
+        venta_id: v.ingreso_id, //
         nombre: v.descripcion,
         cliente: 'Venta Libre',
         descripcion: `${v.tipo_de_pago?.nombre ?? '-'} - ${hora}`,
-        precio: parseFloat(v.monto),
+        precio: parseFloat(v.total),
         fechaCompleta: `${fechaLocal} ${hora}`,
         productosOriginales: [],
         textoBusqueda: v.descripcion
@@ -256,6 +260,7 @@ export class BalancePage implements AfterViewInit {
   }
 
   verRecibo(item: any) {
+    if (this.vistaActual !== 'ingresos' || !item?.venta_id) return;
     this.router.navigate(['/recibo', item.venta_id]);
   }
 

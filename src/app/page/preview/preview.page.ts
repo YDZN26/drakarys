@@ -153,7 +153,6 @@ export class PreviewPage implements OnInit {
       return;
     }
 
-  
     const tipos: Record<string, number> = {
       'Cuotas': 1,
       'Efectivo': 2,
@@ -173,7 +172,6 @@ export class PreviewPage implements OnInit {
     }
 
     try {
-
       const res = await this.supabase.registrarVentaCompleta(
         this.venta.productos,
         tipoPagoId,
@@ -186,8 +184,8 @@ export class PreviewPage implements OnInit {
         return;
       }
 
-      // Navega a recibo con la venta_id 
-      this.navCtrl.navigateForward(['/recibo', res.venta.venta_id]);
+      // Navega a recibo con el ingreso_id
+      this.navCtrl.navigateForward(['/recibo', res.ingreso.ingreso_id]);
     } catch (e) {
       console.error('Error al confirmar venta', e);
     }
