@@ -11,7 +11,7 @@ import { MensajeService } from 'src/app/mensaje.service';
 })
 export class ReciboPage implements OnInit {
   recibo: any = {
-    venta_id: 0,
+    ingreso_id: 0,
     fechaVenta: '',
     productos: [],
     totalVenta: 0,
@@ -34,41 +34,39 @@ export class ReciboPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    const ventaParam = this.route.snapshot.paramMap.get('ventaId');
-    console.log('Recibo cargando con ID:', ventaParam);
+    const ingresoParam = this.route.snapshot.paramMap.get('ventaId');
+    console.log('Recibo cargando con ID:', ingresoParam);
 
-    if (ventaParam) {
-      const ingresoId = Number(ventaParam);
-      this.cargarVenta(ingresoId);
+    if (ingresoParam) {
+      const ingresoId = Number(ingresoParam);
+      this.cargarIngreso(ingresoId);
     } else {
-      console.error('No se recibió ventaId en la URL.');
+      console.error('No se recibió ingresoId en la URL.');
     }
   }
 
-  private async cargarVenta(ingresoId: number) {
-    const venta = await this.supabase.obtenerVentaPorId(ingresoId);
-    const detalles = await this.supabase.obtenerVentaDetalles(ingresoId);
-    if (!venta) return console.error('Venta no encontrada');
+  private async cargarIngreso(ingresoId: number) {
+    const ingreso = await this.supabase.obtenerVentaPorId(ingresoId); // ahora consulta ingreso
+    const detalles = await this.supabase.obtenerVentaDetalles(ingresoId); // ahora por ingreso_id
 
-    // Formatear fecha
-    const fechaObj = new Date(venta.fecha + 'Z');
+    if (!ingreso) return console.error('Ingreso no encontrado');
+
+    const fechaObj = new Date(ingreso.fecha + 'Z');
     const fechaLocal = fechaObj.toLocaleDateString('es-BO');
     const horaLocal  = fechaObj.toLocaleTimeString('es-BO');
 
-    // Obtener nombre legible del tipo de pago
-    const tipoPago = this.tiposPago[venta.tipo_pago_id] || '';
+    const tipoPago = this.tiposPago[ingreso.tipo_pago_id] || '';
 
-    // Traer cliente de Supabase
     let clienteStr = '';
-    if (venta.cliente_id) {
-      const cli = await this.supabase.obtenerClientePorId(venta.cliente_id);
+    if (ingreso.cliente_id) {
+      const cli = await this.supabase.obtenerClientePorId(ingreso.cliente_id);
       if (cli) clienteStr = `${cli.nombre} ${cli.apellido}`.trim();
     }
 
     this.recibo = {
-      venta_id: venta.ingreso_id,
+      ingreso_id: ingreso.ingreso_id,
       fechaVenta: `${fechaLocal} ${horaLocal}`,
-      totalVenta: venta.total,
+      totalVenta: ingreso.total,
       metodoPago: tipoPago,
       cliente: clienteStr,
       productos: detalles || []

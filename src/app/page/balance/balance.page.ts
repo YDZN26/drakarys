@@ -113,10 +113,10 @@ export class BalancePage implements AfterViewInit {
   async cargarBalance(fechaInicio: string, fechaFin: string) {
     const detalles = await this.supabaseService.obtenerDetallesVentasPorFecha(fechaInicio, fechaFin);
 
-    // (CAMBIO) Agrupar por ingreso_id, no por venta_id
     const agrupadas: { [key: number]: any[] } = {};
     for (const d of detalles) {
-      if (!d.ingreso) continue; // (CAMBIO) antes d.venta
+      if (!d.ingreso) continue;
+
       const ingresoId = d.ingreso_id;
       if (!agrupadas[ingresoId]) agrupadas[ingresoId] = [];
       agrupadas[ingresoId].push(d);
@@ -124,8 +124,8 @@ export class BalancePage implements AfterViewInit {
 
     const agrupadasArray = Object.values(agrupadas);
     agrupadasArray.sort((a, b) => {
-      const tA = new Date(a[0].ingreso.fecha + 'Z').getTime(); //
-      const tB = new Date(b[0].ingreso.fecha + 'Z').getTime(); //
+      const tA = new Date(a[0].ingreso.fecha + 'Z').getTime();
+      const tB = new Date(b[0].ingreso.fecha + 'Z').getTime();
       return tB - tA;
     });
 
@@ -136,6 +136,7 @@ export class BalancePage implements AfterViewInit {
       const clienteStr = clienteObj ? `${clienteObj.nombre} ${clienteObj.apellido}` : '-';
 
       const tipoPago = ingreso?.tipo_de_pago?.nombre ?? '-';
+
       const fechaObj = ingreso?.fecha ? new Date(ingreso.fecha + 'Z') : new Date();
       const hora = fechaObj.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
       const fechaLocal = fechaObj.toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' });
@@ -144,7 +145,7 @@ export class BalancePage implements AfterViewInit {
       const total = items.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
 
       return {
-        venta_id: ingreso.ingreso_id, // (CAMBIO) ahora es ingreso_id
+        ingreso_id: ingreso.ingreso_id,
         nombre: productos.length > 1
           ? productos.slice(0, 1).join(', ') + ', ...'
           : productos.join(', '),
@@ -166,10 +167,11 @@ export class BalancePage implements AfterViewInit {
       const fechaObj = new Date(v.fecha + 'Z');
       const hora = fechaObj.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
       const fechaLocal = fechaObj.toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' });
+
       return {
-        venta_id: v.ingreso_id, //
+        ingreso_id: v.ingreso_id ?? null,
         nombre: v.descripcion,
-        cliente: 'Venta Libre',
+        cliente: v.tipo_ingreso === 'ingresos_varios' ? 'Ingreso Libre' : 'Venta Libre',
         descripcion: `${v.tipo_de_pago?.nombre ?? '-'} - ${hora}`,
         precio: parseFloat(v.total),
         fechaCompleta: `${fechaLocal} ${hora}`,
@@ -260,8 +262,8 @@ export class BalancePage implements AfterViewInit {
   }
 
   verRecibo(item: any) {
-    if (this.vistaActual !== 'ingresos' || !item?.venta_id) return;
-    this.router.navigate(['/recibo', item.venta_id]);
+    if (this.vistaActual !== 'ingresos' || !item?.ingreso_id) return;
+    this.router.navigate(['/recibo', item.ingreso_id]);
   }
 
   async seleccionarFechaDesdeCalendario(event: any) {

@@ -2,7 +2,12 @@ import { Injectable } from '@angular/core';
 import { createClient } from '@supabase/supabase-js';
 import { environment } from '../environments/environment';
 
-type TipoIngreso = 'venta' | 'venta_libre' | 'ajuste_positivo' | 'pago_deuda' | 'ingresos_varios';
+type TipoIngreso =
+  | 'venta'
+  | 'venta_libre'
+  | 'pago_deuda'
+  | 'ingresos_varios'
+  | 'ajuste_positivo';
 
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
@@ -172,32 +177,8 @@ export class SupabaseService {
     return data; // { ingreso_id }
   }
 
-  async registrarVentaConIngreso(total: number, tipoPagoId: number, clienteId: number, usuarioId?: number) {
-    const userId = usuarioId ?? 0;
-
-    // 1) PADRE (único registro)
-    const ingreso = await this.crearIngreso({
-      tipo_pago_id: tipoPagoId,
-      usuario_id: userId,
-      cliente_id: clienteId,
-      total,
-      tipo_ingreso: 'venta',
-      descripcion: 'Venta con detalle'
-    });
-
-    if (!ingreso) return null;
-
-    // Ya no existe tabla "venta"
-    return { ingreso };
-  }
-
-  // Nota: el parámetro ventaId se mantiene para no romper llamadas,
-  // pero ahora representa el ingresoId.
-  async registrarVentaDetalles(ventaId: number, productos: any[]) {
-    const ingresoId = ventaId;
-
+  async registrarVentaDetallesPorIngreso(ingresoId: number, productos: any[]) {
     const detalles = productos.map(p => ({
-      venta_id: null,
       ingreso_id: ingresoId,
       producto_id: p.producto_id,
       cantidad: p.cantidadSeleccionada,
@@ -219,20 +200,29 @@ export class SupabaseService {
 
   async registrarVentaCompleta(productos: any[], tipoPagoId: number, clienteId: number, usuarioId?: number) {
     const total = productos.reduce((sum, p) => sum + (p.precio * p.cantidadSeleccionada), 0);
+    const userId = usuarioId ?? 0;
 
-    const res = await this.registrarVentaConIngreso(total, tipoPagoId, clienteId, usuarioId);
-    if (!res) return null;
+    // 1) Crear ingreso tipo "venta"
+    const ingreso = await this.crearIngreso({
+      tipo_pago_id: tipoPagoId,
+      usuario_id: userId,
+      cliente_id: clienteId,
+      total,
+      tipo_ingreso: 'venta',
+      descripcion: 'Venta con productos'
+    });
 
-    const detalles = await this.registrarVentaDetalles(res.ingreso.ingreso_id, productos);
+    if (!ingreso) return null;
+
+    // 2) Crear detalles ligados al ingreso
+    const detalles = await this.registrarVentaDetallesPorIngreso(ingreso.ingreso_id, productos);
     if (!detalles) return null;
 
-    return { ingreso: res.ingreso, detalles };
+    return { ingreso, detalles };
   }
 
-  // Antes era "venta", ahora se obtiene el ingreso por ingreso_id
-  async obtenerVentaPorId(ventaId: number) {
-    const ingresoId = ventaId;
 
+  async obtenerVentaPorId(ingresoId: number) {
     const { data, error } = await this.supabase
       .from('ingreso')
       .select('*')
@@ -240,23 +230,20 @@ export class SupabaseService {
       .single();
 
     if (error) {
-      console.error('Error al obtener el ingreso (venta):', error);
+      console.error('Error al obtener el ingreso:', error);
       return null;
     }
     return data;
   }
 
-  // Nota: el parámetro ventaId se mantiene, pero ahora representa ingresoId.
-  async obtenerVentaDetalles(ventaId: number) {
-    const ingresoId = ventaId;
-
+  async obtenerVentaDetalles(ingresoId: number) {
     const { data, error } = await this.supabase
       .from('venta_detallada')
       .select(`*, producto(nombre)`)
       .eq('ingreso_id', ingresoId);
 
     if (error) {
-      console.error('Error al obtener los detalles de la venta:', error);
+      console.error('Error al obtener los detalles por ingreso:', error);
       return [];
     }
     return data;
@@ -274,7 +261,7 @@ export class SupabaseService {
         ingreso:ingreso_id!inner(
           ingreso_id,
           fecha,
-          tipo_ingreso,
+          total,
           tipo_de_pago:tipo_pago_id(nombre),
           cliente:cliente_id(nombre,apellido)
         )
@@ -319,63 +306,10 @@ export class SupabaseService {
     return data;
   }
 
-  async obtenerIngresosPorTipoPago(fechaInicio: string, fechaFin: string) {
-    const { data, error } = await this.supabase
-      .from('ingreso')
-      .select(`
-        tipo_pago_id,
-        total,
-        tipo_ingreso,
-        tipo_de_pago ( nombre )
-      `)
-      .gte('fecha', fechaInicio)
-      .lte('fecha', fechaFin);
-
-    if (error) {
-      console.error('Error al obtener ingresos por tipo de pago:', error.message);
-      return [];
-    }
-    return data;
-  }
-
-  async obtenerEgresosPorTipoPago(fechaInicio: string, fechaFin: string) {
-    const { data, error } = await this.supabase
-      .from('gasto')
-      .select(`
-        tipo_pago_id,
-        monto,
-        tipo_de_pago ( nombre )
-      `)
-      .gte('fecha', fechaInicio)
-      .lte('fecha', fechaFin);
-
-    if (error) {
-      console.error('Error al obtener egresos por tipo de pago:', error.message);
-      return [];
-    }
-    return data;
-  }
-
-  async obtenerVentasLibresDelDia(fecha: string) {
-    const { data, error } = await this.supabase
-      .from('ingreso')
-      .select('total, fecha')
-      .eq('tipo_ingreso', 'venta_libre')
-      .gte('fecha', `${fecha} 00:00:00`)
-      .lte('fecha', `${fecha} 23:59:59`);
-
-    if (error) {
-      console.error('Error al obtener ventas libres del día:', error);
-      return [];
-    }
-    return data;
-  }
-
   async obtenerIngresosLibres(fechaInicio: string, fechaFin: string) {
     const { data, error } = await this.supabase
       .from('ingreso')
       .select(`
-        ingreso_id,
         total,
         descripcion,
         fecha,
@@ -394,80 +328,12 @@ export class SupabaseService {
     return data;
   }
 
-  async obtenerTotalIngresosDia(fecha: string) {
-    const { data, error } = await this.supabase
-      .rpc('obtener_total_ingresos_dia', { fecha_dia: fecha });
-
-    if (error) {
-      console.error('Error al obtener total de ingresos:', error);
-      return 0;
-    }
-    return data || 0;
-  }
-
-  async obtenerTotalEgresosDia(fecha: string) {
-    const { data, error } = await this.supabase
-      .rpc('obtener_total_egresos_dia', { fecha_dia: fecha });
-
-    if (error) {
-      console.error('Error al obtener total de egresos:', error);
-      return 0;
-    }
-    return data || 0;
-  }
-
-  async obtenerBalanceDia(fecha: string) {
-    const fechaAnterior = new Date(fecha);
-    fechaAnterior.setDate(fechaAnterior.getDate() - 1);
-
-    const { data: cierreAnterior } = await this.supabase
-      .from('cierre')
-      .select('saldo_final')
-      .lte('fecha', fechaAnterior.toISOString())
-      .order('fecha', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const saldoInicial = cierreAnterior?.saldo_final || 0;
-    const totalIngresos = await this.obtenerTotalIngresosDia(fecha);
-    const totalEgresos = await this.obtenerTotalEgresosDia(fecha);
-    const saldoFinal = saldoInicial + totalIngresos - totalEgresos;
-
-    return {
-      saldo_inicial: saldoInicial,
-      total_ingresos: totalIngresos,
-      total_egresos: totalEgresos,
-      saldo_final: saldoFinal
-    };
-  }
-
-  async registrarVentaLibre(venta: {
-    monto: number;
-    descripcion: string;
-    tipo_pago_id: number;
-    usuario_id: number;
-  }) {
-    // Ya no existe tabla "venta_libre": se registra directamente en ingreso
-    const ingreso = await this.crearIngreso({
-      tipo_pago_id: venta.tipo_pago_id,
-      usuario_id: venta.usuario_id,
-      total: venta.monto,
-      tipo_ingreso: 'venta_libre',
-      descripcion: venta.descripcion
-    });
-
-    if (!ingreso) return null;
-
-    return ingreso;
-  }
-
   async registrarVentaLibreConIngreso(venta: {
     monto: number;
     descripcion: string;
     tipo_pago_id: number;
     usuario_id: number;
   }) {
-    // Ya no existe tabla "venta_libre": se registra solo en ingreso
     const ingreso = await this.crearIngreso({
       tipo_pago_id: venta.tipo_pago_id,
       usuario_id: venta.usuario_id,
@@ -478,7 +344,80 @@ export class SupabaseService {
 
     if (!ingreso) return null;
 
-    return ingreso;
+    const { data, error } = await this.supabase
+      .from('ingreso')
+      .select('*')
+      .eq('ingreso_id', ingreso.ingreso_id)
+      .single();
+
+    if (error) {
+      console.error('Error al obtener ingreso recién creado:', error);
+      return null;
+    }
+    return data;
+  }
+
+  async registrarPagoDeuda(payload: {
+    deuda_id: number;
+    monto: number;
+    tipo_pago_id: number;
+    usuario_id: number;
+    descripcion?: string;
+  }) {
+    const { data: deuda, error: eDeuda } = await this.supabase
+      .from('deuda')
+      .select('deuda_id, cliente_id, monto_total, total_pagado, saldo, estado')
+      .eq('deuda_id', payload.deuda_id)
+      .single();
+
+    if (eDeuda || !deuda) {
+      console.error('No se pudo obtener la deuda:', eDeuda);
+      return null;
+    }
+
+    if (payload.monto <= 0) {
+      console.error('Monto inválido');
+      return null;
+    }
+
+    if (Number(deuda.saldo) < payload.monto) {
+      console.error('El monto excede el saldo de la deuda');
+      return null;
+    }
+
+    const ingreso = await this.crearIngreso({
+      tipo_pago_id: payload.tipo_pago_id,
+      usuario_id: payload.usuario_id,
+      cliente_id: deuda.cliente_id,
+      total: payload.monto,
+      tipo_ingreso: 'pago_deuda',
+      descripcion: payload.descripcion ?? 'Pago de deuda',
+      id_deuda: deuda.deuda_id
+    });
+
+    if (!ingreso) return null;
+
+    const nuevoTotalPagado = Number(deuda.total_pagado || 0) + payload.monto;
+    const nuevoSaldo = Number(deuda.saldo || 0) - payload.monto;
+    const nuevoEstado = nuevoSaldo <= 0 ? 'pagada' : 'pendiente';
+
+    const { data: deudaActualizada, error: eUpd } = await this.supabase
+      .from('deuda')
+      .update({
+        total_pagado: nuevoTotalPagado,
+        saldo: nuevoSaldo,
+        estado: nuevoEstado
+      })
+      .eq('deuda_id', deuda.deuda_id)
+      .select('*')
+      .single();
+
+    if (eUpd) {
+      console.error('Error al actualizar deuda:', eUpd);
+      return null;
+    }
+
+    return { ingreso_id: ingreso.ingreso_id, deuda: deudaActualizada };
   }
 
   getSupabase() {

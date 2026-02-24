@@ -5,7 +5,6 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <!-- Usuario e información general -->
   <div class="user-info">
     <div class="user-details">
       <ion-icon name="person-circle" size="large"></ion-icon>
@@ -25,12 +24,10 @@
     </div>
   </div>
 
-  <!-- Barra de búsqueda -->
   <ion-toolbar>
     <ion-searchbar color="light" placeholder="Buscar deudas"></ion-searchbar>
   </ion-toolbar>
 
-  <!-- Lista de clientes con scroll -->
   <div class="cliente-lista-scroll">
     <ion-list>
       <div *ngFor="let cliente of clientes">
@@ -43,13 +40,32 @@
             <p>Bs. {{ cliente.deuda }}</p>
           </ion-label>
         </ion-item>
+
         <div class="menu-desplegable" *ngIf="selectedCliente === cliente.id">
           <p>Monto Pagado: {{ cliente.montoPagado }} Bs.</p>
           <p>Monto Faltante: {{ cliente.montoFaltante }} Bs.</p>
+
+          <!-- ✅ Nuevo: Tipo de pago -->
+          <ion-item lines="none">
+            <ion-label>Tipo de pago</ion-label>
+            <ion-select [(ngModel)]="tipoPagoId" placeholder="Seleccionar">
+              <ion-select-option *ngFor="let t of tiposDePago" [value]="t.tipo_pago_id">
+                {{ t.nombre }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+
           <ion-input [(ngModel)]="pago" type="number" placeholder="Agregar monto a pagar"></ion-input>
-          <ion-button (click)="pagar()">Pagar</ion-button>
+          <ion-button (click)="pagar(cliente.id)">Pagar</ion-button>
         </div>
       </div>
     </ion-list>
   </div>
+
+  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
+    <ion-button class="crear-deuda-button" (click)="crearDeuda()">
+      Nueva Deuda
+    </ion-button>
+  </ion-fab>
+
 </ion-content>

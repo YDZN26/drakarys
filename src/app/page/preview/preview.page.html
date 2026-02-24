@@ -13,7 +13,6 @@
       <ion-card-title>Detalles de la Venta</ion-card-title>
     </ion-card-header>
     <ion-card-content>
-      <!-- Lista de productos seleccionados -->
       <ion-list>
         <ion-item *ngFor="let producto of venta.productos">
           <ion-label>
@@ -25,7 +24,6 @@
         </ion-item>
       </ion-list>
 
-      <!-- Información general de la venta -->
       <ion-item>
         <ion-label>Total Venta</ion-label>
         <ion-note slot="end">Bs. {{ venta.totalVenta }}</ion-note>
@@ -39,7 +37,6 @@
         <ion-note slot="end">{{ venta.fechaVenta }}</ion-note>
       </ion-item>
 
-      <!-- Selector de cliente personalizado -->
       <ion-item button (click)="openClienteAlert()">
         <ion-label>Cliente</ion-label>
         <ion-note slot="end">
@@ -52,10 +49,9 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Botón flotante para confirmar la venta -->
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button (click)="confirmarVenta()">
+  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
+    <ion-button class="confirmar-venta-button" (click)="confirmarVenta()">
       Confirmar Venta
-    </ion-fab-button>
+    </ion-button>
   </ion-fab>
 </ion-content>

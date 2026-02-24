@@ -19,19 +19,16 @@
     </div>
   </div>
 
-  <!-- Barra de búsqueda -->
   <ion-toolbar>
     <ion-searchbar color="light" placeholder="Buscar productos" (ionInput)="buscarProductos($event)"></ion-searchbar>
   </ion-toolbar>
 
-  <!-- Botones de categorías -->
   <div class="category-buttons">
     <ion-button>Todos</ion-button>
     <ion-button>Categoria 1</ion-button>
     <ion-button>Categoria 2</ion-button>
   </div>
 
-  <!-- Lista de productos filtrados -->
   <ion-list>
     <ion-item *ngFor="let producto of productosFiltrados">
       <ion-avatar slot="start">
@@ -52,10 +49,9 @@
     </ion-item>
   </ion-list>
 
-  <!-- Botón "Agregar Venta" -->
-  <div class="button-container">
+  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
     <ion-button class="nuevo-producto-button" [disabled]="totalProductosSeleccionados === 0" (click)="agregarVenta()">
       Agregar Venta
     </ion-button>
-  </div>
+  </ion-fab>
 </ion-content>

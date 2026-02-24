@@ -6,30 +6,30 @@ ion-toolbar {
   display: flex;
   justify-content: center;
   padding: 16px;
-  background-color: var(--ion-color-mycolor); /* Fondo igual al del toolbar */
+  background-color: var(--ion-color-mycolor);
   margin-bottom: 16px;
 
   .card {
     background-color: #fff;
-    color: var(--ion-color-mycolor); /* Color del texto general en las tarjetas */
+    color: var(--ion-color-mycolor);
     padding: 8px 16px;
     border-radius: 20px;
     text-align: center;
-    margin: 0 8px; /* Espacio entre las tarjetas */
-    width: 45%; /* Ajusta el ancho según sea necesario */
+    margin: 0 8px;
+    width: 45%;
 
     p {
       margin: 0;
-      color: #000; /* Color del texto dentro de <p> */
-      font-size: 14px; /* Tamaño del texto en <p> */
-      font-weight: bold; /* Texto en negrilla */
+      color: #000;
+      font-size: 14px;
+      font-weight: bold;
     }
 
     h2 {
       margin: 0;
-      color: #000; /* Color del texto dentro de <h2> */
-      font-size: 18px; /* Tamaño del texto en <h2> */
-      font-weight: bold; /* Texto en negrilla */
+      color: #000;
+      font-size: 18px;
+      font-weight: bold;
     }
   }
 }
@@ -44,20 +44,24 @@ ion-toolbar {
   }
 }
 
-.button-container {
-  display: flex;
-  justify-content: center;
-  margin: 16px 0;
+/* Estilos para el botón flotante */
+ion-fab {
+  margin-bottom: 20px; /* Espacio desde el borde inferior */
 }
 
-ion-button.nuevo-producto-button {
+.nuevo-producto-button {
   --border-radius: 69px;
   --background: #93C572;
   --color: #ffffff;
+  --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  height: 50px;
+  min-width: 200px; /* Asegura que el botón tenga buen tamaño */
+  font-weight: bold;
 }
 
 ion-list {
   margin-top: 16px;
+  padding-bottom: 80px; /* Margen extra para que el botón no tape el último producto */
 
   ion-item {
     --background: white;
@@ -75,29 +79,12 @@ ion-list {
       color: gray;
     }
 
-    strong {
-      font-size: 16px;
-      font-weight: bold;
-    }
-  }
-
-  /* Estilo para los botones de incremento y decremento */
-  ion-item {
     display: flex;
     align-items: center;
 
     ion-button {
       --color: #3880ff;
-      margin-left: 8px; /* Ajuste de espacio entre los botones */
-    }
-
-    .quantity-controls {
-      display: flex;
-      align-items: center;
-    }
-
-    .quantity-controls ion-button {
-      --color: #f04141;
+      margin-left: 8px;
     }
   }
 }

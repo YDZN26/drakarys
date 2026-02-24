@@ -18,15 +18,15 @@ ion-toolbar {
 
     span {
       font-size: 20px;
-      font-weight: bold; // Añadir negrita al texto del usuario
+      font-weight: bold;
     }
   }
 
   .info-cards {
     display: flex;
     justify-content: space-between;
-    height: 110px; // Ajusta la altura según necesites
-    margin-top: 10px; // Añadir margen superior para bajar las tarjetas
+    height: 110px;
+    margin-top: 10px;
 
     .card {
       background: white;
@@ -39,31 +39,31 @@ ion-toolbar {
       p {
         margin: 0;
         color: black;
-        font-weight: bold; // Añadir negrita al texto dentro de las tarjetas
+        font-weight: bold;
       }
 
       h2 {
         margin: 8px 0;
         color: red;
-        font-weight: bold; // Añadir negrita al texto dentro de las tarjetas
+        font-weight: bold;
       }
     }
   }
 }
 
 ion-searchbar {
-  --border-radius: 20px; // Cambia esto al valor que desees
-  --placeholder-color: #BDBDBD; // Color del texto placeholder
+  --border-radius: 20px;
+  --placeholder-color: #BDBDBD;
   text-align: center;
 
   input {
-    font-weight: 600; // Semibold para el texto del input
-    color: #BDBDBD; // Color del texto input
+    font-weight: 600;
+    color: #BDBDBD;
   }
 }
 
 .cliente-lista-scroll {
-  max-height: calc(100vh - 300px); // Ajusta según la altura de los elementos anteriores
+  max-height: calc(100vh - 300px);
   overflow-y: auto;
 }
 
@@ -72,8 +72,8 @@ ion-searchbar {
   height: 70px;
 
   ion-icon {
-    font-size: 50px; // Ajusta el tamaño del ícono
-    color: #787878; // Color del ícono
+    font-size: 50px;
+    color: #787878;
   }
 }
 
@@ -82,7 +82,7 @@ ion-searchbar {
   background: #f9f9f9;
   border: 1px solid #ddd;
   border-radius: 10px;
-  margin: 16px 0; // Añadir margen vertical para separar el menú de los demás elementos
+  margin: 16px 0;
 
   p {
     margin: 0 0 8px;
@@ -99,4 +99,18 @@ ion-searchbar {
     color: white;
     width: 100%;
   }
+}
+
+/* Estilos del botón fuera de cualquier otra llave */
+ion-fab {
+  margin-bottom: 20px; /* Separación del borde inferior de la pantalla */
+}
+
+.crear-deuda-button {
+  --border-radius: 69px;
+  --background: #93C572;
+  --color: #ffffff;
+  --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  height: 50px;
+  font-weight: bold;
 }

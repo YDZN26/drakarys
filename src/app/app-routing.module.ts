@@ -58,12 +58,17 @@ const routes: Routes = [
   {
     path: 'cierre-caja',
     loadChildren: () => import('./page/cierre-caja/cierre-caja.module').then( m => m.CierreCajaPageModule)
-  },  {
+  },
+  {
     path: 'venta-libre',
     loadChildren: () => import('./page/venta-libre/venta-libre.module').then( m => m.VentaLibrePageModule)
   },
 
-
+  // ✅ (AUMENTADO) Ruta para la pantalla Crear Deuda
+  {
+    path: 'crear-deuda',
+    loadChildren: () => import('./page/crear-deuda/crear-deuda.module').then(m => m.CrearDeudaPageModule)
+  },
 ];
 
 @NgModule({
