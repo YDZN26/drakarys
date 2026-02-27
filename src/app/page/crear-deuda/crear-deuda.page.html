@@ -13,7 +13,11 @@
 
   <ion-item>
     <ion-label position="stacked">Cliente</ion-label>
-    <ion-input [(ngModel)]="cliente" placeholder="Nombre del cliente"></ion-input>
+    <ion-select [(ngModel)]="clienteId" placeholder="Seleccionar cliente">
+      <ion-select-option *ngFor="let c of clientes" [value]="c.cliente_id">
+        {{ c.nombre }} {{ c.apellido }}
+      </ion-select-option>
+    </ion-select>
   </ion-item>
 
   <ion-item>

@@ -1,11 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { SupabaseService } from 'src/app/supabase.service';
+import { MensajeService } from 'src/app/mensaje.service';
+import { Subscription } from 'rxjs';
 
-interface Cliente {
-  id: number;
-  deuda: number;
-  montoPagado: number;
-  montoFaltante: number;
+interface ClienteDeudaView {
+  id: number;               // deuda_id
+  clienteId: number;        // cliente_id
+  total: number;            // monto_total
+  montoPagado: number;      // total_pagado
+  montoFaltante: number;    // saldo
+  nombreCliente: string;    // nombre + apellido
+  estado: string;           // pendiente / pagada
+  descripcion: string;      // ✅ (AUMENTADO) descripcion de la deuda
 }
 
 @Component({
@@ -13,52 +20,127 @@ interface Cliente {
   templateUrl: './deudas.page.html',
   styleUrls: ['./deudas.page.scss'],
 })
-export class DeudasPage implements OnInit {
+export class DeudasPage implements OnInit, OnDestroy {
 
   selectedCliente: number | null = null;
-  pago: number = 0;
+  pago: any = 0;
 
-  // ✅ (AUMENTADO) Para que coincida con tu HTML: [(ngModel)]="tipoPagoId"
   tipoPagoId: number = 0;
-
-  // ✅ (AUMENTADO) Para que coincida con tu HTML: *ngFor="let t of tiposDePago"
-  // Por ahora está vacío para que compile; luego lo llenamos desde Supabase si quieres.
   tiposDePago: any[] = [];
 
-  clientes: Cliente[] = [
-    { id: 1, deuda: 10, montoPagado: 5, montoFaltante: 5 },
-    { id: 2, deuda: 45, montoPagado: 20, montoFaltante: 25 },
-    { id: 3, deuda: 30, montoPagado: 10, montoFaltante: 20 },
-    { id: 4, deuda: 25, montoPagado: 5, montoFaltante: 20 },
-    { id: 5, deuda: 50, montoPagado: 20, montoFaltante: 30 }
-  ];
+  clientes: ClienteDeudaView[] = [];
 
-  constructor(private router: Router) {}
+  private mensajeSub!: Subscription;
 
-  ngOnInit() {}
+  constructor(
+    private router: Router,
+    private supabase: SupabaseService,
+    private mensajeService: MensajeService
+  ) {}
+
+  async ngOnInit() {
+    this.tiposDePago = await this.supabase.obtenerTiposDePago();
+
+    this.mensajeSub = this.mensajeService.mensaje$.subscribe(async (mensaje: string) => {
+      if (mensaje === 'actualizar deudas') {
+        await this.cargarDeudas();
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.mensajeSub) this.mensajeSub.unsubscribe();
+  }
+
+  async ionViewWillEnter() {
+    await this.cargarDeudas();
+  }
+
+  async cargarDeudas() {
+    const data = await this.supabase.obtenerDeudas();
+
+    this.clientes = (data || []).map((d: any) => {
+      const nombre = d.cliente ? `${d.cliente.nombre} ${d.cliente.apellido}`.trim() : '';
+      const total = Number(d.monto_total || 0);
+      const pagado = Number(d.total_pagado || 0);
+      const saldo = Number(d.saldo || 0);
+      const estado = String(d.estado || 'pendiente');
+
+      // ✅ (AUMENTADO) descripcion (si viene null, dejar vacío)
+      const descripcion = String(d.descripcion || '');
+
+      return {
+        id: d.deuda_id,
+        clienteId: d.cliente_id,
+        total,
+        montoPagado: pagado,
+        montoFaltante: saldo,
+        nombreCliente: nombre,
+        estado,
+        descripcion
+      };
+    });
+  }
 
   toggleMenu(clienteId: number) {
     this.selectedCliente = this.selectedCliente === clienteId ? null : clienteId;
   }
 
-  pagar(clienteId: number) {
-    if (!clienteId || this.pago <= 0) return;
+  async pagar(deuda: ClienteDeudaView) {
+    const monto = Number(this.pago);
 
-    const cliente = this.clientes.find(c => c.id === clienteId);
-    if (!cliente) return;
+    if (!deuda || !deuda.id) return;
 
-    console.log(`Cliente ${clienteId} pagó ${this.pago} Bs. con tipoPagoId: ${this.tipoPagoId}`);
-
-    cliente.montoPagado += this.pago;
-    cliente.montoFaltante -= this.pago;
-
-    if (cliente.montoFaltante < 0) {
-      cliente.montoFaltante = 0;
+    if (deuda.montoFaltante <= 0 || deuda.estado === 'pagada') {
+      console.log('Esta deuda ya está pagada');
+      return;
     }
+
+    if (!monto || monto <= 0) {
+      console.log('Monto inválido');
+      return;
+    }
+
+    if (!this.tipoPagoId || this.tipoPagoId <= 0) {
+      console.log('Seleccionar tipo de pago');
+      return;
+    }
+
+    const usuarioIdStr = localStorage.getItem('usuario_id');
+    const usuarioId = usuarioIdStr ? Number(usuarioIdStr) : 0;
+
+    if (!usuarioId || usuarioId <= 0) {
+      console.error('No se encontró usuario_id en localStorage');
+      return;
+    }
+
+    const result = await this.supabase.registrarPagoDeuda({
+      deuda_id: deuda.id,
+      monto: monto,
+      tipo_pago_id: this.tipoPagoId,
+      usuario_id: usuarioId,
+      descripcion: 'Pago de deuda'
+    });
+
+    if (!result) return;
 
     this.pago = 0;
     this.tipoPagoId = 0;
     this.selectedCliente = null;
+
+    await this.cargarDeudas();
+  }
+
+  get totalPorCobrar(): number {
+    return this.clientes
+      .filter(c => c.montoFaltante > 0)
+      .reduce((sum, c) => sum + c.montoFaltante, 0);
+  }
+
+  get cantidadClientesConDeuda(): number {
+    return this.clientes
+      .filter(c => c.montoFaltante > 0)
+      .length;
   }
 
   crearDeuda() {

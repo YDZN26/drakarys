@@ -54,7 +54,8 @@ export class CierreCajaPage implements OnInit {
     const { data: ingresos } = await this.supabaseService.getSupabase()
       .from('ingreso')
       .select(`total, tipo_pago_id, tipo_ingreso`)
-      .in('tipo_ingreso', ['venta', 'venta_libre', 'ingresos_varios'])
+      // ✅ (CORREGIDO) incluir pago_deuda
+      .in('tipo_ingreso', ['venta', 'venta_libre', 'ingresos_varios', 'pago_deuda'])
       .gte('fecha', inicioDelDia.toISOString())
       .lte('fecha', finDelDia.toISOString());
 
@@ -64,10 +65,13 @@ export class CierreCajaPage implements OnInit {
     let totalIngreso = 0;
 
     ingresos?.forEach(i => {
-      if (i.tipo_pago_id === 2) efectivoIngreso += i.total;
-      else if (i.tipo_pago_id === 3) transferenciaIngreso += i.total;
-      else if (i.tipo_pago_id === 4) tarjetaIngreso += i.total;
-      totalIngreso += i.total;
+      const total = Number(i.total) || 0;
+
+      if (i.tipo_pago_id === 2) efectivoIngreso += total;
+      else if (i.tipo_pago_id === 3) transferenciaIngreso += total;
+      else if (i.tipo_pago_id === 4) tarjetaIngreso += total;
+
+      totalIngreso += total;
     });
 
     this.ingresosEfectivo = efectivoIngreso;
@@ -87,10 +91,13 @@ export class CierreCajaPage implements OnInit {
     let totalEgreso = 0;
 
     egresos?.forEach(e => {
-      if (e.tipo_pago_id === 2) efectivoEgreso += e.monto;
-      else if (e.tipo_pago_id === 3) transferenciaEgreso += e.monto;
-      else if (e.tipo_pago_id === 4) tarjetaEgreso += e.monto;
-      totalEgreso += e.monto;
+      const monto = Number(e.monto) || 0;
+
+      if (e.tipo_pago_id === 2) efectivoEgreso += monto;
+      else if (e.tipo_pago_id === 3) transferenciaEgreso += monto;
+      else if (e.tipo_pago_id === 4) tarjetaEgreso += monto;
+
+      totalEgreso += monto;
     });
 
     this.egresosEfectivo = efectivoEgreso;
@@ -133,15 +140,10 @@ export class CierreCajaPage implements OnInit {
       header: 'Montos no coinciden',
       message: `¿Deseas continuar?\n\nEl sistema detectó una diferencia de ${diferencia} Bs.`,
       buttons: [
-        {
-          text: 'CANCELAR',
-          role: 'cancel'
-        },
+        { text: 'CANCELAR', role: 'cancel' },
         {
           text: 'SÍ, CONTINUAR',
-          handler: () => {
-            this.mostrarModalAjuste(diferencia);
-          }
+          handler: () => this.mostrarModalAjuste(diferencia)
         }
       ]
     });
@@ -158,15 +160,10 @@ export class CierreCajaPage implements OnInit {
       header: 'Ajuste de caja',
       message: mensaje,
       buttons: [
-        {
-          text: 'CANCELAR',
-          role: 'cancel'
-        },
+        { text: 'CANCELAR', role: 'cancel' },
         {
           text: 'ACEPTAR',
-          handler: () => {
-            this.procesarRetiroYResumen(diferencia);
-          }
+          handler: () => this.procesarRetiroYResumen(diferencia)
         }
       ]
     });
@@ -185,10 +182,7 @@ export class CierreCajaPage implements OnInit {
         }
       ],
       buttons: [
-        {
-          text: 'CANCELAR',
-          role: 'cancel'
-        },
+        { text: 'CANCELAR', role: 'cancel' },
         {
           text: 'ACEPTAR',
           handler: async (data) => {
@@ -225,9 +219,7 @@ Retiro: ${montoRetiro} Bs.
 Saldo Final: ${saldoFinalReal} Bs.`,
                 buttons: [{
                   text: 'ACEPTAR',
-                  handler: () => {
-                    this.navCtrl.navigateBack('/balance');
-                  }
+                  handler: () => this.navCtrl.navigateBack('/balance')
                 }]
               }).then(alerta => alerta.present());
             } else {

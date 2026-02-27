@@ -168,15 +168,35 @@ export class BalancePage implements AfterViewInit {
       const hora = fechaObj.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
       const fechaLocal = fechaObj.toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' });
 
+      const tipoPago = v.tipo_de_pago?.nombre ?? '-';
+
+      const clienteNombre = v.cliente
+        ? `${v.cliente.nombre} ${v.cliente.apellido}`.trim()
+        : '-';
+
+      //título según tipo_ingreso
+      const titulo =
+        v.tipo_ingreso === 'pago_deuda'
+          ? `${(v.deuda?.descripcion ?? 'Deuda')} - Pago de deuda`
+          : (v.descripcion ?? '-');
+
+      //campo cliente segun tipo
+      const clienteLabel =
+        v.tipo_ingreso === 'ingresos_varios'
+          ? 'Ingreso Libre'
+          : v.tipo_ingreso === 'venta_libre'
+            ? 'Venta Libre'
+            : clienteNombre; // pago_deuda -> nombre del cliente real
+
       return {
         ingreso_id: v.ingreso_id ?? null,
-        nombre: v.descripcion,
-        cliente: v.tipo_ingreso === 'ingresos_varios' ? 'Ingreso Libre' : 'Venta Libre',
-        descripcion: `${v.tipo_de_pago?.nombre ?? '-'} - ${hora}`,
+        nombre: titulo,
+        cliente: clienteLabel,
+        descripcion: `${tipoPago} - ${hora}`,
         precio: parseFloat(v.total),
         fechaCompleta: `${fechaLocal} ${hora}`,
         productosOriginales: [],
-        textoBusqueda: v.descripcion
+        textoBusqueda: `${titulo} ${clienteNombre} ${v.descripcion ?? ''}`.trim()
       };
     });
 
@@ -187,12 +207,22 @@ export class BalancePage implements AfterViewInit {
 
     const gastos = await this.supabaseService.obtenerGastos(fechaInicio, fechaFin);
     this.egresos = gastos
-      .sort((a, b) => new Date(b.fecha + 'Z').getTime() - new Date(a.fecha + 'Z').getTime())
-      .map((g: any) => ({
-        nombre: 'Gasto',
-        descripcion: g.descripcion,
-        precio: parseFloat(g.monto),
-      }));
+  .sort((a, b) => new Date(b.fecha + 'Z').getTime() - new Date(a.fecha + 'Z').getTime())
+  .map((g: any) => {
+    const fechaObj = g.fecha ? new Date(g.fecha + 'Z') : new Date();
+    const hora = fechaObj.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
+
+    const tipoPago = g.tipo_de_pago?.nombre ?? '-';
+
+    return {
+      nombre: g.descripcion,
+
+      descripcion: `${tipoPago} - ${hora}`,
+
+      precio: parseFloat(g.monto),
+      textoBusqueda: (g.descripcion ?? '').toLowerCase()
+    };
+  });
 
     if (this.mensaje === 'actualizar ingresos' || !this.mensaje) {
       this.mostrarIngresos();

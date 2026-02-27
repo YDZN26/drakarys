@@ -10,16 +10,12 @@
       <ion-icon name="person-circle" size="large"></ion-icon>
       <span>Drakarys</span>
     </div>
+
     <div class="info-cards">
       <div class="card">
         <p>Por cobrar</p>
-        <h2>Bs 20</h2>
-        <p>2 clientes</p>
-      </div>
-      <div class="card">
-        <p>Por pagar</p>
-        <h2>Bs 25</h2>
-        <p>2 proveedores</p>
+        <h2>Bs {{ totalPorCobrar }}</h2>
+        <p>{{ cantidadClientesConDeuda }} clientes</p>
       </div>
     </div>
   </div>
@@ -35,9 +31,20 @@
           <ion-avatar slot="start" class="cliente-avatar">
             <ion-icon name="person-circle"></ion-icon>
           </ion-avatar>
+
           <ion-label>
-            <h2>Cliente {{ cliente.id }}</h2>
-            <p>Bs. {{ cliente.deuda }}</p>
+            <h2>
+              {{ cliente.nombreCliente ? cliente.nombreCliente : ('Cliente #' + cliente.clienteId) }}
+            </h2>
+
+            <!-- ✅ (AUMENTADO) mostrar descripción -->
+            <p *ngIf="cliente.descripcion">
+              {{ cliente.descripcion }}
+            </p>
+
+            <p>Total: Bs. {{ cliente.total }}</p>
+            <p>Pagado: Bs. {{ cliente.montoPagado }}</p>
+            <p>Saldo: Bs. {{ cliente.montoFaltante }}</p>
           </ion-label>
         </ion-item>
 
@@ -45,18 +52,34 @@
           <p>Monto Pagado: {{ cliente.montoPagado }} Bs.</p>
           <p>Monto Faltante: {{ cliente.montoFaltante }} Bs.</p>
 
-          <!-- ✅ Nuevo: Tipo de pago -->
+          <p *ngIf="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
+            ✅ Deuda pagada
+          </p>
+
           <ion-item lines="none">
             <ion-label>Tipo de pago</ion-label>
-            <ion-select [(ngModel)]="tipoPagoId" placeholder="Seleccionar">
+            <ion-select
+              [(ngModel)]="tipoPagoId"
+              placeholder="Seleccionar"
+              [disabled]="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
               <ion-select-option *ngFor="let t of tiposDePago" [value]="t.tipo_pago_id">
                 {{ t.nombre }}
               </ion-select-option>
             </ion-select>
           </ion-item>
 
-          <ion-input [(ngModel)]="pago" type="number" placeholder="Agregar monto a pagar"></ion-input>
-          <ion-button (click)="pagar(cliente.id)">Pagar</ion-button>
+          <ion-input
+            [(ngModel)]="pago"
+            type="number"
+            placeholder="Agregar monto a pagar"
+            [disabled]="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
+          </ion-input>
+
+          <ion-button
+            (click)="pagar(cliente)"
+            [disabled]="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
+            Pagar
+          </ion-button>
         </div>
       </div>
     </ion-list>
@@ -67,5 +90,4 @@
       Nueva Deuda
     </ion-button>
   </ion-fab>
-
 </ion-content>

@@ -278,7 +278,17 @@ export class SupabaseService {
   }
 
   async obtenerGastos(fechaInicio?: string, fechaFin?: string) {
-    let query = this.supabase.from('gasto').select('*').order('fecha', { ascending: false });
+    let query = this.supabase
+      .from('gasto')
+      .select(`
+        gasto_id,
+        monto,
+        descripcion,
+        fecha,
+        tipo_pago_id,
+        tipo_de_pago:tipo_pago_id(nombre)
+      `)
+      .order('fecha', { ascending: false });
 
     if (fechaInicio && fechaFin) {
       query = query.gte('fecha', fechaInicio).lte('fecha', fechaFin);
@@ -307,26 +317,29 @@ export class SupabaseService {
   }
 
   async obtenerIngresosLibres(fechaInicio: string, fechaFin: string) {
-    const { data, error } = await this.supabase
-      .from('ingreso')
-      .select(`
-        total,
-        descripcion,
-        fecha,
-        tipo_de_pago:tipo_pago_id(nombre),
-        tipo_ingreso
-      `)
-      .in('tipo_ingreso', ['venta_libre', 'ingresos_varios'])
-      .gte('fecha', fechaInicio)
-      .lte('fecha', fechaFin)
-      .order('fecha', { ascending: false });
+  const { data, error } = await this.supabase
+    .from('ingreso')
+    .select(`
+      ingreso_id,
+      total,
+      descripcion,
+      fecha,
+      tipo_de_pago:tipo_pago_id(nombre),
+      tipo_ingreso,
+      cliente:cliente_id(nombre,apellido),
+      deuda:id_deuda(descripcion)
+    `)
+    .in('tipo_ingreso', ['venta_libre', 'ingresos_varios', 'pago_deuda'])
+    .gte('fecha', fechaInicio)
+    .lte('fecha', fechaFin)
+    .order('fecha', { ascending: false });
 
-    if (error) {
-      console.error('Error al obtener ingresos libres:', error);
-      return [];
-    }
-    return data;
+  if (error) {
+    console.error('Error al obtener ingresos libres:', error);
+    return [];
   }
+  return data;
+}
 
   async registrarVentaLibreConIngreso(venta: {
     monto: number;
@@ -418,6 +431,60 @@ export class SupabaseService {
     }
 
     return { ingreso_id: ingreso.ingreso_id, deuda: deudaActualizada };
+  }
+
+   async crearDeuda(payload: {
+    cliente_id: number;
+    usuario_id: number;
+    monto_total: number;
+    descripcion?: string | null;
+  }) {
+    const dataInsert = {
+      cliente_id: payload.cliente_id,
+      usuario_id: payload.usuario_id,
+      monto_total: payload.monto_total,
+      saldo: payload.monto_total,     
+      total_pagado: 0,                 
+      fecha: new Date().toISOString(),   
+      descripcion: payload.descripcion ?? null,
+      estado: 'pendiente'
+    };
+
+    const { data, error } = await this.supabase
+      .from('deuda')
+      .insert([dataInsert])
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error al crear deuda:', error);
+      return null;
+    }
+    return data;
+  }
+
+  async obtenerDeudas() {
+    const { data, error } = await this.supabase
+      .from('deuda')
+      .select(`
+        deuda_id,
+        cliente_id,
+        usuario_id,
+        monto_total,
+        saldo,
+        total_pagado,
+        fecha,
+        descripcion,
+        estado,
+        cliente:cliente_id(nombre, apellido)
+      `)
+      .order('fecha', { ascending: false });
+
+    if (error) {
+      console.error('Error al obtener deudas:', error);
+      return [];
+    }
+    return data;
   }
 
   getSupabase() {

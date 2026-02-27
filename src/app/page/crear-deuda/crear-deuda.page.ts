@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { NavController } from '@ionic/angular';
+import { Router } from '@angular/router';
+import { SupabaseService } from 'src/app/supabase.service';
+import { MensajeService } from 'src/app/mensaje.service'; // ✅ (AUMENTADO)
 
 @Component({
   selector: 'app-crear-deuda',
@@ -8,31 +10,55 @@ import { NavController } from '@ionic/angular';
 })
 export class CrearDeudaPage implements OnInit {
 
-  cliente: string = '';
+  clienteId: number | null = null;
   descripcion: string = '';
-  totalDeuda: number = 0;
+  totalDeuda: any = 0;
 
-  constructor(private navCtrl: NavController) {}
+  clientes: any[] = [];
 
-  ngOnInit() {}
+  constructor(
+    private router: Router,
+    private supabase: SupabaseService,
+    private mensajeService: MensajeService // ✅ (AUMENTADO)
+  ) {}
 
-  guardarDeuda() {
-    if (!this.cliente || !this.descripcion || !this.totalDeuda || this.totalDeuda <= 0) {
+  async ngOnInit() {
+    this.clientes = await this.supabase.obtenerClientes();
+  }
+
+  async guardarDeuda() {
+    const total = Number(this.totalDeuda);
+
+    if (!this.clienteId || !total || total <= 0) {
       console.log('Completar campos antes de guardar');
       return;
     }
 
-    console.log('Deuda a guardar:', {
-      cliente: this.cliente,
-      descripcion: this.descripcion,
-      totalDeuda: this.totalDeuda
+    const usuarioIdStr = localStorage.getItem('usuario_id');
+    const usuarioId = usuarioIdStr ? Number(usuarioIdStr) : 0;
+
+    if (!usuarioId || usuarioId <= 0) {
+      console.error('No se encontró usuario_id en localStorage');
+      return;
+    }
+
+    const deudaCreada = await this.supabase.crearDeuda({
+      cliente_id: this.clienteId,
+      usuario_id: usuarioId,
+      monto_total: total,
+      descripcion: this.descripcion
     });
 
-    // por ahora vuelve a la lista
-    this.navCtrl.navigateBack('/deudas');
+    if (!deudaCreada) return;
+
+    // ✅ (AUMENTADO) avisar que se actualicen deudas
+    this.mensajeService.enviarMensaje('actualizar deudas');
+
+    // ✅ volver a la lista
+    this.router.navigateByUrl('/tab-inicial/deudas');
   }
 
   cancelar() {
-    this.navCtrl.navigateBack('/deudas');
+    this.router.navigateByUrl('/tab-inicial/deudas');
   }
 }
