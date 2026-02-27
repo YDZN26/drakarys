@@ -51,10 +51,9 @@ export class CrearDeudaPage implements OnInit {
 
     if (!deudaCreada) return;
 
-    // ✅ (AUMENTADO) avisar que se actualicen deudas
+    //avisar que se actualicen deudas
     this.mensajeService.enviarMensaje('actualizar deudas');
 
-    // ✅ volver a la lista
     this.router.navigateByUrl('/tab-inicial/deudas');
   }
 

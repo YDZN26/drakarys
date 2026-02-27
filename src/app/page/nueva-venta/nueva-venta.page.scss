@@ -44,9 +44,49 @@ ion-toolbar {
   }
 }
 
+/* AQUÍ: buscador + botón cámara */
+.search-row {
+  --background: transparent;
+  width: 100%;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.scan-btn {
+  margin-left: 6px;
+  height: 44px;
+}
+
+/* Modal scanner */
+.scanner-content {
+  --background: #000;
+}
+
+.scanner-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 16px;
+}
+
+.scanner-video {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 12px;
+  background: #111;
+}
+
+.scanner-text {
+  margin-top: 12px;
+  color: #fff;
+  font-weight: bold;
+}
+
 /* Estilos para el botón flotante */
 ion-fab {
-  margin-bottom: 20px; /* Espacio desde el borde inferior */
+  margin-bottom: 20px;
 }
 
 .nuevo-producto-button {
@@ -55,13 +95,13 @@ ion-fab {
   --color: #ffffff;
   --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   height: 50px;
-  min-width: 200px; /* Asegura que el botón tenga buen tamaño */
+  min-width: 200px;
   font-weight: bold;
 }
 
 ion-list {
   margin-top: 16px;
-  padding-bottom: 80px; /* Margen extra para que el botón no tape el último producto */
+  padding-bottom: 80px;
 
   ion-item {
     --background: white;

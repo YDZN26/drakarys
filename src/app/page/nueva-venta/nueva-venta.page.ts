@@ -1,15 +1,16 @@
-import { Component, OnInit, NgZone } from '@angular/core';
+import { Component, OnInit, NgZone, ViewChild, ElementRef } from '@angular/core';
 import { ActionSheetController, NavController, ModalController } from '@ionic/angular';
-import { CuotasModalPage } from '../cuotas-modal/cuotas-modal.page'; 
+import { CuotasModalPage } from '../cuotas-modal/cuotas-modal.page';
 import { SupabaseService } from '../../supabase.service';
 
+import { BrowserMultiFormatReader } from '@zxing/browser';
+import type { Result } from '@zxing/library';
 
 @Component({
   selector: 'app-nueva-venta',
   templateUrl: './nueva-venta.page.html',
   styleUrls: ['./nueva-venta.page.scss'],
 })
-
 export class NuevaVentaPage implements OnInit {
 
   productos: any[] = [];
@@ -18,26 +19,32 @@ export class NuevaVentaPage implements OnInit {
   totalProductosSeleccionados: number = 0;
   valorTotalSeleccionado: number = 0;
 
-  constructor (
+  // ✅ Scanner
+  scannerAbierto: boolean = false;
+  private codeReader: BrowserMultiFormatReader | null = null;
+  private streamActual: MediaStream | null = null;
+
+  @ViewChild('videoScanner', { static: false }) videoScanner!: ElementRef<HTMLVideoElement>;
+
+  constructor(
     private actionSheetCtrl: ActionSheetController,
     private navCtrl: NavController,
     private modalCtrl: ModalController,
     private supabaseService: SupabaseService,
-    
     private zone: NgZone
   ) {}
 
-  productosCargando: boolean = false; // para evitar duplicados
+  productosCargando: boolean = false;
   tiposDePagoCargando: boolean = false;
 
   ngOnInit() {
     setTimeout(() => {
       this.cargarProductos();
     }, 0);
-  
+
     setTimeout(() => {
       this.cargarTiposDePago();
-    }, 100); // Delay de 100ms para evitar conflictos simultáneos
+    }, 100);
   }
 
   async cargarProductos() {
@@ -45,7 +52,7 @@ export class NuevaVentaPage implements OnInit {
       this.productos = await this.supabaseService.obtenerProductos();
       this.productosFiltrados = this.productos.map((producto) => ({
         ...producto,
-        cantidadSeleccionada: 0, // Inicializa seleccionados en 0
+        cantidadSeleccionada: 0,
         disponibles: typeof producto.stock === 'number' ? producto.stock : 0,
         precio: typeof producto.precio === 'number' ? producto.precio : 0,
       }));
@@ -66,16 +73,81 @@ export class NuevaVentaPage implements OnInit {
   // Buscar productos por nombre o código
   buscarProductos(event: any) {
     const searchTerm = event.target.value.toLowerCase();
-  if (!searchTerm) {
-    this.cargarProductos();
-  } else {
-    this.productosFiltrados = this.productosFiltrados.filter(function(producto) {
-      const nombre = producto.nombre.toLowerCase();
-      const codigoBarras = producto.codigo_barras ? producto.codigo_barras.toString().toLowerCase() : '';
-      return nombre.includes(searchTerm) || codigoBarras.includes(searchTerm);
-    });
+    if (!searchTerm) {
+      this.cargarProductos();
+    } else {
+      this.productosFiltrados = this.productosFiltrados.filter(function(producto) {
+        const nombre = producto.nombre.toLowerCase();
+        const codigoBarras = producto.codigo_barras ? producto.codigo_barras.toString().toLowerCase() : '';
+        return nombre.includes(searchTerm) || codigoBarras.includes(searchTerm);
+      });
+    }
   }
+
+  // =========================
+  // ✅ SCANNER (WEB)
+  // =========================
+
+  async abrirScanner() {
+    this.scannerAbierto = true;
+
+    setTimeout(() => {
+      this.iniciarLectura();
+    }, 300);
   }
+
+  async cerrarScanner() {
+    this.scannerAbierto = false;
+
+    // ✅ No usamos stopContinuousDecode (no existe en tu versión)
+    this.codeReader = null;
+
+    // Detener cámara
+    if (this.streamActual) {
+      this.streamActual.getTracks().forEach(t => t.stop());
+      this.streamActual = null;
+    }
+  }
+
+  async iniciarLectura() {
+    try {
+      if (!this.videoScanner || !this.videoScanner.nativeElement) return;
+
+      this.codeReader = new BrowserMultiFormatReader();
+
+      // Pedir cámara trasera
+      this.streamActual = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false
+      });
+
+      const videoEl = this.videoScanner.nativeElement;
+      videoEl.srcObject = this.streamActual;
+
+      // Leer desde stream (compatible)
+      this.codeReader.decodeFromStream(
+        this.streamActual,
+        videoEl,
+        (result: Result | undefined, err: unknown) => {
+          if (result) {
+            const codigo = (result.getText() || '').trim();
+            if (codigo) {
+              this.buscarProductos({ target: { value: codigo } });
+              this.cerrarScanner();
+            }
+          }
+        }
+      );
+
+    } catch (error) {
+      console.error('Error al abrir cámara o escanear:', error);
+      this.cerrarScanner();
+    }
+  }
+
+  // =========================
+  // FIN SCANNER
+  // =========================
 
   aumentarCantidad(producto: any) {
     const index = this.productos.findIndex(p => p.producto_id === producto.producto_id);
@@ -87,7 +159,7 @@ export class NuevaVentaPage implements OnInit {
       this.actualizarTotales();
     }
   }
-  
+
   disminuirCantidad(producto: any) {
     const index = this.productos.findIndex(p => p.producto_id === producto.producto_id);
     if (producto.cantidadSeleccionada > 0) {
@@ -105,52 +177,28 @@ export class NuevaVentaPage implements OnInit {
         const seleccionados = producto.cantidadSeleccionada || 0;
         return total + seleccionados;
       }, 0);
-  
+
       this.valorTotalSeleccionado = this.productos.reduce((total, producto) => {
         const seleccionados = producto.cantidadSeleccionada || 0;
         const precio = producto.precio || 0;
         return total + seleccionados * precio;
       }, 0);
-  
+
       console.log('Total productos seleccionados:', this.totalProductosSeleccionados);
       console.log('Valor total:', this.valorTotalSeleccionado);
     });
   }
-  
 
   async agregarVenta() {
-    const productosSeleccionados = this.productos.filter(producto => producto.cantidadSeleccionada > 0); // Filtrar productos seleccionados
+    const productosSeleccionados = this.productos.filter(producto => producto.cantidadSeleccionada > 0);
     const actionSheet = await this.actionSheetCtrl.create({
       header: 'Selecciona el método de pago',
       buttons: [
-        {
-          text: 'Efectivo',
-          handler: () => {
-            this.goToCarrito('Efectivo', productosSeleccionados);
-          }
-        },
-        {
-          text: 'Transferencia Bancaria',
-          handler: () => {
-            this.goToCarrito('Transferencia Bancaria', productosSeleccionados);
-          }
-        },
-        {
-          text: 'Tarjeta',
-          handler: () => {
-            this.goToCarrito('Tarjeta', productosSeleccionados);
-          }
-        },
-        {
-          text: 'Cuotas',
-          handler: () => {
-            this.presentCuotasModal();
-          }
-        },
-        {
-          text: 'Cancelar',
-          role: 'cancel'
-        }
+        { text: 'Efectivo', handler: () => { this.goToCarrito('Efectivo', productosSeleccionados); } },
+        { text: 'Transferencia Bancaria', handler: () => { this.goToCarrito('Transferencia Bancaria', productosSeleccionados); } },
+        { text: 'Tarjeta', handler: () => { this.goToCarrito('Tarjeta', productosSeleccionados); } },
+        { text: 'Cuotas', handler: () => { this.presentCuotasModal(); } },
+        { text: 'Cancelar', role: 'cancel' }
       ]
     });
     console.log("Aqui llamare a la funcion que muestra el carrito");
@@ -159,15 +207,14 @@ export class NuevaVentaPage implements OnInit {
 
   async presentCuotasModal() {
     const modal = await this.modalCtrl.create({
-      component: CuotasModalPage, 
-      componentProps: { 
-      }
+      component: CuotasModalPage,
+      componentProps: {}
     });
 
     modal.onDidDismiss().then((data) => {
       if (data.data && data.data.confirmed) {
         const productosSeleccionados = this.productos.filter(producto => producto.cantidadSeleccionada > 0);
-        this.goToCarrito('Cuotas', productosSeleccionados, data.data); 
+        this.goToCarrito('Cuotas', productosSeleccionados, data.data);
       }
     });
 
@@ -176,11 +223,11 @@ export class NuevaVentaPage implements OnInit {
 
   goToCarrito(metodoPago: string, productosSeleccionados: any[], cuotaData?: any) {
     this.navCtrl.navigateForward('/preview', {
-      queryParams: { 
+      queryParams: {
         metodoPago: metodoPago,
-        productos: JSON.stringify(productosSeleccionados), // Enviar productos seleccionados como JSON
-        totalVenta: this.valorTotalSeleccionado,  // Enviar el total de la venta
-        ...cuotaData // Enviar datos de cuotas si existen
+        productos: JSON.stringify(productosSeleccionados),
+        totalVenta: this.valorTotalSeleccionado,
+        ...cuotaData
       }
     });
   }
