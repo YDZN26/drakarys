@@ -23,10 +23,21 @@
     </div>
   </div>
 
-  <!-- Barra de búsqueda -->
+  <!--Barra de búsqueda + cámara -->
   <ion-toolbar>
-    <ion-searchbar color="light" placeholder="Buscar productos"></ion-searchbar>
-  </ion-toolbar> 
+    <ion-item lines="none" class="search-row">
+      <ion-searchbar
+        color="light"
+        placeholder="Buscar productos"
+        [(ngModel)]="textoBusqueda"
+        (ionInput)="buscarProductos($event)">
+      </ion-searchbar>
+
+      <ion-button fill="clear" class="scan-btn" (click)="abrirScanner()">
+        <ion-icon name="camera-outline"></ion-icon>
+      </ion-button>
+    </ion-item>
+  </ion-toolbar>
 
   <!-- Botones de categorías -->
   <div class="category-buttons" style="padding: 10px; display: flex; flex-wrap: wrap; gap: 6px;">
@@ -42,7 +53,7 @@
 
   <!-- Lista de productos -->
   <ion-list>
-    <ion-item button *ngFor="let producto of productos" (click)="verDetalleProducto(producto)">
+    <ion-item button *ngFor="let producto of productosFiltrados" (click)="verDetalleProducto(producto)">
       <ion-label>
         <h2>{{ producto.nombre }}</h2>
         <p>{{ producto.stock }} Disponibles</p>
@@ -52,11 +63,37 @@
         <img [src]="producto.imagen" />
       </ion-thumbnail>
     </ion-item>
-    
   </ion-list>
 
   <!-- Botón "Nuevo Producto" -->
   <div class="button-container">
     <ion-button class="nuevo-producto-button" (click)="agregarNuevoProducto()">Nuevo Producto</ion-button>
   </div>
+
+  <!-- Modal Scanner -->
+  <ion-modal
+    [isOpen]="scannerAbierto"
+    (didPresent)="iniciarLectura()"
+    (didDismiss)="cerrarScanner()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="mycolor">
+          <ion-title>Escanear código</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarScanner()">
+              Cerrar
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="scanner-content">
+        <div class="scanner-box">
+          <video #videoScanner class="scanner-video" autoplay playsinline></video>
+          <p class="scanner-text">Apunta al código de barras</p>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
 </ion-content>

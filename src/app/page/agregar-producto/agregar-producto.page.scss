@@ -1,4 +1,3 @@
-
 ion-toolbar {
   background-color: var(--ion-color-mycolor);
   text-align: center;
@@ -64,11 +63,10 @@ ion-toolbar {
   margin: 20px;
 }
 
-
 .button-container{
   position: fixed;
-  left: 20px; 
-  right: 20px; 
+  left: 20px;
+  right: 20px;
   bottom: 20px;
   height: 50px;
   background-color: #93C572;
@@ -84,3 +82,43 @@ ion-toolbar {
   font-size: large;
 }
 
+/* =========================
+   ✅ (AUMENTADO) INPUT CÓDIGO + BOTÓN SCANNER
+   ========================= */
+.codigo-row{
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.scan-btn{
+  margin-left: 6px;
+}
+
+/* =========================
+   ✅ (AUMENTADO) SCANNER MODAL
+   ========================= */
+.scanner-content {
+  --background: #000;
+}
+
+.scanner-box {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.scanner-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scanner-text {
+  position: absolute;
+  bottom: 30px;
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  font-weight: bold;
+}

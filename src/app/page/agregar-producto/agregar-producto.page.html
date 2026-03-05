@@ -11,19 +11,28 @@
 <!--primera seccion-->
 
   <div class="scan-product">
+    <!-- ✅ cámara para FOTO (mantengo tu flujo) -->
     <div class="camera-container" (click)="showActionSheet()">
       <ion-icon name="camera"></ion-icon>
     </div>
+
     <div class="bar-code">
       <div class="codigo-title-container">
         <ion-label>Código Barras</ion-label>
       </div>
+
+      <!-- ✅ (AUMENTADO) input + botón scanner -->
       <div class="text-container">
-        <ion-item>
+        <ion-item lines="none" class="codigo-row">
           <ion-input placeholder="Agregar código" [(ngModel)]="codigo"></ion-input>
+
+          <ion-button fill="clear" class="scan-btn" (click)="abrirScannerCodigo()">
+            <ion-icon name="camera-outline"></ion-icon>
+          </ion-button>
         </ion-item>
       </div>
     </div>
+
     <div class="stock">
       <div class="stock-title-container">
         <ion-label>Stock</ion-label>
@@ -36,10 +45,9 @@
     </div>
   </div>
 
-  
 <!--Segunda Seccion-->
 <div class="datos">
-<div class="nombre">  
+<div class="nombre">
   <div class="nombre-title-container">
     <ion-label>Nombre del Producto</ion-label>
   </div>
@@ -50,7 +58,7 @@
   </div>
 </div>
 
-<div class="precio">   
+<div class="precio">
   <div class="precio-title-container">
     <ion-label>Precio Unitario</ion-label>
   </div>
@@ -60,7 +68,7 @@
     </ion-item>
   </div>
 </div>
-  
+
 <div class="costo">
   <div class="costo-title-container">
     <ion-label>Costo Unitario</ion-label>
@@ -76,9 +84,9 @@
   <div class="categoria-title-container">Categoria</div>
   <div class="dropdown-container">
     <ion-select interface="action-sheet" [(ngModel)]="selectedOption" (ionChange)="onOptionChange($event)">
-      <ion-select-option *ngFor="let categoria of categorias" [value]="categoria.categoria_id.toString()"> 
+      <ion-select-option *ngFor="let categoria of categorias" [value]="categoria.categoria_id.toString()">
         {{ categoria.nombre }}
-      </ion-select-option> 
+      </ion-select-option>
     </ion-select>
   </div>
 </div>
@@ -94,8 +102,33 @@
 </div>
 
   <div class="button-container" (click)="guardarProducto()">
-  
     {{ isEditMode ? 'Actualizar Producto' : 'Agregar Producto' }}
+  </div>
 
-</div>
+  <!-- ✅ (AUMENTADO) Modal Scanner para código de barras -->
+  <ion-modal
+    [isOpen]="scannerAbierto"
+    (didPresent)="iniciarLecturaCodigo()"
+    (didDismiss)="cerrarScannerCodigo()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="mycolor">
+          <ion-title>Escanear código</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarScannerCodigo()">
+              Cerrar
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="scanner-content">
+        <div class="scanner-box">
+          <video #videoScanner class="scanner-video" autoplay playsinline></video>
+          <p class="scanner-text">Apunta al código de barras</p>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
 </ion-content>
