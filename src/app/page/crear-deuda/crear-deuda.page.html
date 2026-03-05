@@ -20,6 +20,25 @@
     </ion-select>
   </ion-item>
 
+  <!--selector para Deuda / Préstamo -->
+  <ion-item>
+    <ion-label position="stacked">Tipo</ion-label>
+    <ion-select [(ngModel)]="tipoOperacion" placeholder="Seleccionar tipo">
+      <ion-select-option value="deuda">Deuda (no afecta caja)</ion-select-option>
+      <ion-select-option value="prestamo">Préstamo (descuenta de caja)</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <!--Tipo de pago SOLO para Préstamo -->
+  <ion-item *ngIf="tipoOperacion === 'prestamo'">
+    <ion-label position="stacked">Tipo de pago</ion-label>
+    <ion-select [(ngModel)]="tipoPagoId" placeholder="Seleccionar tipo de pago">
+      <ion-select-option *ngFor="let tp of tiposDePago" [value]="tp.tipo_pago_id">
+        {{ tp.nombre }}
+      </ion-select-option>
+    </ion-select>
+  </ion-item>
+
   <ion-item>
     <ion-label position="stacked">Descripción</ion-label>
     <ion-textarea [(ngModel)]="descripcion" placeholder="Ej: Préstamo, producto fiado..."></ion-textarea>

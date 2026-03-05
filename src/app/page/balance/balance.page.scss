@@ -4,25 +4,25 @@ ion-toolbar {
 
 ion-header {
   ion-toolbar {
-    --background: #001E87; // Fondo de la cabecera
-    color: white; // Color del texto en la cabecera
+    --background: #001E87;
+    color: white;
 
     ion-title, ion-icon, ion-button {
-      color: white; // Color del título, íconos y botones
+      color: white;
     }
   }
 
   ion-segment {
-    --background: #001E87; // Fondo del segmento
+    --background: #001E87;
     ion-segment-button {
-      --color-checked: white; // Color del texto cuando está seleccionado
-      --indicator-color: white; // Color del indicador cuando está seleccionado
-      color: white; // Color del texto
+      --color-checked: white;
+      --indicator-color: white;
+      color: white;
     }
   }
 
   ion-icon {
-    color: white; // Color de los íconos
+    color: white;
   }
 }
 
@@ -63,11 +63,11 @@ body{
 }
 
 .balance-segment {
-  margin-top: 32px; /* Aumenta la separación entre el ion-segment y el contenedor de balance */
+  margin-top: 32px;
 }
 
 .balance-segment-button {
-  margin: 0 8px; /* Añade un margen lateral a los botones de segmento para separarlos */
+  margin: 0 8px;
   --background: var(--ion-color-light);
   &.segment-checked {
     background-color: var(--ion-color-primary);
@@ -104,30 +104,30 @@ ion-fab-button {
 }
 
 ion-fab-list ion-fab-button {
-  --background: white; // Establece el color de fondo de los botones del menú FAB
-  --color: black; // Establece el color del texto e íconos de los botones del menú FAB
-  --border-radius: 10px; // Añade bordes redondeados de 10px a los botones del menú FAB
-  display: flex; // Utiliza un diseño flexbox para los botones del menú FAB
-  align-items: center; // Alinea los elementos en el centro verticalmente
-  justify-content: center; // Alinea los elementos en el centro horizontalmente
+  --background: white;
+  --color: black;
+  --border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   ion-icon {
-    margin-right: 8px; // Añade un margen derecho de 8px entre el ícono y el texto
+    margin-right: 8px;
   }
   ion-label {
-    font-weight: bold; // Establece el texto en negrita
+    font-weight: bold;
   }
 }
 
 ion-fab-list {
   position: absolute;
-  bottom: 70px; /* Ajusta la posición según sea necesario */
+  bottom: 70px;
 }
 
 .balance-header {
   font-weight: bold;
   font-size: 18px;
   margin-bottom: 8px;
-  border-bottom: 1px solid #ccc; /* Línea divisora debajo del balance */
+  border-bottom: 1px solid #ccc;
   padding-bottom: 8px;
 }
 
@@ -184,9 +184,9 @@ iion-modal.calendar-modal {
 
 ion-segment-button.selected-date {
   font-weight: bold;
-    background-color: #0327aa;
-    border-radius: 15px;
-    height: 5px;
+  background-color: #0327aa;
+  border-radius: 15px;
+  height: 5px;
 }
 
 .cierre-caja-container {
@@ -195,9 +195,20 @@ ion-segment-button.selected-date {
 }
 
 .cierre-caja-container ion-button {
-  --background: #001E87; /* Puedes cambiarlo por el color que uses */
+  --background: #001E87;
   color: white;
   font-weight: bold;
   border-radius: 10px;
   padding: 8px 16px;
+}
+
+/* saldo inicial dentro del recuadro */
+.balance-saldo-inicial{
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-weight: bold;
+  font-size: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ccc;
 }

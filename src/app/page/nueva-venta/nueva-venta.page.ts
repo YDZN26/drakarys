@@ -19,6 +19,9 @@ export class NuevaVentaPage implements OnInit {
   totalProductosSeleccionados: number = 0;
   valorTotalSeleccionado: number = 0;
 
+  // ✅ (AUMENTADO) texto del searchbar
+  textoBusqueda: string = '';
+
   // ✅ Scanner
   scannerAbierto: boolean = false;
   private codeReader: BrowserMultiFormatReader | null = null;
@@ -49,13 +52,19 @@ export class NuevaVentaPage implements OnInit {
 
   async cargarProductos() {
     try {
-      this.productos = await this.supabaseService.obtenerProductos();
-      this.productosFiltrados = this.productos.map((producto) => ({
+      const data = await this.supabaseService.obtenerProductos();
+
+      // ✅ (MODIFICADO) guardo la lista base en this.productos con campos extra
+      this.productos = (data || []).map((producto: any) => ({
         ...producto,
         cantidadSeleccionada: 0,
         disponibles: typeof producto.stock === 'number' ? producto.stock : 0,
         precio: typeof producto.precio === 'number' ? producto.precio : 0,
       }));
+
+      // lista visible al inicio
+      this.productosFiltrados = this.productos;
+
       console.log(this.productosFiltrados);
     } catch (error) {
       console.error('Error al cargar productos:', error);
@@ -72,16 +81,20 @@ export class NuevaVentaPage implements OnInit {
 
   // Buscar productos por nombre o código
   buscarProductos(event: any) {
-    const searchTerm = event.target.value.toLowerCase();
+    const searchTerm = (event?.target?.value || '').toString().toLowerCase().trim();
+
+    // ✅ (MODIFICADO) si no hay texto, muestro todo sin recargar de BD
     if (!searchTerm) {
-      this.cargarProductos();
-    } else {
-      this.productosFiltrados = this.productosFiltrados.filter(function(producto) {
-        const nombre = producto.nombre.toLowerCase();
-        const codigoBarras = producto.codigo_barras ? producto.codigo_barras.toString().toLowerCase() : '';
-        return nombre.includes(searchTerm) || codigoBarras.includes(searchTerm);
-      });
+      this.productosFiltrados = this.productos;
+      return;
     }
+
+    // ✅ (MODIFICADO) filtro SIEMPRE desde la lista base (this.productos)
+    this.productosFiltrados = this.productos.filter((producto: any) => {
+      const nombre = (producto.nombre || '').toString().toLowerCase();
+      const codigoBarras = producto.codigo_barras ? producto.codigo_barras.toString().toLowerCase() : '';
+      return nombre.includes(searchTerm) || codigoBarras.includes(searchTerm);
+    });
   }
 
   // =========================
@@ -90,19 +103,16 @@ export class NuevaVentaPage implements OnInit {
 
   async abrirScanner() {
     this.scannerAbierto = true;
-
-    setTimeout(() => {
-      this.iniciarLectura();
-    }, 300);
+    // ✅ (MODIFICADO) ya no uso setTimeout, ahora se inicia en (didPresent) del modal
   }
 
   async cerrarScanner() {
     this.scannerAbierto = false;
 
-    // ✅ No usamos stopContinuousDecode (no existe en tu versión)
+    // eliminar lector
     this.codeReader = null;
 
-    // Detener cámara
+    // detener cámara
     if (this.streamActual) {
       this.streamActual.getTracks().forEach(t => t.stop());
       this.streamActual = null;
@@ -124,7 +134,9 @@ export class NuevaVentaPage implements OnInit {
       const videoEl = this.videoScanner.nativeElement;
       videoEl.srcObject = this.streamActual;
 
-      // Leer desde stream (compatible)
+      // ✅ (AUMENTADO) asegurar reproducción
+      try { await videoEl.play(); } catch (e) {}
+
       this.codeReader.decodeFromStream(
         this.streamActual,
         videoEl,
@@ -132,7 +144,12 @@ export class NuevaVentaPage implements OnInit {
           if (result) {
             const codigo = (result.getText() || '').trim();
             if (codigo) {
-              this.buscarProductos({ target: { value: codigo } });
+              // ✅ (AUMENTADO) actualizar UI dentro de Angular + copiar al searchbar
+              this.zone.run(() => {
+                this.textoBusqueda = codigo;
+                this.buscarProductos({ target: { value: codigo } });
+              });
+
               this.cerrarScanner();
             }
           }

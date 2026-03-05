@@ -65,6 +65,13 @@
           BS. {{ balance | number: '1.2-2' }}
         </span>
       </div>
+
+      <!--SALDO INICIAL -->
+      <div class="balance-saldo-inicial">
+        <span>SALDO INICIAL</span>
+        <span>BS. {{ saldoInicial | number: '1.2-2' }}</span>
+      </div>
+
       <div class="balance-details">
         <div class="balance-income">
           <ion-icon name="wallet-outline"></ion-icon>
@@ -78,6 +85,7 @@
           <span>BS. {{ totalEgresos | number: '1.2-2' }}</span>
         </div>
       </div>
+
       <div class="cierre-caja-container">
         <ion-button size="small" (click)="goToCierreCaja()">Cierre de Caja</ion-button>
       </div>
@@ -125,7 +133,6 @@
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
     <ion-fab-list side="start">
-      <!-- NUEVA VENTA CON MENÚ -->
       <ion-button
         fill="clear"
         style="--border-radius: 69px; --background: #93C572; --box-shadow: none; color: #fff;"
@@ -134,7 +141,6 @@
         <ion-label style="font-weight: bold;">Nueva venta</ion-label>
       </ion-button>
 
-      <!-- GASTO -->
       <ion-button
         fill="clear"
         style="--border-radius: 69px; --background: #D70000; --box-shadow: none; color: #fff;"
@@ -146,7 +152,6 @@
   </ion-fab>
 </ion-content>
 
-<!-- POPOVER de opciones de venta -->
 <ion-popover trigger="btnNuevaVentaPopover" triggerAction="click" side="top" alignment="center">
   <ng-template>
     <ion-content class="ion-padding">
@@ -161,7 +166,6 @@
     </ion-content>
   </ng-template>
 </ion-popover>
-
 <!-- MODAL DE CALENDARIO -->
 <ion-modal #modalCalendario trigger="abrirCalendario" [presentingElement]="presentingElement">
   <ng-template>

@@ -19,12 +19,12 @@
     </div>
   </div>
 
-  <!-- AQUÍ: en lugar de solo searchbar, ahora es searchbar + botón cámara a la derecha -->
   <ion-toolbar>
     <ion-item lines="none" class="search-row">
       <ion-searchbar
         color="light"
         placeholder="Buscar productos"
+        [(ngModel)]="textoBusqueda"
         (ionInput)="buscarProductos($event)">
       </ion-searchbar>
 
@@ -68,8 +68,11 @@
     </ion-button>
   </ion-fab>
 
-  <!-- AQUÍ: Modal para escanear con cámara -->
-  <ion-modal [isOpen]="scannerAbierto" (didDismiss)="cerrarScanner()">
+  <!-- ✅ Modal Scanner -->
+  <ion-modal
+    [isOpen]="scannerAbierto"
+    (didPresent)="iniciarLectura()"
+    (didDismiss)="cerrarScanner()">
     <ng-template>
       <ion-header>
         <ion-toolbar color="mycolor">

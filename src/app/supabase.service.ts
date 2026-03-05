@@ -302,6 +302,33 @@ export class SupabaseService {
     return data;
   }
 
+  // Registrar gasto (para préstamos que afectan caja)
+  async registrarGasto(payload: {
+    monto: number;
+    descripcion: string;
+    tipo_pago_id: number;
+    fecha?: string;
+  }) {
+    const dataInsert = {
+      monto: payload.monto,
+      descripcion: payload.descripcion,
+      fecha: payload.fecha ?? new Date().toISOString(),
+      tipo_pago_id: payload.tipo_pago_id
+    };
+
+    const { data, error } = await this.supabase
+      .from('gasto')
+      .insert([dataInsert])
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error al registrar gasto:', error);
+      return null;
+    }
+    return data;
+  }
+
   async registrarCierre(cierre: any) {
     const { data, error } = await this.supabase
       .from('cierre')
@@ -311,6 +338,22 @@ export class SupabaseService {
 
     if (error) {
       console.error('Error al registrar cierre:', error);
+      return null;
+    }
+    return data;
+  }
+
+  async obtenerUltimoCierreAntesDe(fechaISO: string) {
+    const { data, error } = await this.supabase
+      .from('cierre')
+      .select('cierre_id, fecha, saldo_final')
+      .lt('fecha', fechaISO)
+      .order('fecha', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error al obtener cierre anterior:', error);
       return null;
     }
     return data;

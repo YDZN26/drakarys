@@ -27,6 +27,9 @@ export class BalancePage implements AfterViewInit {
   private mensajeSub!: Subscription;
   mensaje: string = '';
 
+  // SALDO INICIAL DEL DÍA (viene del cierre anterior -> saldo_final)
+  saldoInicial: number = 0;
+
   constructor(
     private navCtrl: NavController,
     private supabaseService: SupabaseService,
@@ -110,7 +113,23 @@ export class BalancePage implements AfterViewInit {
     await this.cargarBalance(inicioDelDia, finDelDia);
   }
 
+  // saldo inicial = saldo_final del último cierre anterior al día seleccionado
+  async cargarSaldoInicial(fechaInicioDelDiaISO: string) {
+    const ultimo = await this.supabaseService.obtenerUltimoCierreAntesDe(fechaInicioDelDiaISO);
+
+    if (!ultimo) {
+      this.saldoInicial = 0;
+      return;
+    }
+
+    const si = Number((ultimo as any).saldo_final ?? 0);
+    this.saldoInicial = isNaN(si) ? 0 : si;
+  }
+
   async cargarBalance(fechaInicio: string, fechaFin: string) {
+    // cargar saldo inicial antes de calcular el balance
+    await this.cargarSaldoInicial(fechaInicio);
+
     const detalles = await this.supabaseService.obtenerDetallesVentasPorFecha(fechaInicio, fechaFin);
 
     const agrupadas: { [key: number]: any[] } = {};
@@ -174,19 +193,17 @@ export class BalancePage implements AfterViewInit {
         ? `${v.cliente.nombre} ${v.cliente.apellido}`.trim()
         : '-';
 
-      //título según tipo_ingreso
       const titulo =
         v.tipo_ingreso === 'pago_deuda'
           ? `${(v.deuda?.descripcion ?? 'Deuda')} - Pago de deuda`
           : (v.descripcion ?? '-');
 
-      //campo cliente segun tipo
       const clienteLabel =
         v.tipo_ingreso === 'ingresos_varios'
           ? 'Ingreso Libre'
           : v.tipo_ingreso === 'venta_libre'
             ? 'Venta Libre'
-            : clienteNombre; // pago_deuda -> nombre del cliente real
+            : clienteNombre;
 
       return {
         ingreso_id: v.ingreso_id ?? null,
@@ -207,22 +224,20 @@ export class BalancePage implements AfterViewInit {
 
     const gastos = await this.supabaseService.obtenerGastos(fechaInicio, fechaFin);
     this.egresos = gastos
-  .sort((a, b) => new Date(b.fecha + 'Z').getTime() - new Date(a.fecha + 'Z').getTime())
-  .map((g: any) => {
-    const fechaObj = g.fecha ? new Date(g.fecha + 'Z') : new Date();
-    const hora = fechaObj.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
+      .sort((a, b) => new Date(b.fecha + 'Z').getTime() - new Date(a.fecha + 'Z').getTime())
+      .map((g: any) => {
+        const fechaObj = g.fecha ? new Date(g.fecha + 'Z') : new Date();
+        const hora = fechaObj.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
 
-    const tipoPago = g.tipo_de_pago?.nombre ?? '-';
+        const tipoPago = g.tipo_de_pago?.nombre ?? '-';
 
-    return {
-      nombre: g.descripcion,
-
-      descripcion: `${tipoPago} - ${hora}`,
-
-      precio: parseFloat(g.monto),
-      textoBusqueda: (g.descripcion ?? '').toLowerCase()
-    };
-  });
+        return {
+          nombre: g.descripcion,
+          descripcion: `${tipoPago} - ${hora}`,
+          precio: parseFloat(g.monto),
+          textoBusqueda: (g.descripcion ?? '').toLowerCase()
+        };
+      });
 
     if (this.mensaje === 'actualizar ingresos' || !this.mensaje) {
       this.mostrarIngresos();
@@ -275,8 +290,9 @@ export class BalancePage implements AfterViewInit {
     return this.egresos.reduce((acc, e) => acc + e.precio, 0);
   }
 
+  // Balance = Saldo Inicial + Ingresos - Egresos
   get balance() {
-    return this.totalIngresos - this.totalEgresos;
+    return this.saldoInicial + this.totalIngresos - this.totalEgresos;
   }
 
   goToNuevaVentaPage() {

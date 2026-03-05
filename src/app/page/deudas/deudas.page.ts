@@ -12,7 +12,7 @@ interface ClienteDeudaView {
   montoFaltante: number;    // saldo
   nombreCliente: string;    // nombre + apellido
   estado: string;           // pendiente / pagada
-  descripcion: string;      // ✅ (AUMENTADO) descripcion de la deuda
+  descripcion: string;      // descripcion de la deuda
 }
 
 @Component({
@@ -66,7 +66,6 @@ export class DeudasPage implements OnInit, OnDestroy {
       const saldo = Number(d.saldo || 0);
       const estado = String(d.estado || 'pendiente');
 
-      // ✅ (AUMENTADO) descripcion (si viene null, dejar vacío)
       const descripcion = String(d.descripcion || '');
 
       return {
@@ -86,6 +85,12 @@ export class DeudasPage implements OnInit, OnDestroy {
     this.selectedCliente = this.selectedCliente === clienteId ? null : clienteId;
   }
 
+  // convertir a número para usar en el HTML sin Number()
+  toNumber(valor: any): number {
+    const n = parseFloat(valor);
+    return isNaN(n) ? 0 : n;
+  }
+
   async pagar(deuda: ClienteDeudaView) {
     const monto = Number(this.pago);
 
@@ -98,6 +103,12 @@ export class DeudasPage implements OnInit, OnDestroy {
 
     if (!monto || monto <= 0) {
       console.log('Monto inválido');
+      return;
+    }
+
+    // no permitir pagar más que el saldo
+    if (monto > deuda.montoFaltante) {
+      console.log('El monto ingresado supera el saldo de la deuda');
       return;
     }
 

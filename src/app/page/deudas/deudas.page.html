@@ -37,7 +37,6 @@
               {{ cliente.nombreCliente ? cliente.nombreCliente : ('Cliente #' + cliente.clienteId) }}
             </h2>
 
-            <!-- ✅ (AUMENTADO) mostrar descripción -->
             <p *ngIf="cliente.descripcion">
               {{ cliente.descripcion }}
             </p>
@@ -75,9 +74,21 @@
             [disabled]="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
           </ion-input>
 
+          <!-- ✅ mensaje rojo si supera el saldo -->
+          <p
+            class="error-limite"
+            *ngIf="cliente.montoFaltante > 0
+              && cliente.estado !== 'pagada'
+              && pago
+              && toNumber(pago) > cliente.montoFaltante">
+            El monto ingresado supera el saldo de la deuda.
+          </p>
+
           <ion-button
             (click)="pagar(cliente)"
-            [disabled]="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
+            [disabled]="cliente.montoFaltante <= 0
+              || cliente.estado === 'pagada'
+              || (pago && toNumber(pago) > cliente.montoFaltante)">
             Pagar
           </ion-button>
         </div>
