@@ -54,7 +54,6 @@ export class CierreCajaPage implements OnInit {
     const { data: ingresos } = await this.supabaseService.getSupabase()
       .from('ingreso')
       .select(`total, tipo_pago_id, tipo_ingreso`)
-      // ✅ (CORREGIDO) incluir pago_deuda
       .in('tipo_ingreso', ['venta', 'venta_libre', 'ingresos_varios', 'pago_deuda'])
       .gte('fecha', inicioDelDia.toISOString())
       .lte('fecha', finDelDia.toISOString());
@@ -189,20 +188,27 @@ export class CierreCajaPage implements OnInit {
             const montoRetiro = parseFloat(data.retiro) || 0;
             const saldoFinalReal = this.balance + diferencia - montoRetiro;
 
+            // ✅ CAMBIO SOLO AQUÍ: payload igual a columnas reales de "cierre"
             const cierre = {
               saldo_inicial: this.saldoInicial,
               ingresos_total: this.totalIngresos,
               ingresos_efectivo: this.ingresosEfectivo,
               ingresos_transferencia: this.ingresosTransferencia,
               ingresos_tarjeta: this.ingresosTarjeta,
+
               egresos_total: this.totalEgresos,
               egresos_efectivo: this.egresosEfectivo,
               egresos_transferencia: this.egresosTransferencia,
               egresos_tarjeta: this.egresosTarjeta,
+
               saldo_final: saldoFinalReal,
               efectivo_caja: this.efectivoFinal,
-              retiro: montoRetiro,
-              ajuste: diferencia,
+
+              // ✅ EXISTE en tu tabla:
+              diferencia: diferencia,
+              total_ingresos: this.totalIngresos,
+              total_egresos: this.totalEgresos,
+
               usuario_id: 1
             };
 

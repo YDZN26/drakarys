@@ -1,43 +1,30 @@
-/*
- * App Global CSS
- * ----------------------------------------------------------------------------
- * Put style rules here that you want to apply globally. These styles are for
- * the entire app and not just one component. Additionally, this file can be
- * used as an entry point to import other CSS/Sass files to be included in the
- * output CSS.
- * For more information on global stylesheets, visit the documentation:
- * https://ionicframework.com/docs/layout/global-stylesheets
- */
-
-/* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
-
-/* Basic CSS for apps built with Ionic */
 @import "@ionic/angular/css/normalize.css";
 @import "@ionic/angular/css/structure.css";
 @import "@ionic/angular/css/typography.css";
 @import "@ionic/angular/css/display.css";
-
-/* Optional CSS utils that can be commented out */
 @import "@ionic/angular/css/padding.css";
 @import "@ionic/angular/css/float-elements.css";
 @import "@ionic/angular/css/text-alignment.css";
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
-
 ion-header {
-    ion-toolbar {
-      --background: #001E87 !important; /* Forzar el color del header */
-      --color: white !important; /* Forzar el color del texto */
+  ion-toolbar {
+    --background: #001E87 !important;
+    --color: white !important; /* Fuerza texto blanco en la barra superior */
+
+    ion-title, ion-icon, ion-label, ion-button {
+      color: white !important;
     }
   }
-  
-  ion-content {
-    --background: #EDF2FA !important; /* Forzar el color de fondo */
-  }
+}
 
-  ion-button{
-    --background: #93C572;
-    --border-radius:10px;
-  }
+ion-content {
+  --background: #EDF2FA !important;
+}
+
+ion-button {
+  --background: #93C572;
+  --border-radius: 10px;
+}
