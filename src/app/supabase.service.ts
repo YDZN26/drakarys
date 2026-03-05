@@ -26,11 +26,16 @@ export class SupabaseService {
   constructor() {}
 
   async agregarProducto(producto: any) {
-    const { data, error } = await this.supabase.from('producto').insert([producto]);
+    const { data, error } = await this.supabase
+      .from('producto')
+      .insert([producto])
+      .select('*');
+
     if (error) {
-      console.error('Error al agregar producto:', error);
-      return null;
+      console.error('SUPABASE ERROR:', error);
+      throw error;
     }
+
     return data;
   }
 

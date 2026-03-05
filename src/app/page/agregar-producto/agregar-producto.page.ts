@@ -87,24 +87,39 @@ export class AgregarProductoPage {
   }
 
   async agregarProducto() {
+
+    if (!this.codigo || !this.nombre || !this.selectedOption) {
+      console.error("Faltan datos obligatorios");
+      return;
+    }
+
     const producto = {
-      codigo_barras: parseInt(this.codigo,10),
+      codigo_barras: Number(this.codigo),
       nombre: this.nombre,
-      precio: this.precioUnitario,
-      costo: this.costoUnitario,
+      precio: Number(this.precioUnitario),
+      costo: Number(this.costoUnitario),
       descripcion: this.descripcion,
-      stock: this.counterValue,
-      categoria_id: parseInt(this.selectedOption,10),
-      imagen: this.imagenUrl
+      stock: Number(this.counterValue),
+      categoria_id: Number(this.selectedOption),
+      imagen: this.imagenUrl || null
     };
+
+    console.log("Producto a enviar:", producto);
 
     try {
       const data = await this.supabaseService.agregarProducto(producto);
-      console.log('Producto agregado:', data);
+
+      if (!data) {
+        console.error("Supabase no insertó el producto");
+        return;
+      }
+
+      console.log("Producto agregado:", data);
       this.mensajeService.enviarMensaje('agregado');
       this.navCtrl.back();
+
     } catch (error) {
-      console.error('Error al agregar producto:', error);
+      console.error("Error al agregar producto:", error);
     }
   }
 
