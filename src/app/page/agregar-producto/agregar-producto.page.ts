@@ -146,6 +146,8 @@ export class AgregarProductoPage {
   }
 
   guardarProducto() {
+    console.log('CLICK guardarProducto', { isEditMode: this.isEditMode });
+
     if (this.isEditMode) {
       this.actualizarProducto();
     } else {
