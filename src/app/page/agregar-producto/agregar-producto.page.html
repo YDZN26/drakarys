@@ -8,12 +8,10 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <!--primera seccion-->
-
   <div class="scan-product">
-    <!-- ✅ cámara para FOTO (mantengo tu flujo) -->
     <div class="camera-container" (click)="showActionSheet()">
-      <ion-icon name="camera"></ion-icon>
+      <img *ngIf="imagenUrl" [src]="imagenUrl" class="preview-image" />
+      <ion-icon *ngIf="!imagenUrl" name="camera"></ion-icon>
     </div>
 
     <div class="bar-code">
@@ -21,7 +19,6 @@
         <ion-label>Código Barras</ion-label>
       </div>
 
-      <!-- ✅ (AUMENTADO) input + botón scanner -->
       <div class="text-container">
         <ion-item lines="none" class="codigo-row">
           <ion-input placeholder="Agregar código" [(ngModel)]="codigo"></ion-input>
@@ -45,7 +42,6 @@
     </div>
   </div>
 
-  <!--Segunda Seccion-->
   <div class="datos">
     <div class="nombre">
       <div class="nombre-title-container">
@@ -101,7 +97,6 @@
     </div>
   </div>
 
-  <!-- ✅ (AUMENTADO) Modal Scanner para código de barras -->
   <ion-modal
     [isOpen]="scannerAbierto"
     (didPresent)="iniciarLecturaCodigo()"
@@ -126,10 +121,8 @@
       </ion-content>
     </ng-template>
   </ion-modal>
-
 </ion-content>
 
-<!-- ✅ (AUMENTADO) Botón estable con ion-footer -->
 <ion-footer>
   <ion-toolbar>
     <ion-button expand="block" class="btn-guardar" (click)="guardarProducto()">

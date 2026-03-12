@@ -22,11 +22,18 @@ ion-toolbar {
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
 }
 
 .camera-container ion-icon{
   font-size: 80px;
   color: #ffff;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .bar-code{
@@ -61,7 +68,6 @@ ion-toolbar {
   display: flex;
 }
 
-/* ✅ (AUMENTADO) input + botón scanner */
 .codigo-row {
   display: flex;
   align-items: center;
@@ -80,7 +86,6 @@ ion-toolbar {
   margin: 20px;
 }
 
-/* ✅ (AUMENTADO) Botón del footer */
 ion-footer ion-toolbar {
   --background: transparent;
   background: transparent;

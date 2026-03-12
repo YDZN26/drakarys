@@ -35,9 +35,18 @@
   </ion-toolbar>
 
   <div class="category-buttons">
-    <ion-button>Todos</ion-button>
-    <ion-button>Categoria 1</ion-button>
-    <ion-button>Categoria 2</ion-button>
+    <ion-button
+      [color]="categoriaSeleccionada === null ? 'primary' : 'light'"
+      (click)="filtrarPorCategoria(null)">
+      Todos
+    </ion-button>
+
+    <ion-button
+      *ngFor="let cat of categorias"
+      [color]="categoriaSeleccionada === cat.categoria_id ? 'primary' : 'light'"
+      (click)="filtrarPorCategoria(cat.categoria_id)">
+      {{ cat.nombre }}
+    </ion-button>
   </div>
 
   <ion-list>
@@ -45,30 +54,39 @@
       <ion-avatar slot="start">
         <img [src]="producto.imagen" />
       </ion-avatar>
+
       <ion-label>
         <h2>{{ producto.nombre }}</h2>
-        <p>Disponibles: {{ producto.disponibles }}</p>
+        <p>Disponibles: {{ obtenerDisponibles(producto) }}</p>
         <p>Precio unitario: Bs {{ producto.precio }}</p>
         <p>Seleccionados: {{ producto.cantidadSeleccionada }}</p>
       </ion-label>
 
-      <ion-button fill="clear" (click)="disminuirCantidad(producto)" [disabled]="producto.cantidadSeleccionada === 0">
+      <ion-button
+        fill="clear"
+        (click)="disminuirCantidad(producto)"
+        [disabled]="producto.cantidadSeleccionada === 0">
         <ion-icon name="remove-circle-outline"></ion-icon>
       </ion-button>
 
-      <ion-button fill="clear" (click)="aumentarCantidad(producto)" [disabled]="producto.cantidadSeleccionada === producto.disponibles">
+      <ion-button
+        fill="clear"
+        (click)="aumentarCantidad(producto)"
+        [disabled]="obtenerDisponibles(producto) === 0">
         <ion-icon name="add-circle-outline"></ion-icon>
       </ion-button>
     </ion-item>
   </ion-list>
 
   <ion-fab vertical="bottom" horizontal="center" slot="fixed">
-    <ion-button class="nuevo-producto-button" [disabled]="totalProductosSeleccionados === 0" (click)="agregarVenta()">
+    <ion-button
+      class="nuevo-producto-button"
+      [disabled]="totalProductosSeleccionados === 0"
+      (click)="agregarVenta()">
       Agregar Venta
     </ion-button>
   </ion-fab>
 
-  <!-- ✅ Modal Scanner -->
   <ion-modal
     [isOpen]="scannerAbierto"
     (didPresent)="iniciarLectura()"
@@ -93,5 +111,4 @@
       </ion-content>
     </ng-template>
   </ion-modal>
-
 </ion-content>

@@ -184,7 +184,9 @@ export class PreviewPage implements OnInit {
         return;
       }
 
-      // Navega a recibo con el ingreso_id
+      this.mensajeService.enviarMensaje('actualizar inventario');
+      this.mensajeService.enviarMensaje('actualizar ingresos');
+
       this.navCtrl.navigateForward(['/recibo', res.ingreso.ingreso_id]);
     } catch (e) {
       console.error('Error al confirmar venta', e);

@@ -1,4 +1,4 @@
-import { Component, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, ViewChild, AfterViewInit, OnInit } from '@angular/core';
 import { IonModal, NavController, PopoverController } from '@ionic/angular';
 import { SupabaseService } from '../../supabase.service';
 import { Router } from '@angular/router';
@@ -10,7 +10,7 @@ import { MensajeService } from 'src/app/mensaje.service';
   templateUrl: './balance.page.html',
   styleUrls: ['./balance.page.scss'],
 })
-export class BalancePage implements AfterViewInit {
+export class BalancePage implements OnInit, AfterViewInit {
 
   @ViewChild('modalCalendario', { static: false }) modalCalendario!: IonModal;
   presentingElement: HTMLElement | null = null;
@@ -45,9 +45,15 @@ export class BalancePage implements AfterViewInit {
   }
 
   async ngOnInit() {
-    const nombreGuardado = localStorage.getItem('usuario');
-    if (nombreGuardado) {
-      this.nombreUsuario = this.capitalize(nombreGuardado);
+    const usuarioGuardado = localStorage.getItem('usuario');
+
+    if (usuarioGuardado) {
+      try {
+        const usuarioObj = JSON.parse(usuarioGuardado);
+        this.nombreUsuario = this.capitalize(usuarioObj.username);
+      } catch (error) {
+        this.nombreUsuario = 'Usuario';
+      }
     }
 
     this.generarDiasHistoricos(365);

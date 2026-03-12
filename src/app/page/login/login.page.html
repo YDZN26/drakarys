@@ -30,11 +30,17 @@
       <ion-item lines="none" class="input-item">
         <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
         <ion-input
-          type="password"
+          [type]="mostrarContrasena ? 'text' : 'password'"
           placeholder="Ingrese su Contraseña"
           [(ngModel)]="contrasena">
         </ion-input>
-        <ion-icon name="eye-off-outline" slot="end"></ion-icon>
+
+        <ion-icon
+          [name]="mostrarContrasena ? 'eye-outline' : 'eye-off-outline'"
+          slot="end"
+          (click)="togglePassword()"
+          style="cursor:pointer">
+        </ion-icon>
       </ion-item>
 
       <p *ngIf="errorMsg" class="error-message">{{ errorMsg }}</p>

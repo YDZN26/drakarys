@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, NgZone, ViewChild, ElementRef } from '@angular/core';
+import { Component, EventEmitter, Output, NgZone, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { NavController, ActionSheetController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
 import { SupabaseService } from '../../supabase.service';
@@ -15,7 +15,7 @@ import type { Result } from '@zxing/library';
   templateUrl: './agregar-producto.page.html',
   styleUrls: ['./agregar-producto.page.scss'],
 })
-export class AgregarProductoPage {
+export class AgregarProductoPage implements OnInit {
   counterValue: number = 0;
   selectedOption: string = '';
   codigo: string = '';
@@ -31,10 +31,11 @@ export class AgregarProductoPage {
 
   @Output() emisorMensajes = new EventEmitter<string>();
 
-  // ✅ (AUMENTADO) Scanner código
   scannerAbierto: boolean = false;
   private codeReader: BrowserMultiFormatReader | null = null;
   private streamActual: MediaStream | null = null;
+
+  private imagenNuevaSeleccionada: boolean = false;
 
   @ViewChild('videoScanner', { static: false }) videoScanner!: ElementRef<HTMLVideoElement>;
 
@@ -48,7 +49,7 @@ export class AgregarProductoPage {
     private zone: NgZone
   ) {}
 
-  ngOnInit(){
+  ngOnInit() {
     this.cargarCategorias();
 
     this.route.paramMap.subscribe(params => {
@@ -64,7 +65,7 @@ export class AgregarProductoPage {
   async cargarCategorias() {
     try {
       this.categorias = await this.supabaseService.obtenerCategorias();
-      console.log('Categorias Obtenidas',  this.categorias);
+      console.log('Categorias Obtenidas', this.categorias);
     } catch (error) {
       console.error('Error al obtener categorias', error);
     }
@@ -74,23 +75,36 @@ export class AgregarProductoPage {
     if (this.productoId !== null) {
       const producto = await this.supabaseService.obtenerProductoPorId(this.productoId);
       if (producto) {
-        this.codigo = producto.codigo_barras.toString();
-        this.nombre = producto.nombre;
-        this.precioUnitario = producto.precio;
-        this.costoUnitario = producto.costo;
-        this.descripcion = producto.descripcion;
-        this.counterValue = producto.stock;
-        this.selectedOption = producto.categoria_id.toString();
-        this.imagenUrl = producto.imagen;
+        this.codigo = producto.codigo_barras ? producto.codigo_barras.toString() : '';
+        this.nombre = producto.nombre || '';
+        this.precioUnitario = Number(producto.precio || 0);
+        this.costoUnitario = Number(producto.costo || 0);
+        this.descripcion = producto.descripcion || '';
+        this.counterValue = Number(producto.stock || 0);
+        this.selectedOption = producto.categoria_id ? producto.categoria_id.toString() : '';
+        this.imagenUrl = producto.imagen || '';
+        this.imagenNuevaSeleccionada = false;
       }
     }
   }
 
   async agregarProducto() {
-
     if (!this.codigo || !this.nombre || !this.selectedOption) {
-      console.error("Faltan datos obligatorios");
+      console.error('Faltan datos obligatorios');
       return;
+    }
+
+    let imagenFinal = this.imagenUrl || null;
+
+    if (this.imagenUrl && this.imagenUrl.startsWith('data:image')) {
+      const urlSubida = await this.supabaseService.subirImagenProducto(this.imagenUrl, this.nombre);
+
+      if (!urlSubida) {
+        console.error('No se pudo subir la imagen del producto');
+        return;
+      }
+
+      imagenFinal = urlSubida;
     }
 
     const producto = {
@@ -101,39 +115,51 @@ export class AgregarProductoPage {
       descripcion: this.descripcion,
       stock: Number(this.counterValue),
       categoria_id: Number(this.selectedOption),
-      imagen: this.imagenUrl || null
+      imagen: imagenFinal
     };
 
-    console.log("Producto a enviar:", producto);
+    console.log('Producto a enviar:', producto);
 
     try {
       const data = await this.supabaseService.agregarProducto(producto);
 
       if (!data) {
-        console.error("Supabase no insertó el producto");
+        console.error('Supabase no insertó el producto');
         return;
       }
 
-      console.log("Producto agregado:", data);
+      console.log('Producto agregado:', data);
       this.mensajeService.enviarMensaje('agregado');
       this.navCtrl.back();
-
     } catch (error) {
-      console.error("Error al agregar producto:", error);
+      console.error('Error al agregar producto:', error);
     }
   }
 
   async actualizarProducto() {
+    let imagenFinal = this.imagenUrl || '';
+
+    if (this.imagenNuevaSeleccionada && this.imagenUrl && this.imagenUrl.startsWith('data:image')) {
+      const urlSubida = await this.supabaseService.subirImagenProducto(this.imagenUrl, this.nombre);
+
+      if (!urlSubida) {
+        console.error('No se pudo subir la nueva imagen del producto');
+        return;
+      }
+
+      imagenFinal = urlSubida;
+    }
+
     const producto = {
       producto_id: this.productoId,
       codigo_barras: parseInt(this.codigo, 10),
       nombre: this.nombre,
-      precio: this.precioUnitario,
-      costo: this.costoUnitario,
+      precio: Number(this.precioUnitario),
+      costo: Number(this.costoUnitario),
       descripcion: this.descripcion,
-      stock: this.counterValue,
+      stock: Number(this.counterValue),
       categoria_id: parseInt(this.selectedOption, 10),
-      imagen: this.imagenUrl
+      imagen: imagenFinal
     };
 
     this.supabaseService.actualizarProducto(producto).then(data => {
@@ -173,10 +199,6 @@ export class AgregarProductoPage {
     this.selectedOption = event.detail.value;
   }
 
-  // =========================
-  // ✅ FOTO (TOMAR / GALERÍA)
-  // =========================
-
   async tomarFoto() {
     try {
       const image = await Camera.getPhoto({
@@ -186,8 +208,8 @@ export class AgregarProductoPage {
         source: CameraSource.Camera
       });
 
-      // ✅ (AUMENTADO) guardo la imagen en el mismo campo que ya usas
       this.imagenUrl = image.dataUrl || '';
+      this.imagenNuevaSeleccionada = true;
     } catch (error) {
       console.error('Error al tomar foto:', error);
     }
@@ -202,8 +224,8 @@ export class AgregarProductoPage {
         source: CameraSource.Photos
       });
 
-      // ✅ (AUMENTADO) guardo la imagen en el mismo campo que ya usas
       this.imagenUrl = image.dataUrl || '';
+      this.imagenNuevaSeleccionada = true;
     } catch (error) {
       console.error('Error al abrir galería:', error);
     }
@@ -234,7 +256,6 @@ export class AgregarProductoPage {
     await actionSheet.present();
   }
 
-
   async abrirScannerCodigo() {
     this.scannerAbierto = true;
   }
@@ -264,7 +285,9 @@ export class AgregarProductoPage {
       const videoEl = this.videoScanner.nativeElement;
       videoEl.srcObject = this.streamActual;
 
-      try { await videoEl.play(); } catch (e) {}
+      try {
+        await videoEl.play();
+      } catch (e) {}
 
       this.codeReader.decodeFromStream(
         this.streamActual,
@@ -288,5 +311,4 @@ export class AgregarProductoPage {
       this.cerrarScannerCodigo();
     }
   }
-
 }

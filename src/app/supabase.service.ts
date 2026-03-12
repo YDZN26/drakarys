@@ -25,6 +25,26 @@ export class SupabaseService {
 
   constructor() {}
 
+  obtenerUsuarioLogueadoId(): number {
+    try {
+      const usuarioGuardado =
+        localStorage.getItem('usuario') ||
+        localStorage.getItem('usuarioActual') ||
+        localStorage.getItem('user');
+
+      if (!usuarioGuardado) {
+        return 0;
+      }
+
+      const usuario = JSON.parse(usuarioGuardado);
+
+      return Number(usuario?.usuario_id) || 0;
+    } catch (error) {
+      console.error('Error al obtener usuario logueado:', error);
+      return 0;
+    }
+  }
+
   async agregarProducto(producto: any) {
     const { data, error } = await this.supabase
       .from('producto')
@@ -64,6 +84,56 @@ export class SupabaseService {
       return null;
     }
     return data;
+  }
+
+  async actualizarStockProducto(productoId: number, nuevoStock: number) {
+    const { data, error } = await this.supabase
+      .from('producto')
+      .update({ stock: nuevoStock })
+      .eq('producto_id', productoId)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error al actualizar stock del producto:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  async descontarStockProductos(productos: any[]) {
+    for (const producto of productos) {
+      const productoActual = await this.obtenerProductoPorId(producto.producto_id);
+
+      if (!productoActual) {
+        console.error('No se encontró el producto:', producto.producto_id);
+        return null;
+      }
+
+      const stockActual = Number(productoActual.stock || 0);
+      const cantidadVendida = Number(producto.cantidadSeleccionada || 0);
+      const nuevoStock = stockActual - cantidadVendida;
+
+      if (cantidadVendida <= 0) {
+        console.error('Cantidad vendida inválida para el producto:', producto.nombre);
+        return null;
+      }
+
+      if (nuevoStock < 0) {
+        console.error('Stock insuficiente para el producto:', producto.nombre);
+        return null;
+      }
+
+      const actualizado = await this.actualizarStockProducto(producto.producto_id, nuevoStock);
+
+      if (!actualizado) {
+        console.error('No se pudo actualizar el stock del producto:', producto.nombre);
+        return null;
+      }
+    }
+
+    return true;
   }
 
   async obtenerCategorias() {
@@ -179,7 +249,7 @@ export class SupabaseService {
       console.error('Error al crear ingreso:', error);
       return null;
     }
-    return data; // { ingreso_id }
+    return data;
   }
 
   async registrarVentaDetallesPorIngreso(ingresoId: number, productos: any[]) {
@@ -207,7 +277,6 @@ export class SupabaseService {
     const total = productos.reduce((sum, p) => sum + (p.precio * p.cantidadSeleccionada), 0);
     const userId = usuarioId ?? 0;
 
-    // 1) Crear ingreso tipo "venta"
     const ingreso = await this.crearIngreso({
       tipo_pago_id: tipoPagoId,
       usuario_id: userId,
@@ -219,13 +288,14 @@ export class SupabaseService {
 
     if (!ingreso) return null;
 
-    // 2) Crear detalles ligados al ingreso
     const detalles = await this.registrarVentaDetallesPorIngreso(ingreso.ingreso_id, productos);
     if (!detalles) return null;
 
+    const stockActualizado = await this.descontarStockProductos(productos);
+    if (!stockActualizado) return null;
+
     return { ingreso, detalles };
   }
-
 
   async obtenerVentaPorId(ingresoId: number) {
     const { data, error } = await this.supabase
@@ -307,7 +377,6 @@ export class SupabaseService {
     return data;
   }
 
-  // Registrar gasto (para préstamos que afectan caja)
   async registrarGasto(payload: {
     monto: number;
     descripcion: string;
@@ -365,29 +434,29 @@ export class SupabaseService {
   }
 
   async obtenerIngresosLibres(fechaInicio: string, fechaFin: string) {
-  const { data, error } = await this.supabase
-    .from('ingreso')
-    .select(`
-      ingreso_id,
-      total,
-      descripcion,
-      fecha,
-      tipo_de_pago:tipo_pago_id(nombre),
-      tipo_ingreso,
-      cliente:cliente_id(nombre,apellido),
-      deuda:id_deuda(descripcion)
-    `)
-    .in('tipo_ingreso', ['venta_libre', 'ingresos_varios', 'pago_deuda'])
-    .gte('fecha', fechaInicio)
-    .lte('fecha', fechaFin)
-    .order('fecha', { ascending: false });
+    const { data, error } = await this.supabase
+      .from('ingreso')
+      .select(`
+        ingreso_id,
+        total,
+        descripcion,
+        fecha,
+        tipo_de_pago:tipo_pago_id(nombre),
+        tipo_ingreso,
+        cliente:cliente_id(nombre,apellido),
+        deuda:id_deuda(descripcion)
+      `)
+      .in('tipo_ingreso', ['venta_libre', 'ingresos_varios', 'pago_deuda'])
+      .gte('fecha', fechaInicio)
+      .lte('fecha', fechaFin)
+      .order('fecha', { ascending: false });
 
-  if (error) {
-    console.error('Error al obtener ingresos libres:', error);
-    return [];
+    if (error) {
+      console.error('Error al obtener ingresos libres:', error);
+      return [];
+    }
+    return data;
   }
-  return data;
-}
 
   async registrarVentaLibreConIngreso(venta: {
     monto: number;
@@ -481,7 +550,7 @@ export class SupabaseService {
     return { ingreso_id: ingreso.ingreso_id, deuda: deudaActualizada };
   }
 
-   async crearDeuda(payload: {
+  async crearDeuda(payload: {
     cliente_id: number;
     usuario_id: number;
     monto_total: number;
@@ -491,9 +560,9 @@ export class SupabaseService {
       cliente_id: payload.cliente_id,
       usuario_id: payload.usuario_id,
       monto_total: payload.monto_total,
-      saldo: payload.monto_total,     
-      total_pagado: 0,                 
-      fecha: new Date().toISOString(),   
+      saldo: payload.monto_total,
+      total_pagado: 0,
+      fecha: new Date().toISOString(),
       descripcion: payload.descripcion ?? null,
       estado: 'pendiente'
     };
@@ -533,6 +602,133 @@ export class SupabaseService {
       return [];
     }
     return data;
+  }
+
+  async registrarAjustePositivo(payload: {
+    total: number;
+    tipo_pago_id: number;
+    usuario_id: number;
+    descripcion?: string;
+  }) {
+    const ingreso = await this.crearIngreso({
+      tipo_pago_id: payload.tipo_pago_id,
+      usuario_id: payload.usuario_id,
+      total: payload.total,
+      tipo_ingreso: 'ajuste_positivo',
+      descripcion: payload.descripcion ?? 'Ajuste positivo de caja'
+    });
+
+    if (!ingreso) {
+      console.error('Error al registrar ajuste positivo');
+      return null;
+    }
+
+    return ingreso;
+  }
+
+  async registrarAjusteNegativo(payload: {
+    total: number;
+    tipo_pago_id: number;
+    usuario_id: number;
+    descripcion?: string;
+  }) {
+    const dataInsert = {
+      tipo_pago_id: payload.tipo_pago_id,
+      usuario_id: payload.usuario_id,
+      total: payload.total,
+      fecha: new Date().toISOString(),
+      tipo_egreso: 'ajuste_negativo',
+      descripcion: payload.descripcion ?? 'Ajuste negativo de caja'
+    };
+
+    const { data, error } = await this.supabase
+      .from('egreso')
+      .insert([dataInsert])
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error al registrar ajuste negativo:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  async registrarRetiroCaja(payload: {
+    total: number;
+    tipo_pago_id: number;
+    usuario_id: number;
+    descripcion?: string;
+  }) {
+    const dataInsert = {
+      tipo_pago_id: payload.tipo_pago_id,
+      usuario_id: payload.usuario_id,
+      total: payload.total,
+      fecha: new Date().toISOString(),
+      tipo_egreso: 'retiro_caja',
+      descripcion: payload.descripcion ?? 'Retiro de efectivo de caja'
+    };
+
+    const { data, error } = await this.supabase
+      .from('egreso')
+      .insert([dataInsert])
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error al registrar retiro de caja:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  private dataUrlABlob(dataUrl: string): Blob {
+    const partes = dataUrl.split(',');
+    const mime = partes[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+    const bytes = atob(partes[1]);
+    const array = new Uint8Array(bytes.length);
+
+    for (let i = 0; i < bytes.length; i++) {
+      array[i] = bytes.charCodeAt(i);
+    }
+
+    return new Blob([array], { type: mime });
+  }
+
+  async subirImagenProducto(dataUrl: string, nombreProducto: string): Promise<string | null> {
+    try {
+      const blob = this.dataUrlABlob(dataUrl);
+      const extension = blob.type.split('/')[1] || 'jpg';
+      const nombreLimpio = (nombreProducto || 'producto')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '-');
+
+      const nombreArchivo = `${Date.now()}-${nombreLimpio}.${extension}`;
+      const rutaArchivo = `productos/${nombreArchivo}`;
+
+      const { error } = await this.supabase.storage
+        .from('productos')
+        .upload(rutaArchivo, blob, {
+          contentType: blob.type,
+          upsert: true
+        });
+
+      if (error) {
+        console.error('Error al subir imagen a storage:', error);
+        return null;
+      }
+
+      const { data } = this.supabase.storage
+        .from('productos')
+        .getPublicUrl(rutaArchivo);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error al procesar la imagen:', error);
+      return null;
+    }
   }
 
   getSupabase() {
