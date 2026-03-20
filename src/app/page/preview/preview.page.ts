@@ -13,12 +13,25 @@ export class PreviewPage implements OnInit {
   venta: any = {
     productos: [],
     metodoPago: '',
+    metodosPago: [],
     totalVenta: 0,
     fechaVenta: ''
   };
 
   clientes: any[] = [];
   clienteSeleccionado: any = null;
+
+  esPagoMixto: boolean = false;
+  montoEfectivo: number = 0;
+  montoTransferencia: number = 0;
+  montoTarjeta: number = 0;
+
+  tiposPagoMap: Record<string, number> = {
+    'Cuotas': 1,
+    'Efectivo': 2,
+    'Transferencia Bancaria': 3,
+    'Tarjeta': 4
+  };
 
   constructor(
     private route: ActivatedRoute,
@@ -30,9 +43,25 @@ export class PreviewPage implements OnInit {
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
-      if (params['metodoPago']) this.venta.metodoPago = params['metodoPago'];
-      if (params['productos']) this.venta.productos = JSON.parse(params['productos']);
-      if (params['totalVenta']) this.venta.totalVenta = params['totalVenta'];
+      if (params['metodoPago']) {
+        this.venta.metodoPago = params['metodoPago'];
+      }
+
+      if (params['productos']) {
+        this.venta.productos = JSON.parse(params['productos']);
+      }
+
+      if (params['totalVenta']) {
+        this.venta.totalVenta = Number(params['totalVenta']);
+      }
+
+      if (params['esPagoMixto'] !== undefined) {
+        this.esPagoMixto = params['esPagoMixto'] === 'true' || params['esPagoMixto'] === true;
+      }
+
+      if (params['metodosPago']) {
+        this.venta.metodosPago = JSON.parse(params['metodosPago']);
+      }
 
       const now = new Date();
       this.venta.fechaVenta = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
@@ -43,6 +72,53 @@ export class PreviewPage implements OnInit {
 
   private async cargarClientes() {
     this.clientes = (await this.supabase.obtenerClientes()) || [];
+  }
+
+  actualizarMetodosPagoMixto() {
+    const efectivo = Number(this.montoEfectivo || 0);
+    const transferencia = Number(this.montoTransferencia || 0);
+    const tarjeta = Number(this.montoTarjeta || 0);
+
+    const metodos = [];
+
+    if (efectivo > 0) {
+      metodos.push({
+        nombre: 'Efectivo',
+        tipo_pago_id: 2,
+        monto: efectivo
+      });
+    }
+
+    if (transferencia > 0) {
+      metodos.push({
+        nombre: 'Transferencia Bancaria',
+        tipo_pago_id: 3,
+        monto: transferencia
+      });
+    }
+
+    if (tarjeta > 0) {
+      metodos.push({
+        nombre: 'Tarjeta',
+        tipo_pago_id: 4,
+        monto: tarjeta
+      });
+    }
+
+    this.venta.metodosPago = metodos;
+  }
+
+  obtenerTotalPagoMixto(): number {
+    return Number(this.montoEfectivo || 0)
+      + Number(this.montoTransferencia || 0)
+      + Number(this.montoTarjeta || 0);
+  }
+
+  pagoMixtoEsValido(): boolean {
+    const totalIngresado = this.obtenerTotalPagoMixto();
+    const totalVenta = Number(this.venta.totalVenta || 0);
+
+    return totalIngresado === totalVenta && totalIngresado > 0;
   }
 
   async openClienteAlert() {
@@ -153,34 +229,56 @@ export class PreviewPage implements OnInit {
       return;
     }
 
-    const tipos: Record<string, number> = {
-      'Cuotas': 1,
-      'Efectivo': 2,
-      'Transferencia Bancaria': 3,
-      'Tarjeta': 4
-    };
-
-    const tipoPagoId = tipos[this.venta.metodoPago] || 0;
-    if (!tipoPagoId) {
-      const a = await this.alertCtrl.create({
-        header: 'Método de pago inválido',
-        message: `No se reconoció el método de pago: ${this.venta.metodoPago}`,
-        buttons: ['OK']
-      });
-      await a.present();
-      return;
-    }
-
     try {
-      const res = await this.supabase.registrarVentaCompleta(
-        this.venta.productos,
-        tipoPagoId,
-        this.clienteSeleccionado.cliente_id,
-        usuarioId
-      );
+      let res: any = null;
+
+      if (this.esPagoMixto) {
+        this.actualizarMetodosPagoMixto();
+
+        if (!this.pagoMixtoEsValido()) {
+          const a = await this.alertCtrl.create({
+            header: 'Pago mixto inválido',
+            message: 'La suma de efectivo, transferencia y tarjeta debe ser igual al total de la venta.',
+            buttons: ['OK']
+          });
+          await a.present();
+          return;
+        }
+
+        res = await this.supabase.registrarVentaCompletaMixta(
+          this.venta.productos,
+          this.venta.metodosPago,
+          this.clienteSeleccionado.cliente_id,
+          usuarioId
+        );
+      } else {
+        const tipoPagoId = this.tiposPagoMap[this.venta.metodoPago] || 0;
+
+        if (!tipoPagoId) {
+          const a = await this.alertCtrl.create({
+            header: 'Método de pago inválido',
+            message: `No se reconoció el método de pago: ${this.venta.metodoPago}`,
+            buttons: ['OK']
+          });
+          await a.present();
+          return;
+        }
+
+        res = await this.supabase.registrarVentaCompleta(
+          this.venta.productos,
+          tipoPagoId,
+          this.clienteSeleccionado.cliente_id,
+          usuarioId
+        );
+      }
 
       if (!res) {
-        console.error('Error al registrar venta');
+        const a = await this.alertCtrl.create({
+          header: 'Error',
+          message: 'No se pudo registrar la venta.',
+          buttons: ['OK']
+        });
+        await a.present();
         return;
       }
 
@@ -190,6 +288,13 @@ export class PreviewPage implements OnInit {
       this.navCtrl.navigateForward(['/recibo', res.ingreso.ingreso_id]);
     } catch (e) {
       console.error('Error al confirmar venta', e);
+
+      const a = await this.alertCtrl.create({
+        header: 'Error',
+        message: 'Ocurrió un error al confirmar la venta.',
+        buttons: ['OK']
+      });
+      await a.present();
     }
   }
 }

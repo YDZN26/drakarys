@@ -28,14 +28,65 @@
         <ion-label>Total Venta</ion-label>
         <ion-note slot="end">Bs. {{ venta.totalVenta }}</ion-note>
       </ion-item>
+
       <ion-item>
         <ion-label>Método de Pago</ion-label>
-        <ion-note slot="end">{{ venta.metodoPago }}</ion-note>
+
+        <ion-note slot="end" *ngIf="!esPagoMixto">
+          {{ venta.metodoPago }}
+        </ion-note>
+
+        <ion-note slot="end" *ngIf="esPagoMixto">
+          <div *ngFor="let metodo of venta.metodosPago">
+            {{ metodo.nombre }}: Bs. {{ metodo.monto }}
+          </div>
+          <div *ngIf="venta.metodosPago.length === 0">
+            Pago Mixto
+          </div>
+        </ion-note>
       </ion-item>
+
       <ion-item>
         <ion-label>Fecha de Venta</ion-label>
         <ion-note slot="end">{{ venta.fechaVenta }}</ion-note>
       </ion-item>
+
+      <div *ngIf="esPagoMixto">
+        <ion-item>
+          <ion-label position="stacked">Monto en Efectivo</ion-label>
+          <ion-input
+            type="number"
+            min="0"
+            [(ngModel)]="montoEfectivo"
+            (ionInput)="actualizarMetodosPagoMixto()">
+          </ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Monto en Transferencia Bancaria</ion-label>
+          <ion-input
+            type="number"
+            min="0"
+            [(ngModel)]="montoTransferencia"
+            (ionInput)="actualizarMetodosPagoMixto()">
+          </ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Monto en Tarjeta</ion-label>
+          <ion-input
+            type="number"
+            min="0"
+            [(ngModel)]="montoTarjeta"
+            (ionInput)="actualizarMetodosPagoMixto()">
+          </ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label>Total ingresado</ion-label>
+          <ion-note slot="end">Bs. {{ obtenerTotalPagoMixto() }}</ion-note>
+        </ion-item>
+      </div>
 
       <ion-item button (click)="openClienteAlert()">
         <ion-label>Cliente</ion-label>
