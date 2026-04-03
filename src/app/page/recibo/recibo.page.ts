@@ -56,7 +56,7 @@ export class ReciboPage implements OnInit {
     return [
       {
         nombre: nombreMetodo,
-        monto: Number(total || 0)
+        monto: total
       }
     ];
   }
@@ -64,7 +64,6 @@ export class ReciboPage implements OnInit {
   private async cargarIngreso(ingresoId: number) {
     const ingreso = await this.supabase.obtenerVentaPorId(ingresoId);
     const detalles = await this.supabase.obtenerVentaDetalles(ingresoId);
-    const detallePago = await this.supabase.obtenerIngresoPagoDetalle(ingresoId);
 
     if (!ingreso) {
       console.error('Ingreso no encontrado');
@@ -85,21 +84,12 @@ export class ReciboPage implements OnInit {
       }
     }
 
-    let metodosPago = [];
-
-    if (ingreso.es_pago_mixto && detallePago && detallePago.length > 0) {
-      metodosPago = detallePago.map((detalle: any) => ({
-        nombre: detalle.tipo_de_pago?.nombre || this.tiposPago[detalle.tipo_pago_id] || '',
-        monto: Number(detalle.monto || 0)
-      }));
-    } else {
-      metodosPago = this.formatearMetodoPago(ingreso.tipo_pago_id, ingreso.total);
-    }
+    const metodosPago = this.formatearMetodoPago(ingreso.tipo_pago_id, ingreso.total);
 
     this.recibo = {
       ingreso_id: ingreso.ingreso_id,
       fechaVenta: `${fechaLocal} ${horaLocal}`,
-      totalVenta: Number(ingreso.total || 0),
+      totalVenta: ingreso.total,
       metodoPago: tipoPago,
       metodosPago: metodosPago,
       cliente: clienteStr,

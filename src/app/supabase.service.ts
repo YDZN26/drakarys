@@ -227,7 +227,6 @@ export class SupabaseService {
     descripcion?: string;
     fecha?: string;
     id_deuda?: number | null;
-    es_pago_mixto?: boolean;
   }) {
     const payload = {
       tipo_pago_id: ingreso.tipo_pago_id,
@@ -237,8 +236,7 @@ export class SupabaseService {
       tipo_ingreso: ingreso.tipo_ingreso,
       descripcion: ingreso.descripcion ?? null,
       fecha: ingreso.fecha ?? new Date().toISOString(),
-      id_deuda: ingreso.id_deuda ?? null,
-      es_pago_mixto: ingreso.es_pago_mixto ?? false
+      id_deuda: ingreso.id_deuda ?? null
     };
 
     const { data, error } = await this.supabase
@@ -251,33 +249,6 @@ export class SupabaseService {
       console.error('Error al crear ingreso:', error);
       return null;
     }
-    return data;
-  }
-
-  async registrarIngresoPagoDetalle(ingresoId: number, metodosPago: any[]) {
-    const detalles = metodosPago
-      .filter(metodo => Number(metodo.monto || 0) > 0)
-      .map(metodo => ({
-        ingreso_id: ingresoId,
-        tipo_pago_id: Number(metodo.tipo_pago_id),
-        monto: Number(metodo.monto)
-      }));
-
-    if (detalles.length === 0) {
-      console.error('No hay detalles de pago mixto válidos');
-      return null;
-    }
-
-    const { data, error } = await this.supabase
-      .from('ingreso_pago_detalle')
-      .insert(detalles)
-      .select('*');
-
-    if (error) {
-      console.error('Error al registrar detalle del pago mixto:', error);
-      return null;
-    }
-
     return data;
   }
 
@@ -312,8 +283,7 @@ export class SupabaseService {
       cliente_id: clienteId,
       total,
       tipo_ingreso: 'venta',
-      descripcion: 'Venta con productos',
-      es_pago_mixto: false
+      descripcion: 'Venta con productos'
     });
 
     if (!ingreso) return null;
@@ -327,66 +297,6 @@ export class SupabaseService {
     return { ingreso, detalles };
   }
 
-  async registrarVentaCompletaMixta(
-    productos: any[],
-    metodosPago: any[],
-    clienteId: number,
-    usuarioId?: number
-  ) {
-    const total = productos.reduce((sum, p) => sum + (p.precio * p.cantidadSeleccionada), 0);
-    const userId = usuarioId ?? 0;
-
-    const metodosValidos = (metodosPago || []).filter(metodo => Number(metodo.monto || 0) > 0);
-
-    if (metodosValidos.length === 0) {
-      console.error('No hay métodos de pago mixto válidos');
-      return null;
-    }
-
-    const totalMetodos = metodosValidos.reduce((sum, metodo) => {
-      return sum + Number(metodo.monto || 0);
-    }, 0);
-
-    if (Number(totalMetodos) !== Number(total)) {
-      console.error('La suma de los métodos de pago no coincide con el total de la venta');
-      return null;
-    }
-
-    const tipoPagoBase = Number(metodosValidos[0].tipo_pago_id || 0);
-
-    if (!tipoPagoBase) {
-      console.error('No se encontró un tipo de pago base válido');
-      return null;
-    }
-
-    const ingreso = await this.crearIngreso({
-      tipo_pago_id: tipoPagoBase,
-      usuario_id: userId,
-      cliente_id: clienteId,
-      total,
-      tipo_ingreso: 'venta',
-      descripcion: 'Venta con productos - pago mixto',
-      es_pago_mixto: true
-    });
-
-    if (!ingreso) return null;
-
-    const detallePago = await this.registrarIngresoPagoDetalle(ingreso.ingreso_id, metodosValidos);
-    if (!detallePago) return null;
-
-    const detallesVenta = await this.registrarVentaDetallesPorIngreso(ingreso.ingreso_id, productos);
-    if (!detallesVenta) return null;
-
-    const stockActualizado = await this.descontarStockProductos(productos);
-    if (!stockActualizado) return null;
-
-    return {
-      ingreso,
-      detallePago,
-      detalles: detallesVenta
-    };
-  }
-
   async obtenerVentaPorId(ingresoId: number) {
     const { data, error } = await this.supabase
       .from('ingreso')
@@ -398,26 +308,6 @@ export class SupabaseService {
       console.error('Error al obtener el ingreso:', error);
       return null;
     }
-    return data;
-  }
-
-  async obtenerIngresoPagoDetalle(ingresoId: number) {
-    const { data, error } = await this.supabase
-      .from('ingreso_pago_detalle')
-      .select(`
-        ingreso_pago_detalle_id,
-        ingreso_id,
-        tipo_pago_id,
-        monto,
-        tipo_de_pago:tipo_pago_id(nombre)
-      `)
-      .eq('ingreso_id', ingresoId);
-
-    if (error) {
-      console.error('Error al obtener detalle de métodos de pago del ingreso:', error);
-      return [];
-    }
-
     return data;
   }
 

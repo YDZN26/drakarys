@@ -259,7 +259,6 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
         { text: 'Efectivo', handler: () => { this.goToCarrito('Efectivo', productosSeleccionados); } },
         { text: 'Transferencia Bancaria', handler: () => { this.goToCarrito('Transferencia Bancaria', productosSeleccionados); } },
         { text: 'Tarjeta', handler: () => { this.goToCarrito('Tarjeta', productosSeleccionados); } },
-        { text: 'Pago Mixto', handler: () => { this.goToCarritoPagoMixto(productosSeleccionados); } },
         { text: 'Cuotas', handler: () => { this.presentCuotasModal(); } },
         { text: 'Cancelar', role: 'cancel' }
       ]
@@ -285,35 +284,10 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
     await modal.present();
   }
 
-  crearMetodosPagoSimples(metodoPago: string) {
-    return [
-      {
-        nombre: metodoPago,
-        monto: this.valorTotalSeleccionado
-      }
-    ];
-  }
-
-  goToCarritoPagoMixto(productosSeleccionados: any[]) {
-    this.navCtrl.navigateForward('/preview', {
-      queryParams: {
-        metodoPago: 'Pago Mixto',
-        metodosPago: JSON.stringify([]),
-        esPagoMixto: true,
-        productos: JSON.stringify(productosSeleccionados),
-        totalVenta: this.valorTotalSeleccionado
-      }
-    });
-  }
-
   goToCarrito(metodoPago: string, productosSeleccionados: any[], cuotaData?: any) {
-    const metodosPago = this.crearMetodosPagoSimples(metodoPago);
-
     this.navCtrl.navigateForward('/preview', {
       queryParams: {
         metodoPago: metodoPago,
-        metodosPago: JSON.stringify(metodosPago),
-        esPagoMixto: false,
         productos: JSON.stringify(productosSeleccionados),
         totalVenta: this.valorTotalSeleccionado,
         ...cuotaData
