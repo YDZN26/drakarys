@@ -1,6 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
-import { IonRouterOutlet } from '@ionic/angular';
+import { Component } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
 @Component({
@@ -8,26 +7,20 @@ import { filter } from 'rxjs/operators';
   templateUrl: './tab-inicial.page.html',
   styleUrls: ['./tab-inicial.page.scss'],
 })
-export class TabInicialPage implements OnInit {
+export class TabInicialPage {
+  rutaActual: string = '';
 
-  selectedTab: string = ''; // Inicializar la propiedad selectedTab
-
-  constructor(private routerOutlet: IonRouterOutlet, private route: ActivatedRoute, private router: Router) {}
-
-  ngOnInit() {
-    this.routerOutlet.swipeGesture = false;
+  constructor(private router: Router) {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => {
-        const currentRoute = this.route.root.firstChild;
-        if (currentRoute && currentRoute.snapshot) {
-          const tab = currentRoute.snapshot.firstChild?.routeConfig?.path ?? '';
-          this.selectedTab = tab;
-        }
+      .subscribe((event: any) => {
+        this.rutaActual = event.urlAfterRedirects;
       });
+
+    this.rutaActual = this.router.url;
   }
 
   isTabSelected(tab: string): boolean {
-    return this.selectedTab === tab;
+    return this.rutaActual.includes('/tab-inicial/' + tab);
   }
 }
