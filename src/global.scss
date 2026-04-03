@@ -9,10 +9,19 @@
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
+:root {
+  color-scheme: dark;
+}
+
+html, body, ion-app {
+  color-scheme: dark;
+  background: #EDF2FA;
+}
+
 ion-header {
   ion-toolbar {
     --background: #001E87 !important;
-    --color: white !important; /* Fuerza texto blanco en la barra superior */
+    --color: white !important;
 
     ion-title, ion-icon, ion-label, ion-button {
       color: white !important;
