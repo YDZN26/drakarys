@@ -1,16 +1,27 @@
 <ion-header>
   <ion-toolbar color="mycolor">
-    <ion-title>Inventario</ion-title>
+    <ion-buttons slot="start">
+      <ion-button [id]="'usuarioPopoverTriggerInventario'">
+        <ion-icon name="person-circle" slot="start" size="large"></ion-icon>
+        <ion-label>{{ nombreUsuario }}</ion-label>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
+<ion-popover trigger="usuarioPopoverTriggerInventario" triggerAction="click">
+  <ng-template>
+    <ion-content class="ion-padding">
+      <ion-item button (click)="cerrarSesion()">
+        <ion-icon slot="start" name="log-out-outline"></ion-icon>
+        <ion-label>Cerrar sesión</ion-label>
+      </ion-item>
+    </ion-content>
+  </ng-template>
+</ion-popover>
+
 <ion-content [fullscreen]="true">
-  <!-- Usuario e información general -->
   <div class="user-info">
-    <div class="user-details">
-      <ion-icon name="person-circle" size="large"></ion-icon>
-      <span>Drakarys Vape Store</span>
-    </div>
     <div class="info-cards">
       <div class="card">
         <p>Total de productos</p>
@@ -23,7 +34,6 @@
     </div>
   </div>
 
-  <!--Barra de búsqueda + cámara -->
   <ion-toolbar>
     <ion-item lines="none" class="search-row">
       <ion-searchbar
@@ -39,20 +49,21 @@
     </ion-item>
   </ion-toolbar>
 
-  <!-- Botones de categorías -->
   <div class="category-buttons">
-    <ion-button [color]="categoriaSeleccionada === null ? 'primary' : 'light'" (click)="filtrarPorCategoria(null)">
+    <ion-button
+      [color]="categoriaSeleccionada === null ? 'primary' : 'light'"
+      (click)="filtrarPorCategoria(null)">
       Todos
     </ion-button>
 
-    <ion-button *ngFor="let cat of categorias"
-                [color]="categoriaSeleccionada === cat.categoria_id ? 'primary' : 'light'"
-                (click)="filtrarPorCategoria(cat.categoria_id)">
+    <ion-button
+      *ngFor="let cat of categorias"
+      [color]="categoriaSeleccionada === cat.categoria_id ? 'primary' : 'light'"
+      (click)="filtrarPorCategoria(cat.categoria_id)">
       {{ cat.nombre }}
     </ion-button>
   </div>
 
-  <!-- Lista de productos -->
   <ion-list>
     <ion-item button *ngFor="let producto of productosFiltrados" (click)="verDetalleProducto(producto)">
       <ion-label>
@@ -66,12 +77,10 @@
     </ion-item>
   </ion-list>
 
-  <!-- Botón "Nuevo Producto" -->
   <div class="button-container">
     <ion-button class="nuevo-producto-button" (click)="agregarNuevoProducto()">Nuevo Producto</ion-button>
   </div>
 
-  <!-- Modal Scanner -->
   <ion-modal
     [isOpen]="scannerAbierto"
     (didPresent)="iniciarLectura()"
@@ -96,5 +105,4 @@
       </ion-content>
     </ng-template>
   </ion-modal>
-
 </ion-content>

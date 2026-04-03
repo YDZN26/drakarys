@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar color="mycolor">
     <ion-buttons slot="start">
-      <ion-button [id]="'usuarioPopoverTrigger'">
+      <ion-button [id]="'usuarioPopoverTriggerBalance'">
         <ion-icon name="person-circle" slot="start" size="large"></ion-icon>
         <ion-label>{{ nombreUsuario }}</ion-label>
       </ion-button>
@@ -39,7 +39,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-popover trigger="usuarioPopoverTrigger" triggerAction="click">
+<ion-popover trigger="usuarioPopoverTriggerBalance" triggerAction="click">
   <ng-template>
     <ion-content class="ion-padding">
       <ion-item button (click)="cerrarSesion()">

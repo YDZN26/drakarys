@@ -1,5 +1,5 @@
-import { Component, OnInit, NgZone, ViewChild, ElementRef } from '@angular/core';
-import { NavController } from '@ionic/angular';
+import { Component, OnInit, NgZone, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { NavController, PopoverController } from '@ionic/angular';
 import { SupabaseService } from '../../supabase.service';
 import { MensajeService } from 'src/app/mensaje.service';
 import { Subscription } from 'rxjs';
@@ -12,16 +12,17 @@ import type { Result } from '@zxing/library';
   templateUrl: './inventario.page.html',
   styleUrls: ['./inventario.page.scss'],
 })
-export class InventarioPage implements OnInit {
+export class InventarioPage implements OnInit, OnDestroy {
+  nombreUsuario: string = 'Usuario';
+
   productos: any[] = [];
-  productosFiltrados: any[] = []; // ✅ (AUMENTADO)
+  productosFiltrados: any[] = [];
   categorias: any[] = [];
   categoriaSeleccionada: number | null = null;
   textoBusqueda: string = '';
   mensaje: string = '';
   private mensajeSub!: Subscription;
 
-  // ✅ (AUMENTADO) Scanner
   scannerAbierto: boolean = false;
   private codeReader: BrowserMultiFormatReader | null = null;
   private streamActual: MediaStream | null = null;
@@ -30,14 +31,27 @@ export class InventarioPage implements OnInit {
 
   constructor(
     private navCtrl: NavController,
+    private popoverCtrl: PopoverController,
     private supabaseService: SupabaseService,
     private mensajeService: MensajeService,
     private zone: NgZone
   ) { }
 
   ngOnInit() {
+    const usuarioGuardado = localStorage.getItem('usuario');
+
+    if (usuarioGuardado) {
+      try {
+        const usuarioObj = JSON.parse(usuarioGuardado);
+        this.nombreUsuario = this.capitalize(usuarioObj.username);
+      } catch (error) {
+        this.nombreUsuario = 'Usuario';
+      }
+    }
+
     this.cargarProductos();
     this.cargarCategorias();
+
     this.mensajeSub = this.mensajeService.mensaje$.subscribe((mensaje: string) => {
       if (mensaje) {
         console.log('Mensaje recibido:', mensaje);
@@ -45,6 +59,30 @@ export class InventarioPage implements OnInit {
         this.cargarProductos(this.categoriaSeleccionada);
       }
     });
+  }
+
+  ngOnDestroy() {
+    if (this.mensajeSub) {
+      this.mensajeSub.unsubscribe();
+    }
+  }
+
+  async ionViewWillEnter() {
+    await this.popoverCtrl.dismiss().catch(() => {});
+  }
+
+  async ionViewWillLeave() {
+    await this.popoverCtrl.dismiss().catch(() => {});
+  }
+
+  capitalize(nombre: string): string {
+    return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+  }
+
+  async cerrarSesion() {
+    await this.popoverCtrl.dismiss().catch(() => {});
+    localStorage.clear();
+    this.navCtrl.navigateRoot('/login');
   }
 
   async cargarCategorias() {
@@ -62,14 +100,11 @@ export class InventarioPage implements OnInit {
         ? todos.filter(p => p.categoria_id === categoriaId)
         : todos;
 
-      // ✅ (AUMENTADO) lista visible
       this.productosFiltrados = this.productos;
 
-      // ✅ (AUMENTADO) si ya había texto, re-filtrar
       if (this.textoBusqueda && this.textoBusqueda.trim().length > 0) {
         this.buscarProductos({ target: { value: this.textoBusqueda } });
       }
-
     } catch (error) {
       console.error('Error al cargar productos:', error);
     }
@@ -80,7 +115,6 @@ export class InventarioPage implements OnInit {
     this.cargarProductos(categoriaId);
   }
 
-  // ✅ (AUMENTADO) buscar por nombre o código de barras
   buscarProductos(event: any) {
     const searchTerm = (event?.target?.value || '').toString().toLowerCase().trim();
     this.textoBusqueda = event?.target?.value || '';
@@ -114,7 +148,6 @@ export class InventarioPage implements OnInit {
     }, 0);
   }
 
-
   async abrirScanner() {
     this.scannerAbierto = true;
   }
@@ -144,7 +177,9 @@ export class InventarioPage implements OnInit {
       const videoEl = this.videoScanner.nativeElement;
       videoEl.srcObject = this.streamActual;
 
-      try { await videoEl.play(); } catch (e) {}
+      try {
+        await videoEl.play();
+      } catch (e) {}
 
       this.codeReader.decodeFromStream(
         this.streamActual,
@@ -163,11 +198,9 @@ export class InventarioPage implements OnInit {
           }
         }
       );
-
     } catch (error) {
       console.error('Error al abrir cámara o escanear:', error);
       this.cerrarScanner();
     }
   }
-
 }

@@ -2,17 +2,30 @@ ion-toolbar {
   background-color: var(--ion-color-mycolor);
 }
 
+ion-header {
+  ion-toolbar {
+    --background: #001E87;
+    color: white;
+
+    ion-icon,
+    ion-button,
+    ion-label {
+      color: white;
+    }
+  }
+}
+
 .user-info {
   background-color: var(--ion-color-mycolor);
   color: #fff;
   padding: 5px;
-  text-align: left; /* Ajuste para alinear a la izquierda */
+  text-align: left;
 }
 
 .user-details {
   display: flex;
-  align-items: center; /* Ajuste para centrar verticalmente */
-  justify-content: flex-start; /* Ajuste para alinear a la izquierda */
+  align-items: center;
+  justify-content: flex-start;
   margin-bottom: 1px;
 
   ion-icon {
@@ -29,50 +42,50 @@ ion-toolbar {
   display: flex;
   justify-content: center;
   padding: 16px;
-  background-color: var(--ion-color-mycolor); /* Fondo igual al del toolbar */
+  background-color: var(--ion-color-mycolor);
   margin-bottom: 16px;
 
   .card {
     background-color: #fff;
-    color: var(--ion-color-mycolor); /* Color del texto general en las tarjetas */
+    color: var(--ion-color-mycolor);
     padding: 8px 16px;
     border-radius: 20px;
     text-align: center;
-    margin: 0 8px; /* Espacio entre las tarjetas */
-    width: 45%; /* Ajusta el ancho según sea necesario */
+    margin: 0 8px;
+    width: 45%;
 
     p {
       margin: 0;
-      color: #000; /* Color del texto dentro de <p> */
-      font-size: 14px; /* Tamaño del texto en <p> */
-      font-weight: bold; /* Texto en negrilla */
+      color: #000;
+      font-size: 14px;
+      font-weight: bold;
     }
 
     h2 {
       margin: 0;
-      color: #000; /* Color del texto dentro de <h2> */
-      font-size: 18px; /* Tamaño del texto en <h2> */
-      font-weight: bold; /* Texto en negrilla */
+      color: #000;
+      font-size: 18px;
+      font-weight: bold;
     }
   }
 }
 
 .category-buttons {
   display: flex;
-  flex-wrap: nowrap; /* para que no baje a otra fila */
+  flex-wrap: nowrap;
   overflow-x: auto;
   white-space: nowrap;
   padding: 10px;
-  gap: 8px; /*separación entre botones */
-  -webkit-overflow-scrolling: touch; /* scroll suave en móviles */
+  gap: 8px;
+  -webkit-overflow-scrolling: touch;
 
   &::-webkit-scrollbar {
     display: none;
   }
 
   ion-button {
-    flex: 0 0 auto; 
-    margin: 0;      /* para que el gap controle el espacio */
+    flex: 0 0 auto;
+    margin: 0;
   }
 }
 
@@ -91,7 +104,7 @@ ion-button {
 
 ion-list {
   margin-top: 16px;
-  height: calc(100vh - 350px); /* Ajusta la altura según sea necesario */
+  height: calc(100vh - 350px);
   overflow-y: auto;
 }
 
@@ -102,17 +115,11 @@ ion-item {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Estilos para la barra de búsqueda */
 ion-searchbar {
-  --background: #edf2fa; /* Cambia el color de fondo */
-  --border-radius: 10px; /* Cambia el radio del borde */
+  --background: #edf2fa;
+  --border-radius: 10px;
 }
 
-/* =========================
-   ✅ SCANNER + BOTÓN CÁMARA
-   ========================= */
-
-/* fila searchbar + botón cámara */
 .search-row {
   display: flex;
   align-items: center;
@@ -123,7 +130,6 @@ ion-searchbar {
   margin-left: 6px;
 }
 
-/* estilos del scanner */
 .scanner-content {
   --background: #000;
 }

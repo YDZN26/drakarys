@@ -1,18 +1,19 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { PopoverController } from '@ionic/angular';
 import { SupabaseService } from 'src/app/supabase.service';
 import { MensajeService } from 'src/app/mensaje.service';
 import { Subscription } from 'rxjs';
 
 interface ClienteDeudaView {
-  id: number;               // deuda_id
-  clienteId: number;        // cliente_id
-  total: number;            // monto_total
-  montoPagado: number;      // total_pagado
-  montoFaltante: number;    // saldo
-  nombreCliente: string;    // nombre + apellido
-  estado: string;           // pendiente / pagada
-  descripcion: string;      // descripcion de la deuda
+  id: number;
+  clienteId: number;
+  total: number;
+  montoPagado: number;
+  montoFaltante: number;
+  nombreCliente: string;
+  estado: string;
+  descripcion: string;
 }
 
 @Component({
@@ -22,6 +23,8 @@ interface ClienteDeudaView {
 })
 export class DeudasPage implements OnInit, OnDestroy {
 
+  nombreUsuario: string = 'Usuario';
+
   selectedCliente: number | null = null;
   pago: any = 0;
 
@@ -29,16 +32,30 @@ export class DeudasPage implements OnInit, OnDestroy {
   tiposDePago: any[] = [];
 
   clientes: ClienteDeudaView[] = [];
+  clientesFiltrados: ClienteDeudaView[] = [];
+  textoBusqueda: string = '';
 
   private mensajeSub!: Subscription;
 
   constructor(
     private router: Router,
+    private popoverCtrl: PopoverController,
     private supabase: SupabaseService,
     private mensajeService: MensajeService
   ) {}
 
   async ngOnInit() {
+    const usuarioGuardado = localStorage.getItem('usuario');
+
+    if (usuarioGuardado) {
+      try {
+        const usuarioObj = JSON.parse(usuarioGuardado);
+        this.nombreUsuario = this.capitalize(usuarioObj.username);
+      } catch (error) {
+        this.nombreUsuario = 'Usuario';
+      }
+    }
+
     this.tiposDePago = await this.supabase.obtenerTiposDePago();
 
     this.mensajeSub = this.mensajeService.mensaje$.subscribe(async (mensaje: string) => {
@@ -49,11 +66,28 @@ export class DeudasPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.mensajeSub) this.mensajeSub.unsubscribe();
+    if (this.mensajeSub) {
+      this.mensajeSub.unsubscribe();
+    }
   }
 
   async ionViewWillEnter() {
+    await this.popoverCtrl.dismiss().catch(() => {});
     await this.cargarDeudas();
+  }
+
+  async ionViewWillLeave() {
+    await this.popoverCtrl.dismiss().catch(() => {});
+  }
+
+  capitalize(nombre: string): string {
+    return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+  }
+
+  async cerrarSesion() {
+    await this.popoverCtrl.dismiss().catch(() => {});
+    localStorage.clear();
+    this.router.navigate(['/login']);
   }
 
   async cargarDeudas() {
@@ -65,7 +99,6 @@ export class DeudasPage implements OnInit, OnDestroy {
       const pagado = Number(d.total_pagado || 0);
       const saldo = Number(d.saldo || 0);
       const estado = String(d.estado || 'pendiente');
-
       const descripcion = String(d.descripcion || '');
 
       return {
@@ -79,16 +112,38 @@ export class DeudasPage implements OnInit, OnDestroy {
         descripcion
       };
     });
+
+    this.clientesFiltrados = this.clientes;
+
+    if (this.textoBusqueda && this.textoBusqueda.trim().length > 0) {
+      this.buscarDeudas({ target: { value: this.textoBusqueda } });
+    }
   }
 
   toggleMenu(clienteId: number) {
     this.selectedCliente = this.selectedCliente === clienteId ? null : clienteId;
   }
 
-  // convertir a número para usar en el HTML sin Number()
   toNumber(valor: any): number {
     const n = parseFloat(valor);
     return isNaN(n) ? 0 : n;
+  }
+
+  buscarDeudas(event: any) {
+    const searchTerm = (event?.target?.value || '').toString().toLowerCase().trim();
+    this.textoBusqueda = event?.target?.value || '';
+
+    if (!searchTerm) {
+      this.clientesFiltrados = this.clientes;
+      return;
+    }
+
+    this.clientesFiltrados = this.clientes.filter((cliente: ClienteDeudaView) => {
+      const nombre = (cliente.nombreCliente || '').toLowerCase();
+      const descripcion = (cliente.descripcion || '').toLowerCase();
+
+      return nombre.includes(searchTerm) || descripcion.includes(searchTerm);
+    });
   }
 
   async pagar(deuda: ClienteDeudaView) {
@@ -106,7 +161,6 @@ export class DeudasPage implements OnInit, OnDestroy {
       return;
     }
 
-    // no permitir pagar más que el saldo
     if (monto > deuda.montoFaltante) {
       console.log('El monto ingresado supera el saldo de la deuda');
       return;

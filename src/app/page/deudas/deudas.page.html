@@ -1,16 +1,27 @@
 <ion-header>
   <ion-toolbar color="mycolor">
-    <ion-title>Deudas</ion-title>
+    <ion-buttons slot="start">
+      <ion-button [id]="'usuarioPopoverTriggerDeuda'">
+        <ion-icon name="person-circle" slot="start" size="large"></ion-icon>
+        <ion-label>{{ nombreUsuario }}</ion-label>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
+<ion-popover trigger="usuarioPopoverTriggerDeuda" triggerAction="click">
+  <ng-template>
+    <ion-content class="ion-padding">
+      <ion-item button (click)="cerrarSesion()">
+        <ion-icon slot="start" name="log-out-outline"></ion-icon>
+        <ion-label>Cerrar sesión</ion-label>
+      </ion-item>
+    </ion-content>
+  </ng-template>
+</ion-popover>
+
 <ion-content [fullscreen]="true">
   <div class="user-info">
-    <div class="user-details">
-      <ion-icon name="person-circle" size="large"></ion-icon>
-      <span>Drakarys</span>
-    </div>
-
     <div class="info-cards">
       <div class="card">
         <p>Por cobrar</p>
@@ -21,12 +32,17 @@
   </div>
 
   <ion-toolbar>
-    <ion-searchbar color="light" placeholder="Buscar deudas"></ion-searchbar>
+    <ion-searchbar
+      color="light"
+      placeholder="Buscar deudas"
+      [(ngModel)]="textoBusqueda"
+      (ionInput)="buscarDeudas($event)">
+    </ion-searchbar>
   </ion-toolbar>
 
   <div class="cliente-lista-scroll">
     <ion-list>
-      <div *ngFor="let cliente of clientes">
+      <div *ngFor="let cliente of clientesFiltrados">
         <ion-item button (click)="toggleMenu(cliente.id)">
           <ion-avatar slot="start" class="cliente-avatar">
             <ion-icon name="person-circle"></ion-icon>
@@ -52,7 +68,7 @@
           <p>Monto Faltante: {{ cliente.montoFaltante }} Bs.</p>
 
           <p *ngIf="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
-            ✅ Deuda pagada
+            Deuda pagada
           </p>
 
           <ion-item lines="none">
@@ -74,7 +90,6 @@
             [disabled]="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
           </ion-input>
 
-          <!-- ✅ mensaje rojo si supera el saldo -->
           <p
             class="error-limite"
             *ngIf="cliente.montoFaltante > 0

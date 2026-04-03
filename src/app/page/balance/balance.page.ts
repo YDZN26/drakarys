@@ -27,8 +27,12 @@ export class BalancePage implements OnInit, AfterViewInit {
   private mensajeSub!: Subscription;
   mensaje: string = '';
 
-  // SALDO INICIAL DEL DÍA (viene del cierre anterior -> saldo_final)
   saldoInicial: number = 0;
+
+  mostrarCampoBusqueda = false;
+  textoBusqueda: string = '';
+
+  vistaActual: 'ingresos' | 'egresos' = 'ingresos';
 
   constructor(
     private navCtrl: NavController,
@@ -75,11 +79,20 @@ export class BalancePage implements OnInit, AfterViewInit {
     });
   }
 
+  async ionViewWillEnter() {
+    await this.popoverCtrl.dismiss().catch(() => {});
+  }
+
+  async ionViewWillLeave() {
+    await this.popoverCtrl.dismiss().catch(() => {});
+  }
+
   capitalize(nombre: string): string {
     return nombre.charAt(0).toUpperCase() + nombre.slice(1);
   }
 
-  cerrarSesion() {
+  async cerrarSesion() {
+    await this.popoverCtrl.dismiss().catch(() => {});
     localStorage.clear();
     this.router.navigate(['/login']);
   }
@@ -119,7 +132,6 @@ export class BalancePage implements OnInit, AfterViewInit {
     await this.cargarBalance(inicioDelDia, finDelDia);
   }
 
-  // saldo inicial = saldo_final del último cierre anterior al día seleccionado
   async cargarSaldoInicial(fechaInicioDelDiaISO: string) {
     const ultimo = await this.supabaseService.obtenerUltimoCierreAntesDe(fechaInicioDelDiaISO);
 
@@ -133,7 +145,6 @@ export class BalancePage implements OnInit, AfterViewInit {
   }
 
   async cargarBalance(fechaInicio: string, fechaFin: string) {
-    // cargar saldo inicial antes de calcular el balance
     await this.cargarSaldoInicial(fechaInicio);
 
     const detalles = await this.supabaseService.obtenerDetallesVentasPorFecha(fechaInicio, fechaFin);
@@ -143,7 +154,9 @@ export class BalancePage implements OnInit, AfterViewInit {
       if (!d.ingreso) continue;
 
       const ingresoId = d.ingreso_id;
-      if (!agrupadas[ingresoId]) agrupadas[ingresoId] = [];
+      if (!agrupadas[ingresoId]) {
+        agrupadas[ingresoId] = [];
+      }
       agrupadas[ingresoId].push(d);
     }
 
@@ -248,21 +261,22 @@ export class BalancePage implements OnInit, AfterViewInit {
     if (this.mensaje === 'actualizar ingresos' || !this.mensaje) {
       this.mostrarIngresos();
     }
+
     if (this.mensaje === 'actualizar gastos') {
       this.mostrarEgresos();
     }
   }
 
-  mostrarCampoBusqueda = false;
-  textoBusqueda: string = '';
-
   filtrarItems() {
     const texto = this.textoBusqueda.toLowerCase().trim();
+
     if (!texto) {
       this.filteredItems = this.vistaActual === 'ingresos'
-        ? this.ingresos : this.egresos;
+        ? this.ingresos
+        : this.egresos;
       return;
     }
+
     if (this.vistaActual === 'ingresos') {
       this.filteredItems = this.ingresos.filter(item =>
         item.textoBusqueda?.toLowerCase().includes(texto) ||
@@ -275,8 +289,6 @@ export class BalancePage implements OnInit, AfterViewInit {
       );
     }
   }
-
-  vistaActual: 'ingresos' | 'egresos' = 'ingresos';
 
   mostrarIngresos() {
     this.vistaActual = 'ingresos';
@@ -296,7 +308,6 @@ export class BalancePage implements OnInit, AfterViewInit {
     return this.egresos.reduce((acc, e) => acc + e.precio, 0);
   }
 
-  // Balance = Saldo Inicial + Ingresos - Egresos
   get balance() {
     return this.saldoInicial + this.totalIngresos - this.totalEgresos;
   }
@@ -330,12 +341,12 @@ export class BalancePage implements OnInit, AfterViewInit {
   }
 
   async irAVentaProductos() {
-    await this.popoverCtrl.dismiss();
+    await this.popoverCtrl.dismiss().catch(() => {});
     this.router.navigate(['/nueva-venta']);
   }
 
   async irAVentaLibre() {
-    await this.popoverCtrl.dismiss();
+    await this.popoverCtrl.dismiss().catch(() => {});
     this.router.navigate(['/venta-libre']);
   }
 }
