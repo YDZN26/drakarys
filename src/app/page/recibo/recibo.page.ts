@@ -11,7 +11,7 @@ import { MensajeService } from 'src/app/mensaje.service';
 })
 export class ReciboPage implements OnInit {
   recibo: any = {
-    ingreso_id: 0,
+    venta_id: 0,
     fechaVenta: '',
     productos: [],
     totalVenta: 0,
@@ -35,14 +35,14 @@ export class ReciboPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    const ingresoParam = this.route.snapshot.paramMap.get('ventaId');
-    console.log('Recibo cargando con ID:', ingresoParam);
+    const ventaParam = this.route.snapshot.paramMap.get('ventaId');
+    console.log('Recibo cargando con ID:', ventaParam);
 
-    if (ingresoParam) {
-      const ingresoId = Number(ingresoParam);
-      this.cargarIngreso(ingresoId);
+    if (ventaParam) {
+      const ventaId = Number(ventaParam);
+      this.cargarVenta(ventaId);
     } else {
-      console.error('No se recibió ingresoId en la URL.');
+      console.error('No se recibió ventaId en la URL.');
     }
   }
 
@@ -61,35 +61,37 @@ export class ReciboPage implements OnInit {
     ];
   }
 
-  private async cargarIngreso(ingresoId: number) {
-    const ingreso = await this.supabase.obtenerVentaPorId(ingresoId);
-    const detalles = await this.supabase.obtenerVentaDetalles(ingresoId);
+  private async cargarVenta(ventaId: number) {
+    const venta = await this.supabase.obtenerVentaPorId(ventaId);
+    const detalles = await this.supabase.obtenerVentaDetalles(ventaId);
 
-    if (!ingreso) {
-      console.error('Ingreso no encontrado');
+    if (!venta) {
+      console.error('Venta no encontrada');
       return;
     }
 
-    const fechaObj = new Date(ingreso.fecha + 'Z');
+    const fechaObj = new Date(venta.fecha + 'Z');
     const fechaLocal = fechaObj.toLocaleDateString('es-BO');
     const horaLocal = fechaObj.toLocaleTimeString('es-BO');
 
-    const tipoPago = this.tiposPago[ingreso.tipo_pago_id] || '';
+    const ingreso = Array.isArray(venta.ingreso) ? venta.ingreso[0] : venta.ingreso;
+    const tipoPagoId = Number(ingreso?.tipo_pago_id || 0);
+    const tipoPago = this.tiposPago[tipoPagoId] || '';
 
     let clienteStr = '';
-    if (ingreso.cliente_id) {
-      const cli = await this.supabase.obtenerClientePorId(ingreso.cliente_id);
+    if (venta.cliente_id) {
+      const cli = await this.supabase.obtenerClientePorId(venta.cliente_id);
       if (cli) {
         clienteStr = `${cli.nombre} ${cli.apellido}`.trim();
       }
     }
 
-    const metodosPago = this.formatearMetodoPago(ingreso.tipo_pago_id, ingreso.total);
+    const metodosPago = this.formatearMetodoPago(tipoPagoId, Number(venta.monto || 0));
 
     this.recibo = {
-      ingreso_id: ingreso.ingreso_id,
+      venta_id: venta.venta_id,
       fechaVenta: `${fechaLocal} ${horaLocal}`,
-      totalVenta: ingreso.total,
+      totalVenta: Number(venta.monto || 0),
       metodoPago: tipoPago,
       metodosPago: metodosPago,
       cliente: clienteStr,

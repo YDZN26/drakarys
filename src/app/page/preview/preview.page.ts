@@ -187,7 +187,7 @@ export class PreviewPage implements OnInit {
         usuarioId
       );
 
-      if (!res) {
+      if (!res || !res.venta) {
         console.error('Error al registrar venta');
         return;
       }
@@ -195,7 +195,7 @@ export class PreviewPage implements OnInit {
       this.mensajeService.enviarMensaje('actualizar inventario');
       this.mensajeService.enviarMensaje('actualizar ingresos');
 
-      this.navCtrl.navigateForward(['/recibo', res.ingreso.ingreso_id]);
+      this.navCtrl.navigateForward(['/recibo', res.venta.venta_id]);
     } catch (e) {
       console.error('Error al confirmar venta', e);
     }

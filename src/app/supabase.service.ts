@@ -221,7 +221,6 @@ export class SupabaseService {
   async crearIngreso(ingreso: {
     tipo_pago_id: number;
     usuario_id: number;
-    cliente_id?: number | null;
     total: number;
     tipo_ingreso: TipoIngreso;
     descripcion?: string;
@@ -231,7 +230,6 @@ export class SupabaseService {
     const payload = {
       tipo_pago_id: ingreso.tipo_pago_id,
       usuario_id: ingreso.usuario_id,
-      cliente_id: ingreso.cliente_id ?? null,
       total: ingreso.total,
       tipo_ingreso: ingreso.tipo_ingreso,
       descripcion: ingreso.descripcion ?? null,
@@ -252,9 +250,38 @@ export class SupabaseService {
     return data;
   }
 
-  async registrarVentaDetallesPorIngreso(ingresoId: number, productos: any[]) {
+  async crearVenta(venta: {
+    usuario_id: number;
+    cliente_id: number;
+    ingreso_id: number;
+    monto: number;
+    fecha?: string;
+  }) {
+    const payload = {
+      usuario_id: venta.usuario_id,
+      cliente_id: venta.cliente_id,
+      ingreso_id: venta.ingreso_id,
+      monto: venta.monto,
+      fecha: venta.fecha ?? new Date().toISOString()
+    };
+
+    const { data, error } = await this.supabase
+      .from('venta')
+      .insert([payload])
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error al crear venta:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  async registrarVentaDetallesPorVenta(ventaId: number, productos: any[]) {
     const detalles = productos.map(p => ({
-      ingreso_id: ingresoId,
+      venta_id: ventaId,
       producto_id: p.producto_id,
       cantidad: p.cantidadSeleccionada,
       precio_unitario: p.precio,
@@ -280,7 +307,6 @@ export class SupabaseService {
     const ingreso = await this.crearIngreso({
       tipo_pago_id: tipoPagoId,
       usuario_id: userId,
-      cliente_id: clienteId,
       total,
       tipo_ingreso: 'venta',
       descripcion: 'Venta con productos'
@@ -288,37 +314,62 @@ export class SupabaseService {
 
     if (!ingreso) return null;
 
-    const detalles = await this.registrarVentaDetallesPorIngreso(ingreso.ingreso_id, productos);
+    const venta = await this.crearVenta({
+      usuario_id: userId,
+      cliente_id: clienteId,
+      ingreso_id: ingreso.ingreso_id,
+      monto: total
+    });
+
+    if (!venta) return null;
+
+    const detalles = await this.registrarVentaDetallesPorVenta(venta.venta_id, productos);
     if (!detalles) return null;
 
     const stockActualizado = await this.descontarStockProductos(productos);
     if (!stockActualizado) return null;
 
-    return { ingreso, detalles };
+    return { ingreso, venta, detalles };
   }
 
-  async obtenerVentaPorId(ingresoId: number) {
+  async obtenerVentaPorId(ventaId: number) {
     const { data, error } = await this.supabase
-      .from('ingreso')
-      .select('*')
-      .eq('ingreso_id', ingresoId)
+      .from('venta')
+      .select(`
+        venta_id,
+        usuario_id,
+        cliente_id,
+        ingreso_id,
+        monto,
+        fecha,
+        ingreso:ingreso_id(
+          ingreso_id,
+          tipo_pago_id,
+          total,
+          descripcion
+        )
+      `)
+      .eq('venta_id', ventaId)
       .single();
 
     if (error) {
-      console.error('Error al obtener el ingreso:', error);
+      console.error('Error al obtener la venta:', error);
       return null;
     }
     return data;
   }
 
-  async obtenerVentaDetalles(ingresoId: number) {
+  async obtenerVentaDetalles(ventaId: number) {
     const { data, error } = await this.supabase
       .from('venta_detallada')
-      .select(`*, producto(nombre)`)
-      .eq('ingreso_id', ingresoId);
+      .select(`
+        *,
+        producto(nombre)
+      `)
+      .eq('venta_id', ventaId);
 
     if (error) {
-      console.error('Error al obtener los detalles por ingreso:', error);
+      console.error('Error al obtener los detalles de la venta:', error);
       return [];
     }
     return data;
@@ -328,25 +379,28 @@ export class SupabaseService {
     const { data, error } = await this.supabase
       .from('venta_detallada')
       .select(`
-        ingreso_id,
+        venta_id,
         cantidad,
         precio_unitario,
         subtotal,
         producto:producto_id(nombre),
-        ingreso:ingreso_id!inner(
-          ingreso_id,
+        venta:venta_id!inner(
+          venta_id,
           fecha,
-          total,
-          tipo_de_pago:tipo_pago_id(nombre),
-          cliente:cliente_id(nombre,apellido)
+          monto,
+          cliente:cliente_id(nombre,apellido),
+          ingreso:ingreso_id(
+            ingreso_id,
+            tipo_de_pago:tipo_pago_id(nombre)
+          )
         )
       `)
-      .gte('ingreso.fecha', fechaInicio)
-      .lte('ingreso.fecha', fechaFin)
-      .order('ingreso_id', { ascending: false });
+      .gte('venta.fecha', fechaInicio)
+      .lte('venta.fecha', fechaFin)
+      .order('venta_id', { ascending: false });
 
     if (error) {
-      console.error(error);
+      console.error('Error al obtener detalles de ventas por fecha:', error);
       return [];
     }
     return data;
@@ -443,7 +497,6 @@ export class SupabaseService {
         fecha,
         tipo_de_pago:tipo_pago_id(nombre),
         tipo_ingreso,
-        cliente:cliente_id(nombre,apellido),
         deuda:id_deuda(descripcion)
       `)
       .in('tipo_ingreso', ['venta_libre', 'ingresos_varios', 'pago_deuda'])
@@ -518,7 +571,6 @@ export class SupabaseService {
     const ingreso = await this.crearIngreso({
       tipo_pago_id: payload.tipo_pago_id,
       usuario_id: payload.usuario_id,
-      cliente_id: deuda.cliente_id,
       total: payload.monto,
       tipo_ingreso: 'pago_deuda',
       descripcion: payload.descripcion ?? 'Pago de deuda',

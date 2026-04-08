@@ -151,31 +151,31 @@ export class BalancePage implements OnInit, AfterViewInit {
 
     const agrupadas: { [key: number]: any[] } = {};
     for (const d of detalles) {
-      if (!d.ingreso) continue;
+      if (!d.venta) continue;
 
-      const ingresoId = d.ingreso_id;
-      if (!agrupadas[ingresoId]) {
-        agrupadas[ingresoId] = [];
+      const ventaId = d.venta_id;
+      if (!agrupadas[ventaId]) {
+        agrupadas[ventaId] = [];
       }
-      agrupadas[ingresoId].push(d);
+      agrupadas[ventaId].push(d);
     }
 
     const agrupadasArray = Object.values(agrupadas);
     agrupadasArray.sort((a, b) => {
-      const tA = new Date(a[0].ingreso.fecha + 'Z').getTime();
-      const tB = new Date(b[0].ingreso.fecha + 'Z').getTime();
+      const tA = new Date(a[0].venta.fecha + 'Z').getTime();
+      const tB = new Date(b[0].venta.fecha + 'Z').getTime();
       return tB - tA;
     });
 
     this.ingresos = agrupadasArray.map((items: any[]) => {
-      const ingreso = items[0].ingreso;
+      const venta = items[0].venta;
 
-      const clienteObj = ingreso.cliente;
+      const clienteObj = venta.cliente;
       const clienteStr = clienteObj ? `${clienteObj.nombre} ${clienteObj.apellido}` : '-';
 
-      const tipoPago = ingreso?.tipo_de_pago?.nombre ?? '-';
+      const tipoPago = venta?.ingreso?.tipo_de_pago?.nombre ?? '-';
 
-      const fechaObj = ingreso?.fecha ? new Date(ingreso.fecha + 'Z') : new Date();
+      const fechaObj = venta?.fecha ? new Date(venta.fecha + 'Z') : new Date();
       const hora = fechaObj.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
       const fechaLocal = fechaObj.toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' });
 
@@ -183,7 +183,7 @@ export class BalancePage implements OnInit, AfterViewInit {
       const total = items.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
 
       return {
-        ingreso_id: ingreso.ingreso_id,
+        venta_id: venta.venta_id,
         nombre: productos.length > 1
           ? productos.slice(0, 1).join(', ') + ', ...'
           : productos.join(', '),
@@ -195,7 +195,7 @@ export class BalancePage implements OnInit, AfterViewInit {
           descripcion: i.producto?.nombre,
           cantidad: i.cantidad
         })),
-        textoBusqueda: productos.join(', ')
+        textoBusqueda: `${productos.join(', ')} ${clienteStr}`.trim()
       };
     });
 
@@ -208,10 +208,6 @@ export class BalancePage implements OnInit, AfterViewInit {
 
       const tipoPago = v.tipo_de_pago?.nombre ?? '-';
 
-      const clienteNombre = v.cliente
-        ? `${v.cliente.nombre} ${v.cliente.apellido}`.trim()
-        : '-';
-
       const titulo =
         v.tipo_ingreso === 'pago_deuda'
           ? `${(v.deuda?.descripcion ?? 'Deuda')} - Pago de deuda`
@@ -222,7 +218,7 @@ export class BalancePage implements OnInit, AfterViewInit {
           ? 'Ingreso Libre'
           : v.tipo_ingreso === 'venta_libre'
             ? 'Venta Libre'
-            : clienteNombre;
+            : '-';
 
       return {
         ingreso_id: v.ingreso_id ?? null,
@@ -232,7 +228,7 @@ export class BalancePage implements OnInit, AfterViewInit {
         precio: parseFloat(v.total),
         fechaCompleta: `${fechaLocal} ${hora}`,
         productosOriginales: [],
-        textoBusqueda: `${titulo} ${clienteNombre} ${v.descripcion ?? ''}`.trim()
+        textoBusqueda: `${titulo} ${v.descripcion ?? ''}`.trim()
       };
     });
 
@@ -325,8 +321,11 @@ export class BalancePage implements OnInit, AfterViewInit {
   }
 
   verRecibo(item: any) {
-    if (this.vistaActual !== 'ingresos' || !item?.ingreso_id) return;
-    this.router.navigate(['/recibo', item.ingreso_id]);
+    if (this.vistaActual !== 'ingresos') return;
+
+    if (item?.venta_id) {
+      this.router.navigate(['/recibo', item.venta_id]);
+    }
   }
 
   async seleccionarFechaDesdeCalendario(event: any) {
