@@ -30,11 +30,6 @@
       </ion-item>
 
       <ion-item>
-        <ion-label>Método de Pago</ion-label>
-        <ion-note slot="end">{{ venta.metodoPago }}</ion-note>
-      </ion-item>
-
-      <ion-item>
         <ion-label>Fecha de Venta</ion-label>
         <ion-note slot="end">{{ venta.fechaVenta }}</ion-note>
       </ion-item>
@@ -52,8 +47,8 @@
   </ion-card>
 
   <ion-fab vertical="bottom" horizontal="center" slot="fixed">
-    <ion-button class="confirmar-venta-button" (click)="confirmarVenta()">
-      Confirmar Venta
+    <ion-button class="confirmar-venta-button" (click)="irAMetodoPago()">
+      Continuar
     </ion-button>
   </ion-fab>
 </ion-content>

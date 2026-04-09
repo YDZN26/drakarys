@@ -226,6 +226,7 @@ export class SupabaseService {
     descripcion?: string;
     fecha?: string;
     id_deuda?: number | null;
+    venta_id?: number | null;
   }) {
     const payload = {
       tipo_pago_id: ingreso.tipo_pago_id,
@@ -234,13 +235,14 @@ export class SupabaseService {
       tipo_ingreso: ingreso.tipo_ingreso,
       descripcion: ingreso.descripcion ?? null,
       fecha: ingreso.fecha ?? new Date().toISOString(),
-      id_deuda: ingreso.id_deuda ?? null
+      id_deuda: ingreso.id_deuda ?? null,
+      venta_id: ingreso.venta_id ?? null
     };
 
     const { data, error } = await this.supabase
       .from('ingreso')
       .insert([payload])
-      .select('ingreso_id')
+      .select('*')
       .single();
 
     if (error) {
@@ -253,14 +255,12 @@ export class SupabaseService {
   async crearVenta(venta: {
     usuario_id: number;
     cliente_id: number;
-    ingreso_id: number;
     monto: number;
     fecha?: string;
   }) {
     const payload = {
       usuario_id: venta.usuario_id,
       cliente_id: venta.cliente_id,
-      ingreso_id: venta.ingreso_id,
       monto: venta.monto,
       fecha: venta.fecha ?? new Date().toISOString()
     };
@@ -300,24 +300,49 @@ export class SupabaseService {
     return data;
   }
 
-  async registrarVentaCompleta(productos: any[], tipoPagoId: number, clienteId: number, usuarioId?: number) {
+  async registrarIngresosDeVenta(
+    ventaId: number,
+    usuarioId: number,
+    pagos: { tipo_pago_id: number; monto: number }[],
+    descripcion?: string
+  ) {
+    const ingresos = pagos.map(pago => ({
+      tipo_pago_id: pago.tipo_pago_id,
+      usuario_id: usuarioId,
+      total: pago.monto,
+      tipo_ingreso: 'venta' as TipoIngreso,
+      descripcion: descripcion ?? 'Venta con productos',
+      venta_id: ventaId,
+      fecha: new Date().toISOString(),
+      id_deuda: null
+    }));
+
+    const { data, error } = await this.supabase
+      .from('ingreso')
+      .insert(ingresos)
+      .select('*');
+
+    if (error) {
+      console.error('Error al registrar los ingresos de la venta:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  async registrarVentaCompleta(
+    productos: any[],
+    tipoPagoId: number,
+    clienteId: number,
+    usuarioId?: number,
+    pagos?: { tipo_pago_id: number; monto: number }[]
+  ) {
     const total = productos.reduce((sum, p) => sum + (p.precio * p.cantidadSeleccionada), 0);
     const userId = usuarioId ?? 0;
-
-    const ingreso = await this.crearIngreso({
-      tipo_pago_id: tipoPagoId,
-      usuario_id: userId,
-      total,
-      tipo_ingreso: 'venta',
-      descripcion: 'Venta con productos'
-    });
-
-    if (!ingreso) return null;
 
     const venta = await this.crearVenta({
       usuario_id: userId,
       cliente_id: clienteId,
-      ingreso_id: ingreso.ingreso_id,
       monto: total
     });
 
@@ -326,10 +351,37 @@ export class SupabaseService {
     const detalles = await this.registrarVentaDetallesPorVenta(venta.venta_id, productos);
     if (!detalles) return null;
 
+    let pagosFinales: { tipo_pago_id: number; monto: number }[] = [];
+
+    if (pagos && pagos.length > 0) {
+      pagosFinales = pagos.filter(p => Number(p.monto) > 0 && Number(p.tipo_pago_id) > 0);
+    } else {
+      pagosFinales = [{
+        tipo_pago_id: tipoPagoId,
+        monto: total
+      }];
+    }
+
+    const totalPagos = pagosFinales.reduce((sum, p) => sum + Number(p.monto || 0), 0);
+
+    if (Number(totalPagos) !== Number(total)) {
+      console.error('La suma de los pagos no coincide con el total de la venta');
+      return null;
+    }
+
+    const ingresos = await this.registrarIngresosDeVenta(
+      venta.venta_id,
+      userId,
+      pagosFinales,
+      'Venta con productos'
+    );
+
+    if (!ingresos) return null;
+
     const stockActualizado = await this.descontarStockProductos(productos);
     if (!stockActualizado) return null;
 
-    return { ingreso, venta, detalles };
+    return { venta, detalles, ingresos };
   }
 
   async obtenerVentaPorId(ventaId: number) {
@@ -339,14 +391,15 @@ export class SupabaseService {
         venta_id,
         usuario_id,
         cliente_id,
-        ingreso_id,
         monto,
         fecha,
-        ingreso:ingreso_id(
+        ingresos:ingreso(
           ingreso_id,
           tipo_pago_id,
           total,
-          descripcion
+          descripcion,
+          fecha,
+          tipo_de_pago:tipo_pago_id(nombre)
         )
       `)
       .eq('venta_id', ventaId)
@@ -389,8 +442,10 @@ export class SupabaseService {
           fecha,
           monto,
           cliente:cliente_id(nombre,apellido),
-          ingreso:ingreso_id(
+          ingresos:ingreso(
             ingreso_id,
+            tipo_pago_id,
+            total,
             tipo_de_pago:tipo_pago_id(nombre)
           )
         )
@@ -522,7 +577,8 @@ export class SupabaseService {
       usuario_id: venta.usuario_id,
       total: venta.monto,
       tipo_ingreso: 'venta_libre',
-      descripcion: venta.descripcion
+      descripcion: venta.descripcion,
+      venta_id: null
     });
 
     if (!ingreso) return null;
@@ -574,7 +630,8 @@ export class SupabaseService {
       total: payload.monto,
       tipo_ingreso: 'pago_deuda',
       descripcion: payload.descripcion ?? 'Pago de deuda',
-      id_deuda: deuda.deuda_id
+      id_deuda: deuda.deuda_id,
+      venta_id: null
     });
 
     if (!ingreso) return null;
@@ -667,7 +724,8 @@ export class SupabaseService {
       usuario_id: payload.usuario_id,
       total: payload.total,
       tipo_ingreso: 'ajuste_positivo',
-      descripcion: payload.descripcion ?? 'Ajuste positivo de caja'
+      descripcion: payload.descripcion ?? 'Ajuste positivo de caja',
+      venta_id: null
     });
 
     if (!ingreso) {

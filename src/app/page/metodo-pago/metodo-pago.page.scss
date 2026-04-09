@@ -1,0 +1,25 @@
+ion-content {
+  --padding-bottom: 90px;
+}
+
+ion-card {
+  margin: 16px;
+  border-radius: 16px;
+}
+
+ion-card-title {
+  font-weight: 700;
+}
+
+ion-item {
+  --padding-start: 8px;
+  --inner-padding-end: 8px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+}
+
+.confirmar-pago-button {
+  min-width: 220px;
+  --border-radius: 14px;
+  font-weight: 600;
+}

@@ -46,19 +46,27 @@ export class ReciboPage implements OnInit {
     }
   }
 
-  private formatearMetodoPago(tipoPagoId: number, total: number) {
-    const nombreMetodo = this.tiposPago[tipoPagoId] || '';
-
-    if (!nombreMetodo) {
+  private formatearMetodosPago(ingresos: any[]) {
+    if (!ingresos || ingresos.length === 0) {
       return [];
     }
 
-    return [
-      {
-        nombre: nombreMetodo,
-        monto: total
-      }
-    ];
+    return ingresos.map((ingreso: any) => ({
+      nombre: this.tiposPago[Number(ingreso.tipo_pago_id)] || 'Sin tipo de pago',
+      monto: Number(ingreso.total || 0)
+    }));
+  }
+
+  private obtenerTextoMetodoPago(metodosPago: any[]) {
+    if (!metodosPago || metodosPago.length === 0) {
+      return '';
+    }
+
+    if (metodosPago.length === 1) {
+      return metodosPago[0].nombre;
+    }
+
+    return metodosPago.map((metodo: any) => metodo.nombre).join(' + ');
   }
 
   private async cargarVenta(ventaId: number) {
@@ -74,9 +82,9 @@ export class ReciboPage implements OnInit {
     const fechaLocal = fechaObj.toLocaleDateString('es-BO');
     const horaLocal = fechaObj.toLocaleTimeString('es-BO');
 
-    const ingreso = Array.isArray(venta.ingreso) ? venta.ingreso[0] : venta.ingreso;
-    const tipoPagoId = Number(ingreso?.tipo_pago_id || 0);
-    const tipoPago = this.tiposPago[tipoPagoId] || '';
+    const ingresos = Array.isArray(venta.ingresos) ? venta.ingresos : [];
+    const metodosPago = this.formatearMetodosPago(ingresos);
+    const metodoPago = this.obtenerTextoMetodoPago(metodosPago);
 
     let clienteStr = '';
     if (venta.cliente_id) {
@@ -86,13 +94,11 @@ export class ReciboPage implements OnInit {
       }
     }
 
-    const metodosPago = this.formatearMetodoPago(tipoPagoId, Number(venta.monto || 0));
-
     this.recibo = {
       venta_id: venta.venta_id,
       fechaVenta: `${fechaLocal} ${horaLocal}`,
       totalVenta: Number(venta.monto || 0),
-      metodoPago: tipoPago,
+      metodoPago: metodoPago,
       metodosPago: metodosPago,
       cliente: clienteStr,
       productos: detalles || []

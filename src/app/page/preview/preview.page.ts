@@ -39,7 +39,7 @@ export class PreviewPage implements OnInit {
       }
 
       if (params['totalVenta']) {
-        this.venta.totalVenta = params['totalVenta'];
+        this.venta.totalVenta = Number(params['totalVenta']);
       }
 
       const now = new Date();
@@ -144,7 +144,7 @@ export class PreviewPage implements OnInit {
     await prompt.present();
   }
 
-  async confirmarVenta() {
+  async irAMetodoPago() {
     if (!this.clienteSeleccionado) {
       const a = await this.alertCtrl.create({
         header: 'Cliente requerido',
@@ -155,49 +155,13 @@ export class PreviewPage implements OnInit {
       return;
     }
 
-    const usuarioId = parseInt(localStorage.getItem('usuario_id') || '', 10);
-    if (!usuarioId) {
-      console.error('No hay usuario_id');
-      return;
-    }
-
-    const tipos: Record<string, number> = {
-      'Cuotas': 1,
-      'Efectivo': 2,
-      'Transferencia Bancaria': 3,
-      'Tarjeta': 4
-    };
-
-    const tipoPagoId = tipos[this.venta.metodoPago] || 0;
-    if (!tipoPagoId) {
-      const a = await this.alertCtrl.create({
-        header: 'Método de pago inválido',
-        message: `No se reconoció el método de pago: ${this.venta.metodoPago}`,
-        buttons: ['OK']
-      });
-      await a.present();
-      return;
-    }
-
-    try {
-      const res = await this.supabase.registrarVentaCompleta(
-        this.venta.productos,
-        tipoPagoId,
-        this.clienteSeleccionado.cliente_id,
-        usuarioId
-      );
-
-      if (!res || !res.venta) {
-        console.error('Error al registrar venta');
-        return;
+    this.navCtrl.navigateForward('/metodo-pago', {
+      queryParams: {
+        productos: JSON.stringify(this.venta.productos),
+        totalVenta: this.venta.totalVenta,
+        fechaVenta: this.venta.fechaVenta,
+        cliente: JSON.stringify(this.clienteSeleccionado)
       }
-
-      this.mensajeService.enviarMensaje('actualizar inventario');
-      this.mensajeService.enviarMensaje('actualizar ingresos');
-
-      this.navCtrl.navigateForward(['/recibo', res.venta.venta_id]);
-    } catch (e) {
-      console.error('Error al confirmar venta', e);
-    }
+    });
   }
 }

@@ -34,6 +34,13 @@ export class BalancePage implements OnInit, AfterViewInit {
 
   vistaActual: 'ingresos' | 'egresos' = 'ingresos';
 
+  tiposPago: { [key: number]: string } = {
+    1: 'Cuota',
+    2: 'Efectivo',
+    3: 'Transferencia Bancaria',
+    4: 'Tarjeta'
+  };
+
   constructor(
     private navCtrl: NavController,
     private supabaseService: SupabaseService,
@@ -144,6 +151,18 @@ export class BalancePage implements OnInit, AfterViewInit {
     this.saldoInicial = isNaN(si) ? 0 : si;
   }
 
+  obtenerTextoMetodosPago(ingresos: any[]): string {
+    if (!ingresos || ingresos.length === 0) {
+      return '-';
+    }
+
+    const nombresUnicos = ingresos.map((ingreso: any) => {
+      return ingreso?.tipo_de_pago?.nombre || this.tiposPago[Number(ingreso?.tipo_pago_id)] || '-';
+    });
+
+    return [...new Set(nombresUnicos)].join(' + ');
+  }
+
   async cargarBalance(fechaInicio: string, fechaFin: string) {
     await this.cargarSaldoInicial(fechaInicio);
 
@@ -173,7 +192,8 @@ export class BalancePage implements OnInit, AfterViewInit {
       const clienteObj = venta.cliente;
       const clienteStr = clienteObj ? `${clienteObj.nombre} ${clienteObj.apellido}` : '-';
 
-      const tipoPago = venta?.ingreso?.tipo_de_pago?.nombre ?? '-';
+      const ingresosVenta = Array.isArray(venta.ingresos) ? venta.ingresos : [];
+      const tipoPago = this.obtenerTextoMetodosPago(ingresosVenta);
 
       const fechaObj = venta?.fecha ? new Date(venta.fecha + 'Z') : new Date();
       const hora = fechaObj.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
@@ -190,12 +210,13 @@ export class BalancePage implements OnInit, AfterViewInit {
         cliente: clienteStr,
         descripcion: `${tipoPago} - ${hora}`,
         precio: total,
-        fechaCompleta: `${fechaLocal} ${hora}`,
+        fechaCompleta: fechaObj.toISOString(),
+        fechaTexto: `${fechaLocal} ${hora}`,
         productosOriginales: items.map(i => ({
           descripcion: i.producto?.nombre,
           cantidad: i.cantidad
         })),
-        textoBusqueda: `${productos.join(', ')} ${clienteStr}`.trim()
+        textoBusqueda: `${productos.join(', ')} ${clienteStr} ${tipoPago}`.trim()
       };
     });
 
@@ -226,9 +247,10 @@ export class BalancePage implements OnInit, AfterViewInit {
         cliente: clienteLabel,
         descripcion: `${tipoPago} - ${hora}`,
         precio: parseFloat(v.total),
-        fechaCompleta: `${fechaLocal} ${hora}`,
+        fechaCompleta: fechaObj.toISOString(),
+        fechaTexto: `${fechaLocal} ${hora}`,
         productosOriginales: [],
-        textoBusqueda: `${titulo} ${v.descripcion ?? ''}`.trim()
+        textoBusqueda: `${titulo} ${v.descripcion ?? ''} ${tipoPago}`.trim()
       };
     });
 
@@ -250,7 +272,7 @@ export class BalancePage implements OnInit, AfterViewInit {
           nombre: g.descripcion,
           descripcion: `${tipoPago} - ${hora}`,
           precio: parseFloat(g.monto),
-          textoBusqueda: (g.descripcion ?? '').toLowerCase()
+          textoBusqueda: `${g.descripcion ?? ''} ${tipoPago}`.toLowerCase()
         };
       });
 

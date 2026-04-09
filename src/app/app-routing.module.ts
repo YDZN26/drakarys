@@ -56,6 +56,10 @@ const routes: Routes = [
     loadChildren: () => import('./page/preview/preview.module').then( m => m.PreviewPageModule)
   },
   {
+    path: 'metodo-pago',
+    loadChildren: () => import('./page/metodo-pago/metodo-pago.module').then( m => m.MetodoPagoPageModule)
+  },
+  {
     path: 'cierre-caja',
     loadChildren: () => import('./page/cierre-caja/cierre-caja.module').then( m => m.CierreCajaPageModule)
   },
@@ -64,7 +68,6 @@ const routes: Routes = [
     loadChildren: () => import('./page/venta-libre/venta-libre.module').then( m => m.VentaLibrePageModule)
   },
 
-  // ✅ (AUMENTADO) Ruta para la pantalla Crear Deuda
   {
     path: 'crear-deuda',
     loadChildren: () => import('./page/crear-deuda/crear-deuda.module').then(m => m.CrearDeudaPageModule)

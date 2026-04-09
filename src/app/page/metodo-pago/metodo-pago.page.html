@@ -1,0 +1,75 @@
+<ion-header>
+  <ion-toolbar color="mycolor">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/preview"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Método de Pago</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Selección de métodos de pago</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="stacked">Efectivo</ion-label>
+        <ion-input
+          type="number"
+          min="0"
+          [(ngModel)]="montoEfectivo">
+        </ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Transferencia</ion-label>
+        <ion-input
+          type="number"
+          min="0"
+          [(ngModel)]="montoTransferencia">
+        </ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Tarjeta</ion-label>
+        <ion-input
+          type="number"
+          min="0"
+          [(ngModel)]="montoTarjeta">
+        </ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Total venta</ion-label>
+        <ion-note slot="end">Bs. {{ venta.totalVenta }}</ion-note>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Total ingresado</ion-label>
+        <ion-note slot="end">Bs. {{ totalPagado }}</ion-note>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Diferencia</ion-label>
+        <ion-note slot="end">Bs. {{ diferencia }}</ion-note>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-label>
+          Cliente:
+          <strong>
+            {{ venta.cliente ? (venta.cliente.nombre + ' ' + venta.cliente.apellido) : '' }}
+          </strong>
+        </ion-label>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
+    <ion-button class="confirmar-pago-button" (click)="confirmarVenta()">
+      Confirmar Venta
+    </ion-button>
+  </ion-fab>
+</ion-content>

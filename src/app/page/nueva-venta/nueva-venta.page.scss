@@ -53,7 +53,6 @@ ion-toolbar {
   }
 }
 
-/* buscador + botón cámara */
 .search-row {
   display: flex;
   align-items: center;
@@ -65,7 +64,6 @@ ion-toolbar {
   height: 44px;
 }
 
-/* Modal scanner */
 .scanner-content {
   --background: #000;
 }
@@ -92,7 +90,6 @@ ion-toolbar {
   font-weight: bold;
 }
 
-/* Botón flotante */
 ion-fab {
   margin-bottom: 20px;
 }

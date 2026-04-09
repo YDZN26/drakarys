@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy, NgZone, ViewChild, ElementRef } from '@angular/core';
-import { ActionSheetController, NavController, ModalController } from '@ionic/angular';
-import { CuotasModalPage } from '../cuotas-modal/cuotas-modal.page';
+import { NavController } from '@ionic/angular';
 import { SupabaseService } from '../../supabase.service';
 import { MensajeService } from 'src/app/mensaje.service';
 import { Subscription } from 'rxjs';
@@ -18,7 +17,6 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
   productos: any[] = [];
   productosFiltrados: any[] = [];
   categorias: any[] = [];
-  tipo_de_pago: any[] = [];
 
   totalProductosSeleccionados: number = 0;
   valorTotalSeleccionado: number = 0;
@@ -34,16 +32,13 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
   @ViewChild('videoScanner', { static: false }) videoScanner!: ElementRef<HTMLVideoElement>;
 
   constructor(
-    private actionSheetCtrl: ActionSheetController,
     private navCtrl: NavController,
-    private modalCtrl: ModalController,
     private supabaseService: SupabaseService,
     private mensajeService: MensajeService,
     private zone: NgZone
   ) {}
 
   productosCargando: boolean = false;
-  tiposDePagoCargando: boolean = false;
 
   ngOnInit() {
     setTimeout(() => {
@@ -53,10 +48,6 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
     setTimeout(() => {
       this.cargarCategorias();
     }, 0);
-
-    setTimeout(() => {
-      this.cargarTiposDePago();
-    }, 100);
 
     this.mensajeSub = this.mensajeService.mensaje$.subscribe((mensaje: string) => {
       if (mensaje === 'actualizar inventario') {
@@ -100,14 +91,6 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
       console.log(this.productosFiltrados);
     } catch (error) {
       console.error('Error al cargar productos:', error);
-    }
-  }
-
-  async cargarTiposDePago() {
-    try {
-      this.tipo_de_pago = await this.supabaseService.obtenerTiposDePago();
-    } catch (error) {
-      console.error('Error al cargar tipos de pago:', error);
     }
   }
 
@@ -178,7 +161,9 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
       const videoEl = this.videoScanner.nativeElement;
       videoEl.srcObject = this.streamActual;
 
-      try { await videoEl.play(); } catch (e) {}
+      try {
+        await videoEl.play();
+      } catch (e) {}
 
       this.codeReader.decodeFromStream(
         this.streamActual,
@@ -197,7 +182,6 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
           }
         }
       );
-
     } catch (error) {
       console.error('Error al abrir cámara o escanear:', error);
       this.cerrarScanner();
@@ -253,44 +237,14 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
   async agregarVenta() {
     const productosSeleccionados = this.productos.filter(producto => producto.cantidadSeleccionada > 0);
 
-    const actionSheet = await this.actionSheetCtrl.create({
-      header: 'Selecciona el método de pago',
-      buttons: [
-        { text: 'Efectivo', handler: () => { this.goToCarrito('Efectivo', productosSeleccionados); } },
-        { text: 'Transferencia Bancaria', handler: () => { this.goToCarrito('Transferencia Bancaria', productosSeleccionados); } },
-        { text: 'Tarjeta', handler: () => { this.goToCarrito('Tarjeta', productosSeleccionados); } },
-        { text: 'Cuotas', handler: () => { this.presentCuotasModal(); } },
-        { text: 'Cancelar', role: 'cancel' }
-      ]
-    });
+    if (productosSeleccionados.length === 0) {
+      return;
+    }
 
-    console.log('Aqui llamare a la funcion que muestra el carrito');
-    await actionSheet.present();
-  }
-
-  async presentCuotasModal() {
-    const modal = await this.modalCtrl.create({
-      component: CuotasModalPage,
-      componentProps: {}
-    });
-
-    modal.onDidDismiss().then((data) => {
-      if (data.data && data.data.confirmed) {
-        const productosSeleccionados = this.productos.filter(producto => producto.cantidadSeleccionada > 0);
-        this.goToCarrito('Cuotas', productosSeleccionados, data.data);
-      }
-    });
-
-    await modal.present();
-  }
-
-  goToCarrito(metodoPago: string, productosSeleccionados: any[], cuotaData?: any) {
     this.navCtrl.navigateForward('/preview', {
       queryParams: {
-        metodoPago: metodoPago,
         productos: JSON.stringify(productosSeleccionados),
-        totalVenta: this.valorTotalSeleccionado,
-        ...cuotaData
+        totalVenta: this.valorTotalSeleccionado
       }
     });
   }
