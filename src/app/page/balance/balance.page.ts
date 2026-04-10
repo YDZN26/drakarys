@@ -74,12 +74,16 @@ export class BalancePage implements OnInit, AfterViewInit {
     const mes = fecha.toLocaleString('es-BO', { month: 'long' });
     this.selectedDay = `${day} de ${mes}`;
 
-    this.onDaySelected(this.selectedDay);
+    await this.onDaySelected(this.selectedDay);
 
     this.mensajeSub = this.mensajeService.mensaje$.subscribe((mensaje: string) => {
       if (mensaje) {
         this.mensaje = mensaje;
-        if (mensaje === 'actualizar ingresos' || mensaje === 'actualizar gastos') {
+        if (
+          mensaje === 'actualizar ingresos' ||
+          mensaje === 'actualizar gastos' ||
+          mensaje === 'actualizar cierre'
+        ) {
           this.onDaySelected(this.selectedDay);
         }
       }
@@ -88,6 +92,7 @@ export class BalancePage implements OnInit, AfterViewInit {
 
   async ionViewWillEnter() {
     await this.popoverCtrl.dismiss().catch(() => {});
+    await this.onDaySelected(this.selectedDay);
   }
 
   async ionViewWillLeave() {
@@ -123,7 +128,7 @@ export class BalancePage implements OnInit, AfterViewInit {
     const partes = dayString.split(' ');
     if (partes.length < 3) return;
 
-    const dia = parseInt(partes[0]);
+    const dia = parseInt(partes[0], 10);
     const meses: { [key: string]: number } = {
       enero: 0, febrero: 1, marzo: 2, abril: 3, mayo: 4, junio: 5,
       julio: 6, agosto: 7, septiembre: 8, octubre: 9, noviembre: 10, diciembre: 11,
@@ -161,6 +166,18 @@ export class BalancePage implements OnInit, AfterViewInit {
     });
 
     return [...new Set(nombresUnicos)].join(' + ');
+  }
+
+  obtenerNombreTipoEgreso(tipoEgreso: string): string {
+    if (tipoEgreso === 'retiro_caja') {
+      return 'Retiro de caja';
+    }
+
+    if (tipoEgreso === 'ajuste_negativo') {
+      return 'Ajuste negativo';
+    }
+
+    return 'Egreso';
   }
 
   async cargarBalance(fechaInicio: string, fechaFin: string) {
@@ -260,28 +277,49 @@ export class BalancePage implements OnInit, AfterViewInit {
     );
 
     const gastos = await this.supabaseService.obtenerGastos(fechaInicio, fechaFin);
-    this.egresos = gastos
-      .sort((a, b) => new Date(b.fecha + 'Z').getTime() - new Date(a.fecha + 'Z').getTime())
-      .map((g: any) => {
-        const fechaObj = g.fecha ? new Date(g.fecha + 'Z') : new Date();
-        const hora = fechaObj.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
+    const otrosEgresos = await this.supabaseService.obtenerOtrosEgresos(fechaInicio, fechaFin);
 
-        const tipoPago = g.tipo_de_pago?.nombre ?? '-';
+    const gastosFormateados = gastos.map((g: any) => {
+      const fechaObj = g.fecha ? new Date(g.fecha + 'Z') : new Date();
+      const hora = fechaObj.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
 
-        return {
-          nombre: g.descripcion,
-          descripcion: `${tipoPago} - ${hora}`,
-          precio: parseFloat(g.monto),
-          textoBusqueda: `${g.descripcion ?? ''} ${tipoPago}`.toLowerCase()
-        };
-      });
+      const tipoPago = g.tipo_de_pago?.nombre ?? '-';
 
-    if (this.mensaje === 'actualizar ingresos' || !this.mensaje) {
-      this.mostrarIngresos();
-    }
+      return {
+        nombre: g.descripcion,
+        descripcion: `${tipoPago} - ${hora}`,
+        precio: parseFloat(g.monto),
+        fechaCompleta: fechaObj.toISOString(),
+        textoBusqueda: `${g.descripcion ?? ''} ${tipoPago}`.toLowerCase()
+      };
+    });
 
-    if (this.mensaje === 'actualizar gastos') {
+    const otrosEgresosFormateados = otrosEgresos.map((e: any) => {
+      const fechaObj = e.fecha ? new Date(e.fecha + 'Z') : new Date();
+      const hora = fechaObj.toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' });
+
+      const tipoPago = e.tipo_de_pago?.nombre ?? '-';
+      const nombreBase = this.obtenerNombreTipoEgreso(e.tipo_egreso);
+      const descripcionBase = e.descripcion ?? nombreBase;
+
+      return {
+        nombre: descripcionBase,
+        descripcion: `${tipoPago} - ${hora}`,
+        precio: parseFloat(e.total),
+        fechaCompleta: fechaObj.toISOString(),
+        textoBusqueda: `${descripcionBase} ${nombreBase} ${tipoPago}`.toLowerCase()
+      };
+    });
+
+    this.egresos = [...gastosFormateados, ...otrosEgresosFormateados];
+    this.egresos.sort((a, b) =>
+      new Date(b.fechaCompleta).getTime() - new Date(a.fechaCompleta).getTime()
+    );
+
+    if (this.vistaActual === 'egresos') {
       this.mostrarEgresos();
+    } else {
+      this.mostrarIngresos();
     }
   }
 
@@ -303,7 +341,8 @@ export class BalancePage implements OnInit, AfterViewInit {
     } else {
       this.filteredItems = this.egresos.filter(item =>
         item.nombre?.toLowerCase().includes(texto) ||
-        item.descripcion?.toLowerCase().includes(texto)
+        item.descripcion?.toLowerCase().includes(texto) ||
+        item.textoBusqueda?.toLowerCase().includes(texto)
       );
     }
   }

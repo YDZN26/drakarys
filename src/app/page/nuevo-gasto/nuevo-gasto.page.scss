@@ -1,49 +1,110 @@
 ion-toolbar {
-    background-color: var(--ion-color-mycolor);
+  background-color: var(--ion-color-mycolor);
+}
+
+.top-toolbar {
+  --min-height: 66px;
+}
+
+.nuevo-gasto-content {
+  --background: #f5f7fb;
+}
+
+.nuevo-gasto-container {
+  padding: 16px 16px 120px 16px;
+}
+
+.gasto-card {
+  background-color: #edf2fa;
+  border-radius: 22px;
+  padding: 18px 16px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+}
+
+.gasto-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  border-bottom: 1px solid #cfd8e3;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+
+  .gasto-titulo {
+    font-size: 22px;
+    color: #2d3d55;
   }
-  
-  .form-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: calc(100vh - 100px); /* Ajusta la altura para centrar el contenido */
-  }
-  
-  ion-card {
-    width: 90%;
-    max-width: 400px;
-    background-color: #EDF2FA;
-    border-radius: 16px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  ion-item {
-    --background: #EDF2FA;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    --padding-start: 10px;
-    --padding-end: 10px;
-  }
-  
-  .button-container {
-    position: fixed;
-    bottom: 16px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    padding: 0 16px;
-  }
-  
-  ion-button {
-    --border-radius: 90px;
-    --background: #D70000;
-    color: white;
+}
+
+.formulario-gasto {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.campo-grupo {
+  width: 100%;
+}
+
+.campo-title-container {
+  margin-bottom: 8px;
+
+  ion-label {
+    color: #4f6178;
     font-weight: bold;
-    width: 100%;
-    max-width: 400px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    height: 30px;
+    font-size: 14px;
   }
-  
+}
+
+.input-item {
+  --background: #ffffff;
+  --border-radius: 12px;
+  --min-height: 56px;
+  border: 1px solid #d9e1ea;
+  width: 100%;
+}
+
+.select-item {
+  background: #ffffff;
+  border: 1px solid #d9e1ea;
+  border-radius: 12px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+
+  ion-select {
+    width: 100%;
+    color: #1f2d3d;
+    font-size: 0.98rem;
+  }
+}
+
+.acciones-inferiores {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  display: flex;
+  z-index: 20;
+}
+
+.agregar-gasto-button {
+  width: 100%;
+  height: 46px;
+  --border-radius: 10px;
+  --background: #D70000;
+  --color: #ffffff;
+  font-weight: bold;
+  font-size: 1rem;
+  text-transform: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 480px) {
+  .gasto-header {
+    .gasto-titulo {
+      font-size: 19px;
+    }
+  }
+}

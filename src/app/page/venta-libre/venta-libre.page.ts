@@ -50,7 +50,7 @@ export class VentaLibrePage implements OnInit {
     } else {
       this.mostrarToast('Venta registrada correctamente');
       this.mensajeService.enviarMensaje('actualizar ingresos');
-      this.navCtrl.navigateBack('/balance');
+      this.navCtrl.navigateBack('/tab-inicial/balance');
     }
   }
 

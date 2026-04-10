@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { SupabaseService } from '../../supabase.service';
 import { AlertController, NavController } from '@ionic/angular';
+import { MensajeService } from 'src/app/mensaje.service';
 
 @Component({
   selector: 'app-cierre-caja',
@@ -27,33 +28,68 @@ export class CierreCajaPage implements OnInit {
   colorMensaje: string = 'primary';
 
   usuarioId: number = 0;
+  cierreYaRegistrado: boolean = false;
 
   constructor(
     private supabaseService: SupabaseService,
     private navCtrl: NavController,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private mensajeService: MensajeService
   ) {}
 
   async ngOnInit() {
     this.usuarioId = this.supabaseService.obtenerUsuarioLogueadoId();
+    await this.validarSiYaExisteCierreDelDia();
     await this.cargarDatosDelDia();
   }
 
-  async cargarDatosDelDia() {
-    const { data: cierreData } = await this.supabaseService.getSupabase()
-      .from('cierre')
-      .select('*')
-      .order('fecha', { ascending: false })
-      .limit(1)
-      .single();
-
-    this.saldoInicial = Number(cierreData?.saldo_final) || 0;
-
+  private obtenerInicioDelDia(): Date {
     const inicioDelDia = new Date();
     inicioDelDia.setHours(0, 0, 0, 0);
+    return inicioDelDia;
+  }
 
+  private obtenerFinDelDia(): Date {
     const finDelDia = new Date();
     finDelDia.setHours(23, 59, 59, 999);
+    return finDelDia;
+  }
+
+  private obtenerEfectivoEsperado(): number {
+    return this.saldoInicial + this.ingresosEfectivo - this.egresosEfectivo;
+  }
+
+  async validarSiYaExisteCierreDelDia() {
+    const inicioDelDia = this.obtenerInicioDelDia().toISOString();
+    const finDelDia = this.obtenerFinDelDia().toISOString();
+
+    const cierreDelDia = await this.supabaseService.obtenerCierreDelDia(inicioDelDia, finDelDia);
+    this.cierreYaRegistrado = !!cierreDelDia;
+
+    if (this.cierreYaRegistrado) {
+      const alerta = await this.alertCtrl.create({
+        header: 'Cierre ya registrado',
+        message: 'Ya existe un cierre de caja para el día de hoy. No se puede registrar otro cierre.',
+        buttons: [
+          {
+            text: 'ACEPTAR',
+            handler: () => {
+              this.navCtrl.navigateBack('tab-inicial/balance');
+            }
+          }
+        ]
+      });
+
+      await alerta.present();
+    }
+  }
+
+  async cargarDatosDelDia() {
+    const inicioDelDia = this.obtenerInicioDelDia();
+    const finDelDia = this.obtenerFinDelDia();
+
+    const cierreAnterior = await this.supabaseService.obtenerUltimoCierreAntesDe(inicioDelDia.toISOString());
+    this.saldoInicial = Number(cierreAnterior?.saldo_final) || 0;
 
     const { data: ingresos } = await this.supabaseService.getSupabase()
       .from('ingreso')
@@ -70,9 +106,13 @@ export class CierreCajaPage implements OnInit {
     ingresos?.forEach(i => {
       const total = Number(i.total) || 0;
 
-      if (i.tipo_pago_id === 2) efectivoIngreso += total;
-      else if (i.tipo_pago_id === 3) transferenciaIngreso += total;
-      else if (i.tipo_pago_id === 4) tarjetaIngreso += total;
+      if (i.tipo_pago_id === 2) {
+        efectivoIngreso += total;
+      } else if (i.tipo_pago_id === 3) {
+        transferenciaIngreso += total;
+      } else if (i.tipo_pago_id === 4) {
+        tarjetaIngreso += total;
+      }
 
       totalIngreso += total;
     });
@@ -103,9 +143,13 @@ export class CierreCajaPage implements OnInit {
     gastos?.forEach(g => {
       const monto = Number(g.monto) || 0;
 
-      if (g.tipo_pago_id === 2) efectivoEgreso += monto;
-      else if (g.tipo_pago_id === 3) transferenciaEgreso += monto;
-      else if (g.tipo_pago_id === 4) tarjetaEgreso += monto;
+      if (g.tipo_pago_id === 2) {
+        efectivoEgreso += monto;
+      } else if (g.tipo_pago_id === 3) {
+        transferenciaEgreso += monto;
+      } else if (g.tipo_pago_id === 4) {
+        tarjetaEgreso += monto;
+      }
 
       totalEgreso += monto;
     });
@@ -113,9 +157,13 @@ export class CierreCajaPage implements OnInit {
     otrosEgresos?.forEach(e => {
       const monto = Number(e.total) || 0;
 
-      if (e.tipo_pago_id === 2) efectivoEgreso += monto;
-      else if (e.tipo_pago_id === 3) transferenciaEgreso += monto;
-      else if (e.tipo_pago_id === 4) tarjetaEgreso += monto;
+      if (e.tipo_pago_id === 2) {
+        efectivoEgreso += monto;
+      } else if (e.tipo_pago_id === 3) {
+        transferenciaEgreso += monto;
+      } else if (e.tipo_pago_id === 4) {
+        tarjetaEgreso += monto;
+      }
 
       totalEgreso += monto;
     });
@@ -131,7 +179,7 @@ export class CierreCajaPage implements OnInit {
   }
 
   calcularDiferenciaEfectivo() {
-    const efectivoEsperado = this.saldoInicial + this.ingresosEfectivo - this.egresosEfectivo;
+    const efectivoEsperado = this.obtenerEfectivoEsperado();
     const efectivoIngresado = Number(this.efectivoFinal) || 0;
     const diferencia = efectivoIngresado - efectivoEsperado;
 
@@ -154,6 +202,31 @@ export class CierreCajaPage implements OnInit {
   }
 
   async confirmarCierre() {
+    if (this.cierreYaRegistrado) {
+      const alerta = await this.alertCtrl.create({
+        header: 'Cierre ya registrado',
+        message: 'Ya existe un cierre de caja para el día de hoy.',
+        buttons: ['ACEPTAR']
+      });
+      await alerta.present();
+      return;
+    }
+
+    const inicioDelDia = this.obtenerInicioDelDia().toISOString();
+    const finDelDia = this.obtenerFinDelDia().toISOString();
+    const cierreDelDia = await this.supabaseService.obtenerCierreDelDia(inicioDelDia, finDelDia);
+
+    if (cierreDelDia) {
+      this.cierreYaRegistrado = true;
+      const alerta = await this.alertCtrl.create({
+        header: 'Cierre ya registrado',
+        message: 'Ya existe un cierre de caja para el día de hoy. No se puede registrar otro cierre.',
+        buttons: ['ACEPTAR']
+      });
+      await alerta.present();
+      return;
+    }
+
     const efectivoIngresado = Number(this.efectivoFinal) || 0;
 
     if (efectivoIngresado <= 0) {
@@ -176,7 +249,7 @@ export class CierreCajaPage implements OnInit {
       return;
     }
 
-    const efectivoEsperado = this.saldoInicial + this.ingresosEfectivo - this.egresosEfectivo;
+    const efectivoEsperado = this.obtenerEfectivoEsperado();
     const diferencia = efectivoIngresado - efectivoEsperado;
 
     if (diferencia !== 0) {
@@ -245,6 +318,16 @@ export class CierreCajaPage implements OnInit {
             const efectivoIngresado = Number(this.efectivoFinal) || 0;
             const saldoFinalReal = efectivoIngresado - montoRetiro;
 
+            if (montoRetiro < 0) {
+              const alertaError = await this.alertCtrl.create({
+                header: 'Monto inválido',
+                message: 'El retiro no puede ser menor a 0.',
+                buttons: ['ACEPTAR']
+              });
+              await alertaError.present();
+              return false;
+            }
+
             if (saldoFinalReal < 0) {
               const alertaError = await this.alertCtrl.create({
                 header: 'Monto inválido',
@@ -254,6 +337,9 @@ export class CierreCajaPage implements OnInit {
               await alertaError.present();
               return false;
             }
+
+            let ajustePositivo = 0;
+            let ajusteNegativo = 0;
 
             if (diferencia > 0) {
               const ajusteOk = await this.supabaseService.registrarAjustePositivo({
@@ -272,6 +358,8 @@ export class CierreCajaPage implements OnInit {
                 await alertaError.present();
                 return false;
               }
+
+              ajustePositivo = diferencia;
             }
 
             if (diferencia < 0) {
@@ -291,6 +379,8 @@ export class CierreCajaPage implements OnInit {
                 await alertaError.present();
                 return false;
               }
+
+              ajusteNegativo = Math.abs(diferencia);
             }
 
             if (montoRetiro > 0) {
@@ -312,39 +402,49 @@ export class CierreCajaPage implements OnInit {
               }
             }
 
+            const totalIngresosFinal = this.totalIngresos + ajustePositivo;
+            const totalEgresosFinal = this.totalEgresos + ajusteNegativo + montoRetiro;
+            const ingresosEfectivoFinal = this.ingresosEfectivo + ajustePositivo;
+            const egresosEfectivoFinal = this.egresosEfectivo + ajusteNegativo + montoRetiro;
+
             const cierre = {
               saldo_inicial: this.saldoInicial,
-              ingresos_total: this.totalIngresos,
-              ingresos_efectivo: this.ingresosEfectivo,
+              ingresos_total: totalIngresosFinal,
+              ingresos_efectivo: ingresosEfectivoFinal,
               ingresos_transferencia: this.ingresosTransferencia,
               ingresos_tarjeta: this.ingresosTarjeta,
-              egresos_total: this.totalEgresos + montoRetiro,
-              egresos_efectivo: this.egresosEfectivo + montoRetiro,
+              egresos_total: totalEgresosFinal,
+              egresos_efectivo: egresosEfectivoFinal,
               egresos_transferencia: this.egresosTransferencia,
               egresos_tarjeta: this.egresosTarjeta,
               saldo_final: saldoFinalReal,
               efectivo_caja: efectivoIngresado,
               diferencia: diferencia,
-              total_ingresos: this.totalIngresos,
-              total_egresos: this.totalEgresos + montoRetiro,
+              total_ingresos: totalIngresosFinal,
+              total_egresos: totalEgresosFinal,
               usuario_id: this.usuarioId
             };
 
             const resultado = await this.supabaseService.registrarCierre(cierre);
 
             if (resultado) {
+              this.cierreYaRegistrado = true;
+
               const alertaResumen = await this.alertCtrl.create({
                 header: 'Resumen del Cierre',
                 message:
-`Ingresos: ${this.totalIngresos} Bs.
-Egresos: ${this.totalEgresos + montoRetiro} Bs.
+`Ingresos: ${totalIngresosFinal} Bs.
+Egresos: ${totalEgresosFinal} Bs.
 Diferencia: ${diferencia > 0 ? '+' : ''}${diferencia} Bs.
 Retiro: ${montoRetiro} Bs.
 Saldo Final en Caja: ${saldoFinalReal} Bs.`,
                 buttons: [
                   {
                     text: 'ACEPTAR',
-                    handler: () => this.navCtrl.navigateBack('tab-inicial/balance')
+                    handler: () => {
+                      this.mensajeService.enviarMensaje('actualizar cierre');
+                      this.navCtrl.navigateBack('tab-inicial/balance');
+                    }
                   }
                 ]
               });

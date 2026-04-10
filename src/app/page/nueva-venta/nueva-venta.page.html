@@ -1,25 +1,27 @@
 <ion-header>
-  <ion-toolbar color="mycolor">
+  <ion-toolbar color="mycolor" class="top-toolbar">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/balance"></ion-back-button>
     </ion-buttons>
-    <ion-title>Nueva Venta</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <div class="info-cards">
-    <div class="card">
-      <p>Total de productos</p>
-      <h2>{{ totalProductosSeleccionados }}</h2>
-    </div>
-    <div class="card">
-      <p>Valor total</p>
-      <h2>Bs. {{ valorTotalSeleccionado | number: '1.2-2' }}</h2>
+<ion-content [fullscreen]="true" class="nueva-venta-content">
+  <div class="resumen-container">
+    <div class="info-cards">
+      <div class="card">
+        <p>Total de productos</p>
+        <h2>{{ totalProductosSeleccionados }}</h2>
+      </div>
+
+      <div class="card">
+        <p>Valor total</p>
+        <h2>Bs. {{ valorTotalSeleccionado | number: '1.2-2' }}</h2>
+      </div>
     </div>
   </div>
 
-  <ion-toolbar>
+  <div class="busqueda-container">
     <ion-item lines="none" class="search-row">
       <ion-searchbar
         color="light"
@@ -32,7 +34,7 @@
         <ion-icon name="camera-outline"></ion-icon>
       </ion-button>
     </ion-item>
-  </ion-toolbar>
+  </div>
 
   <div class="category-buttons">
     <ion-button
@@ -49,43 +51,47 @@
     </ion-button>
   </div>
 
-  <ion-list>
-    <ion-item *ngFor="let producto of productosFiltrados">
-      <ion-avatar slot="start">
-        <img [src]="producto.imagen" />
-      </ion-avatar>
+  <div class="productos-container">
+    <ion-list lines="none">
+      <ion-item *ngFor="let producto of productosFiltrados" class="producto-item">
+        <ion-avatar slot="start">
+          <img [src]="producto.imagen" />
+        </ion-avatar>
 
-      <ion-label>
-        <h2>{{ producto.nombre }}</h2>
-        <p>Disponibles: {{ obtenerDisponibles(producto) }}</p>
-        <p>Precio unitario: Bs {{ producto.precio }}</p>
-        <p>Seleccionados: {{ producto.cantidadSeleccionada }}</p>
-      </ion-label>
+        <ion-label>
+          <h2>{{ producto.nombre }}</h2>
+          <p>Disponibles: {{ obtenerDisponibles(producto) }}</p>
+          <p>Precio unitario: Bs {{ producto.precio }}</p>
+          <p>Seleccionados: {{ producto.cantidadSeleccionada }}</p>
+        </ion-label>
 
-      <ion-button
-        fill="clear"
-        (click)="disminuirCantidad(producto)"
-        [disabled]="producto.cantidadSeleccionada === 0">
-        <ion-icon name="remove-circle-outline"></ion-icon>
-      </ion-button>
+        <div class="acciones-cantidad">
+          <ion-button
+            fill="clear"
+            (click)="disminuirCantidad(producto)"
+            [disabled]="producto.cantidadSeleccionada === 0">
+            <ion-icon name="remove-circle-outline"></ion-icon>
+          </ion-button>
 
-      <ion-button
-        fill="clear"
-        (click)="aumentarCantidad(producto)"
-        [disabled]="obtenerDisponibles(producto) === 0">
-        <ion-icon name="add-circle-outline"></ion-icon>
-      </ion-button>
-    </ion-item>
-  </ion-list>
+          <ion-button
+            fill="clear"
+            (click)="aumentarCantidad(producto)"
+            [disabled]="obtenerDisponibles(producto) === 0">
+            <ion-icon name="add-circle-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-item>
+    </ion-list>
+  </div>
 
-  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
+  <div class="acciones-inferiores">
     <ion-button
-      class="nuevo-producto-button"
+      class="continuar-button"
       [disabled]="totalProductosSeleccionados === 0"
       (click)="agregarVenta()">
       Continuar
     </ion-button>
-  </ion-fab>
+  </div>
 
   <ion-modal
     [isOpen]="scannerAbierto"

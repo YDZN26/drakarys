@@ -1,7 +1,7 @@
 <ion-header>
-  <ion-toolbar color="mycolor">
+  <ion-toolbar color="mycolor" class="top-toolbar">
     <ion-buttons slot="start">
-      <ion-button [id]="'usuarioPopoverTriggerDeuda'">
+      <ion-button [id]="'usuarioPopoverTriggerDeuda'" class="usuario-btn">
         <ion-icon name="person-circle" slot="start" size="large"></ion-icon>
         <ion-label>{{ nombreUsuario }}</ion-label>
       </ion-button>
@@ -20,8 +20,8 @@
   </ng-template>
 </ion-popover>
 
-<ion-content [fullscreen]="true">
-  <div class="user-info">
+<ion-content [fullscreen]="true" class="deuda-content">
+  <div class="resumen-container">
     <div class="info-cards">
       <div class="card">
         <p>Por cobrar</p>
@@ -31,19 +31,19 @@
     </div>
   </div>
 
-  <ion-toolbar>
+  <div class="busqueda-container">
     <ion-searchbar
       color="light"
       placeholder="Buscar deudas"
       [(ngModel)]="textoBusqueda"
       (ionInput)="buscarDeudas($event)">
     </ion-searchbar>
-  </ion-toolbar>
+  </div>
 
   <div class="cliente-lista-scroll">
-    <ion-list>
-      <div *ngFor="let cliente of clientesFiltrados">
-        <ion-item button (click)="toggleMenu(cliente.id)">
+    <ion-list lines="none">
+      <div *ngFor="let cliente of clientesFiltrados" class="cliente-bloque">
+        <ion-item button (click)="toggleMenu(cliente.id)" class="cliente-item">
           <ion-avatar slot="start" class="cliente-avatar">
             <ion-icon name="person-circle"></ion-icon>
           </ion-avatar>
@@ -64,14 +64,16 @@
         </ion-item>
 
         <div class="menu-desplegable" *ngIf="selectedCliente === cliente.id">
-          <p>Monto Pagado: {{ cliente.montoPagado }} Bs.</p>
-          <p>Monto Faltante: {{ cliente.montoFaltante }} Bs.</p>
+          <div class="resumen-deuda">
+            <p>Monto Pagado: {{ cliente.montoPagado }} Bs.</p>
+            <p>Monto Faltante: {{ cliente.montoFaltante }} Bs.</p>
 
-          <p *ngIf="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
-            Deuda pagada
-          </p>
+            <p *ngIf="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'" class="deuda-pagada">
+              Deuda pagada
+            </p>
+          </div>
 
-          <ion-item lines="none">
+          <ion-item lines="none" class="input-item">
             <ion-label>Tipo de pago</ion-label>
             <ion-select
               [(ngModel)]="tipoPagoId"
@@ -83,12 +85,14 @@
             </ion-select>
           </ion-item>
 
-          <ion-input
-            [(ngModel)]="pago"
-            type="number"
-            placeholder="Agregar monto a pagar"
-            [disabled]="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
-          </ion-input>
+          <ion-item lines="none" class="input-item">
+            <ion-input
+              [(ngModel)]="pago"
+              type="number"
+              placeholder="Agregar monto a pagar"
+              [disabled]="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
+            </ion-input>
+          </ion-item>
 
           <p
             class="error-limite"
@@ -100,6 +104,7 @@
           </p>
 
           <ion-button
+            class="pagar-button"
             (click)="pagar(cliente)"
             [disabled]="cliente.montoFaltante <= 0
               || cliente.estado === 'pagada'
@@ -111,9 +116,9 @@
     </ion-list>
   </div>
 
-  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
+  <div class="acciones-inferiores">
     <ion-button class="crear-deuda-button" (click)="crearDeuda()">
       Nueva Deuda
     </ion-button>
-  </ion-fab>
+  </div>
 </ion-content>

@@ -1,7 +1,7 @@
 <ion-header>
-  <ion-toolbar color="mycolor">
+  <ion-toolbar color="mycolor" class="top-toolbar">
     <ion-buttons slot="start">
-      <ion-button [id]="'usuarioPopoverTriggerInventario'">
+      <ion-button [id]="'usuarioPopoverTriggerInventario'" class="usuario-btn">
         <ion-icon name="person-circle" slot="start" size="large"></ion-icon>
         <ion-label>{{ nombreUsuario }}</ion-label>
       </ion-button>
@@ -20,13 +20,14 @@
   </ng-template>
 </ion-popover>
 
-<ion-content [fullscreen]="true">
-  <div class="user-info">
+<ion-content [fullscreen]="true" class="inventario-content">
+  <div class="resumen-container">
     <div class="info-cards">
       <div class="card">
         <p>Total de productos</p>
         <h2>{{ productos.length }}</h2>
       </div>
+
       <div class="card">
         <p>Valor total</p>
         <h2>Bs. {{ calcularValorTotal() }}</h2>
@@ -34,7 +35,7 @@
     </div>
   </div>
 
-  <ion-toolbar>
+  <div class="busqueda-container">
     <ion-item lines="none" class="search-row">
       <ion-searchbar
         color="light"
@@ -47,7 +48,7 @@
         <ion-icon name="camera-outline"></ion-icon>
       </ion-button>
     </ion-item>
-  </ion-toolbar>
+  </div>
 
   <div class="category-buttons">
     <ion-button
@@ -64,21 +65,31 @@
     </ion-button>
   </div>
 
-  <ion-list>
-    <ion-item button *ngFor="let producto of productosFiltrados" (click)="verDetalleProducto(producto)">
-      <ion-label>
-        <h2>{{ producto.nombre }}</h2>
-        <p>{{ producto.stock }} Disponibles</p>
-        <p>Precio unitario Bs {{ producto.precio }}</p>
-      </ion-label>
-      <ion-thumbnail slot="end">
-        <img [src]="producto.imagen" />
-      </ion-thumbnail>
-    </ion-item>
-  </ion-list>
+  <div class="productos-container">
+    <ion-list lines="none">
+      <ion-item
+        button
+        *ngFor="let producto of productosFiltrados"
+        (click)="verDetalleProducto(producto)"
+        class="producto-item">
 
-  <div class="button-container">
-    <ion-button class="nuevo-producto-button" (click)="agregarNuevoProducto()">Nuevo Producto</ion-button>
+        <ion-label>
+          <h2>{{ producto.nombre }}</h2>
+          <p>{{ producto.stock }} Disponibles</p>
+          <p>Precio unitario Bs {{ producto.precio }}</p>
+        </ion-label>
+
+        <ion-thumbnail slot="end" class="producto-thumbnail">
+          <img [src]="producto.imagen" />
+        </ion-thumbnail>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <div class="acciones-inferiores">
+    <ion-button class="nuevo-producto-button" (click)="agregarNuevoProducto()">
+      Nuevo Producto
+    </ion-button>
   </div>
 
   <ion-modal

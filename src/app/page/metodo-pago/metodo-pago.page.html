@@ -1,75 +1,76 @@
 <ion-header>
-  <ion-toolbar color="mycolor">
+  <ion-toolbar color="mycolor" class="top-toolbar">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/preview"></ion-back-button>
     </ion-buttons>
-    <ion-title>Método de Pago</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Selección de métodos de pago</ion-card-title>
-    </ion-card-header>
+<ion-content [fullscreen]="true" class="metodo-pago-content">
+  <div class="metodo-pago-container">
+    <div class="metodo-pago-card">
+      <div class="metodo-pago-header">
+        <span class="metodo-pago-titulo">SELECCIÓN DE MÉTODOS DE PAGO</span>
+      </div>
 
-    <ion-card-content>
-      <ion-item>
-        <ion-label position="stacked">Efectivo</ion-label>
-        <ion-input
-          type="number"
-          min="0"
-          [(ngModel)]="montoEfectivo">
-        </ion-input>
-      </ion-item>
+      <div class="metodo-pago-formulario">
+        <ion-item lines="none" class="input-item">
+          <ion-label position="stacked">Efectivo</ion-label>
+          <ion-input
+            type="number"
+            min="0"
+            [(ngModel)]="montoEfectivo">
+          </ion-input>
+        </ion-item>
 
-      <ion-item>
-        <ion-label position="stacked">Transferencia</ion-label>
-        <ion-input
-          type="number"
-          min="0"
-          [(ngModel)]="montoTransferencia">
-        </ion-input>
-      </ion-item>
+        <ion-item lines="none" class="input-item">
+          <ion-label position="stacked">Transferencia</ion-label>
+          <ion-input
+            type="number"
+            min="0"
+            [(ngModel)]="montoTransferencia">
+          </ion-input>
+        </ion-item>
 
-      <ion-item>
-        <ion-label position="stacked">Tarjeta</ion-label>
-        <ion-input
-          type="number"
-          min="0"
-          [(ngModel)]="montoTarjeta">
-        </ion-input>
-      </ion-item>
+        <ion-item lines="none" class="input-item">
+          <ion-label position="stacked">Tarjeta</ion-label>
+          <ion-input
+            type="number"
+            min="0"
+            [(ngModel)]="montoTarjeta">
+          </ion-input>
+        </ion-item>
+      </div>
 
-      <ion-item>
-        <ion-label>Total venta</ion-label>
-        <ion-note slot="end">Bs. {{ venta.totalVenta }}</ion-note>
-      </ion-item>
+      <div class="resumen-pago">
+        <div class="resumen-item">
+          <span>Total venta</span>
+          <strong>Bs. {{ venta.totalVenta }}</strong>
+        </div>
 
-      <ion-item>
-        <ion-label>Total ingresado</ion-label>
-        <ion-note slot="end">Bs. {{ totalPagado }}</ion-note>
-      </ion-item>
+        <div class="resumen-item">
+          <span>Total ingresado</span>
+          <strong>Bs. {{ totalPagado }}</strong>
+        </div>
 
-      <ion-item>
-        <ion-label>Diferencia</ion-label>
-        <ion-note slot="end">Bs. {{ diferencia }}</ion-note>
-      </ion-item>
+        <div class="resumen-item">
+          <span>Diferencia</span>
+          <strong>Bs. {{ diferencia }}</strong>
+        </div>
 
-      <ion-item lines="none">
-        <ion-label>
-          Cliente:
+        <div class="resumen-item resumen-cliente">
+          <span>Cliente</span>
           <strong>
             {{ venta.cliente ? (venta.cliente.nombre + ' ' + venta.cliente.apellido) : '' }}
           </strong>
-        </ion-label>
-      </ion-item>
-    </ion-card-content>
-  </ion-card>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
+  <div class="acciones-inferiores">
     <ion-button class="confirmar-pago-button" (click)="confirmarVenta()">
       Confirmar Venta
     </ion-button>
-  </ion-fab>
+  </div>
 </ion-content>

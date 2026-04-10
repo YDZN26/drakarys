@@ -1,71 +1,144 @@
 ion-header {
-  ion-toolbar {
-    --background: #001E87;
-    --color: white;
-  }
-
   ion-title {
     color: white;
     font-weight: bold;
   }
 }
 
-.balance-container {
-  padding: 16px;
+.top-toolbar {
+  --min-height: 66px;
+}
 
-  .balance-card {
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    padding: 16px;
-    margin-bottom: 24px;
+.cierre-content {
+  --background: #f5f7fb;
+}
 
-    .balance-header {
-      display: flex;
-      justify-content: space-between;
-      font-weight: bold;
-      font-size: 18px;
-      margin-bottom: 12px;
-    }
+.cierre-container {
+  padding: 16px 16px 120px 16px;
+}
 
-    .balance-details {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+.cierre-card {
+  background-color: #edf2fa;
+  border-radius: 22px;
+  padding: 18px 16px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+}
 
-      .section-title {
-        font-weight: bold;
-        margin-top: 12px;
-        margin-bottom: 4px;
-      }
+.cierre-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  border-bottom: 1px solid #cfd8e3;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
 
-      .ingresos {
-        color: #001E87; // azul ingresos
-      }
-
-      .egresos {
-        color: #D70000; // rojo egresos
-      }
-
-      .detail-row {
-        display: flex;
-        justify-content: space-between;
-        font-size: 15px;
-
-        span:last-child {
-          font-weight: bold;
-        }
-      }
-    }
+  .cierre-titulo {
+    font-size: 22px;
+    color: #2d3d55;
   }
 
-  ion-item {
-    margin-bottom: 24px;
-  }
-
-  ion-button {
-    --background: #001E87;
-    --border-radius: 10px;
+  .cierre-total {
+    font-size: 22px;
     font-weight: bold;
+  }
+}
+
+.cierre-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-title {
+  font-weight: bold;
+  margin-top: 14px;
+  margin-bottom: 4px;
+  font-size: 15px;
+}
+
+.ingresos {
+  color: #001E87;
+}
+
+.egresos {
+  color: #D70000;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+
+  span {
+    color: #4f6178;
+    font-weight: bold;
+  }
+
+  strong {
+    color: #1f2d3d;
+  }
+}
+
+.cierre-input-container {
+  margin-top: 20px;
+}
+
+.input-item {
+  --background: #ffffff;
+  --border-radius: 12px;
+  --min-height: 64px;
+  border: 1px solid #d9e1ea;
+  width: 100%;
+
+  ion-label {
+    color: #4f6178 !important;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+
+  ion-input {
+    font-size: 1rem;
+    color: #1f2d3d;
+  }
+}
+
+.mensaje-caja {
+  margin: 10px 0;
+  text-align: center;
+  font-weight: bold;
+}
+
+.acciones-inferiores {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  display: flex;
+  z-index: 20;
+}
+
+.confirmar-button {
+  width: 100%;
+  height: 46px;
+  --border-radius: 10px;
+  --background: #001E87;
+  --color: white;
+  font-weight: bold;
+  text-transform: none;
+  font-size: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 480px) {
+  .cierre-header {
+    .cierre-titulo,
+    .cierre-total {
+      font-size: 19px;
+    }
+  }
+
+  .detail-row {
+    font-size: 14px;
   }
 }

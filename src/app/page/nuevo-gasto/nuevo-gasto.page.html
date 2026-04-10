@@ -1,43 +1,67 @@
 <ion-header>
-  <ion-toolbar color="mycolor">
+  <ion-toolbar color="mycolor" class="top-toolbar">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tab-inicial/balance"></ion-back-button>
     </ion-buttons>
-    <ion-title>Nuevo Gasto</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <div class="form-container">
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>Información</ion-card-title>
-      </ion-card-header>
+<ion-content [fullscreen]="true" class="nuevo-gasto-content">
+  <div class="nuevo-gasto-container">
+    <div class="gasto-card">
+      <div class="gasto-header">
+        <span class="gasto-titulo">NUEVO GASTO</span>
+      </div>
 
-      <ion-card-content>
-        <ion-item>
-          <ion-label position="stacked">Monto</ion-label>
-          <ion-input type="number" [(ngModel)]="monto" placeholder="Agregar un valor"></ion-input>
-        </ion-item>
+      <div class="formulario-gasto">
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Monto</ion-label>
+          </div>
+          <ion-item lines="none" class="input-item">
+            <ion-input
+              type="number"
+              [(ngModel)]="monto"
+              placeholder="Agregar un valor">
+            </ion-input>
+          </ion-item>
+        </div>
 
-        <ion-item>
-          <ion-label position="stacked">Descripción</ion-label>
-          <ion-input [(ngModel)]="descripcion" placeholder="Agregar una descripción"></ion-input>
-        </ion-item>
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Descripción</ion-label>
+          </div>
+          <ion-item lines="none" class="input-item">
+            <ion-input
+              [(ngModel)]="descripcion"
+              placeholder="Agregar una descripción">
+            </ion-input>
+          </ion-item>
+        </div>
 
-        <ion-item>
-          <ion-label position="stacked">Método de pago</ion-label>
-          <ion-select placeholder="Seleccionar método" [(ngModel)]="tipoPago">
-            <ion-select-option [value]="2">Efectivo</ion-select-option>
-            <ion-select-option [value]="3">Transferencia</ion-select-option>
-            <ion-select-option [value]="4">Tarjeta</ion-select-option>
-          </ion-select>
-        </ion-item>
-      </ion-card-content>
-    </ion-card>
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Método de pago</ion-label>
+          </div>
+          <div class="select-item">
+            <ion-select placeholder="Seleccionar método" [(ngModel)]="tipoPago">
+              <ion-select-option [value]="2">Efectivo</ion-select-option>
+              <ion-select-option [value]="3">Transferencia</ion-select-option>
+              <ion-select-option [value]="4">Tarjeta</ion-select-option>
+            </ion-select>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="button-container">
-    <ion-button class="nuevo-producto-button" expand="full" [disabled]="!esFormularioValido()" (click)="agregarGasto()">Agregar Gasto</ion-button>
+  <div class="acciones-inferiores">
+    <ion-button
+      class="agregar-gasto-button"
+      expand="block"
+      [disabled]="!esFormularioValido()"
+      (click)="agregarGasto()">
+      Agregar Gasto
+    </ion-button>
   </div>
 </ion-content>

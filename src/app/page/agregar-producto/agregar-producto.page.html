@@ -1,98 +1,112 @@
 <ion-header>
-  <ion-toolbar color="mycolor">
+  <ion-toolbar color="mycolor" class="top-toolbar">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/inventario"></ion-back-button>
     </ion-buttons>
-    <ion-title>Agregar Productos</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <div class="scan-product">
-    <div class="camera-container" (click)="showActionSheet()">
-      <img *ngIf="imagenUrl" [src]="imagenUrl" class="preview-image" />
-      <ion-icon *ngIf="!imagenUrl" name="camera"></ion-icon>
-    </div>
-
-    <div class="bar-code">
-      <div class="codigo-title-container">
-        <ion-label>Código Barras</ion-label>
+<ion-content [fullscreen]="true" class="agregar-producto-content">
+  <div class="agregar-producto-container">
+    <div class="producto-card">
+      <div class="producto-header">
+        <span class="producto-titulo">
+          {{ isEditMode ? 'ACTUALIZAR PRODUCTO' : 'AGREGAR PRODUCTO' }}
+        </span>
       </div>
 
-      <div class="text-container">
-        <ion-item lines="none" class="codigo-row">
-          <ion-input placeholder="Agregar código" [(ngModel)]="codigo"></ion-input>
+      <div class="scan-product">
+        <div class="camera-container" (click)="showActionSheet()">
+          <img *ngIf="imagenUrl" [src]="imagenUrl" class="preview-image" />
+          <ion-icon *ngIf="!imagenUrl" name="camera"></ion-icon>
+        </div>
 
-          <ion-button fill="clear" class="scan-btn" (click)="abrirScannerCodigo()">
-            <ion-icon name="camera-outline"></ion-icon>
-          </ion-button>
-        </ion-item>
-      </div>
-    </div>
+        <div class="bar-code">
+          <div class="codigo-title-container">
+            <ion-label>Código Barras</ion-label>
+          </div>
 
-    <div class="stock">
-      <div class="stock-title-container">
-        <ion-label>Stock</ion-label>
-      </div>
-      <div class="counter-container">
-        <ion-button class="counter-button" (click)="decreaseCounter()">-</ion-button>
-        <ion-label class="counter-label">{{ counterValue }}</ion-label>
-        <ion-button class="counter-button" (click)="increaseCounter()">+</ion-button>
-      </div>
-    </div>
-  </div>
+          <div class="text-container">
+            <ion-item lines="none" class="codigo-row input-item">
+              <ion-input placeholder="Agregar código" [(ngModel)]="codigo"></ion-input>
 
-  <div class="datos">
-    <div class="nombre">
-      <div class="nombre-title-container">
-        <ion-label>Nombre del Producto</ion-label>
-      </div>
-      <div class="name-text-container">
-        <ion-item>
-          <ion-input placeholder="Ingrese el nombre del producto" [(ngModel)]="nombre"></ion-input>
-        </ion-item>
-      </div>
-    </div>
+              <ion-button fill="clear" class="scan-btn" (click)="abrirScannerCodigo()">
+                <ion-icon name="camera-outline"></ion-icon>
+              </ion-button>
+            </ion-item>
+          </div>
+        </div>
 
-    <div class="precio">
-      <div class="precio-title-container">
-        <ion-label>Precio Unitario</ion-label>
-      </div>
-      <div class="precio-text-container">
-        <ion-item>
-          <ion-input type="number" placeholder="Ingrese el precio unitario" [(ngModel)]="precioUnitario"></ion-input>
-        </ion-item>
-      </div>
-    </div>
+        <div class="stock">
+          <div class="stock-title-container">
+            <ion-label>Stock</ion-label>
+          </div>
 
-    <div class="costo">
-      <div class="costo-title-container">
-        <ion-label>Costo Unitario</ion-label>
+          <div class="counter-container">
+            <ion-button class="counter-button" (click)="decreaseCounter()">-</ion-button>
+            <ion-label class="counter-label">{{ counterValue }}</ion-label>
+            <ion-button class="counter-button" (click)="increaseCounter()">+</ion-button>
+          </div>
+        </div>
       </div>
-      <div class="costo-text-container">
-        <ion-item>
-          <ion-input type="number" placeholder="Ingrese el costo unitario" [(ngModel)]="costoUnitario"></ion-input>
-        </ion-item>
-      </div>
-    </div>
 
-    <div class="categoria">
-      <div class="categoria-title-container">Categoria</div>
-      <div class="dropdown-container">
-        <ion-select interface="action-sheet" [(ngModel)]="selectedOption" (ionChange)="onOptionChange($event)">
-          <ion-select-option *ngFor="let categoria of categorias" [value]="categoria.categoria_id.toString()">
-            {{ categoria.nombre }}
-          </ion-select-option>
-        </ion-select>
-      </div>
-    </div>
+      <div class="datos">
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Nombre del Producto</ion-label>
+          </div>
+          <div class="campo-text-container">
+            <ion-item lines="none" class="input-item">
+              <ion-input placeholder="Ingrese el nombre del producto" [(ngModel)]="nombre"></ion-input>
+            </ion-item>
+          </div>
+        </div>
 
-    <div class="descripcion">
-      <div class="descripcion-title-container">Descripcion</div>
-      <div class="descripcion-text-container">
-        <ion-item>
-          <ion-textarea placeholder="Escribir descripción del producto" [(ngModel)]="descripcion"></ion-textarea>
-        </ion-item>
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Precio Unitario</ion-label>
+          </div>
+          <div class="campo-text-container">
+            <ion-item lines="none" class="input-item">
+              <ion-input type="number" placeholder="Ingrese el precio unitario" [(ngModel)]="precioUnitario"></ion-input>
+            </ion-item>
+          </div>
+        </div>
+
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Costo Unitario</ion-label>
+          </div>
+          <div class="campo-text-container">
+            <ion-item lines="none" class="input-item">
+              <ion-input type="number" placeholder="Ingrese el costo unitario" [(ngModel)]="costoUnitario"></ion-input>
+            </ion-item>
+          </div>
+        </div>
+
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Categoría</ion-label>
+          </div>
+          <div class="dropdown-container select-item">
+            <ion-select interface="action-sheet" [(ngModel)]="selectedOption" (ionChange)="onOptionChange($event)">
+              <ion-select-option *ngFor="let categoria of categorias" [value]="categoria.categoria_id.toString()">
+                {{ categoria.nombre }}
+              </ion-select-option>
+            </ion-select>
+          </div>
+        </div>
+
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Descripción</ion-label>
+          </div>
+          <div class="campo-text-container">
+            <ion-item lines="none" class="textarea-item">
+              <ion-textarea placeholder="Escribir descripción del producto" [(ngModel)]="descripcion"></ion-textarea>
+            </ion-item>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -124,7 +138,7 @@
 </ion-content>
 
 <ion-footer>
-  <ion-toolbar>
+  <ion-toolbar class="footer-toolbar">
     <ion-button expand="block" class="btn-guardar" (click)="guardarProducto()">
       {{ isEditMode ? 'Actualizar Producto' : 'Agregar Producto' }}
     </ion-button>

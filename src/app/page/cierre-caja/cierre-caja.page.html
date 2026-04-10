@@ -1,76 +1,98 @@
 <ion-header>
-  <ion-toolbar>
+  <ion-toolbar color="mycolor" class="top-toolbar">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/balance"></ion-back-button>
     </ion-buttons>
+
     <ion-title>Cierre de Caja</ion-title>
   </ion-toolbar>
 </ion-header>
 
-
-<ion-content [fullscreen]="true">
-  <div class="balance-container">
-    <div class="balance-card">
-      <div class="balance-header">
-        <span>BALANCE:</span>
-        <span>{{ balance }} Bs.</span>
+<ion-content [fullscreen]="true" class="cierre-content">
+  <div class="cierre-container">
+    <div class="cierre-card">
+      <div class="cierre-header">
+        <span class="cierre-titulo">BALANCE</span>
+        <span class="cierre-total">{{ balance }} Bs.</span>
       </div>
 
-      <div class="balance-details">
+      <div class="cierre-details">
+
         <div class="detail-row">
-          <span>Saldo Inicial:</span>
-          <span>{{ saldoInicial }} Bs.</span>
+          <span>Saldo Inicial</span>
+          <strong>{{ saldoInicial }} Bs.</strong>
         </div>
 
         <div class="section-title ingresos">INGRESOS DEL DÍA</div>
 
         <div class="detail-row">
-          <span>Total:</span>
-          <span>{{ totalIngresos }} Bs.</span>
+          <span>Total</span>
+          <strong>{{ totalIngresos }} Bs.</strong>
         </div>
+
         <div class="detail-row">
-          <span>Pago con Efectivo:</span>
-          <span>{{ ingresosEfectivo }} Bs.</span>
+          <span>Efectivo</span>
+          <strong>{{ ingresosEfectivo }} Bs.</strong>
         </div>
+
         <div class="detail-row">
-          <span>Pago con Transferencia:</span>
-          <span>{{ ingresosTransferencia }} Bs.</span>
+          <span>Transferencia</span>
+          <strong>{{ ingresosTransferencia }} Bs.</strong>
         </div>
+
         <div class="detail-row">
-          <span>Pago con Tarjeta:</span>
-          <span>{{ ingresosTarjeta }} Bs.</span>
+          <span>Tarjeta</span>
+          <strong>{{ ingresosTarjeta }} Bs.</strong>
         </div>
 
         <div class="section-title egresos">EGRESOS DEL DÍA</div>
 
         <div class="detail-row">
-          <span>Total:</span>
-          <span>{{ totalEgresos }} Bs.</span>
+          <span>Total</span>
+          <strong>{{ totalEgresos }} Bs.</strong>
         </div>
+
         <div class="detail-row">
-          <span>Pago con Efectivo:</span>
-          <span>{{ egresosEfectivo }} Bs.</span>
+          <span>Efectivo</span>
+          <strong>{{ egresosEfectivo }} Bs.</strong>
         </div>
+
         <div class="detail-row">
-          <span>Pago con Transferencia:</span>
-          <span>{{ egresosTransferencia }} Bs.</span>
+          <span>Transferencia</span>
+          <strong>{{ egresosTransferencia }} Bs.</strong>
         </div>
+
         <div class="detail-row">
-          <span>Pago con Tarjeta:</span>
-          <span>{{ egresosTarjeta }} Bs.</span>
+          <span>Tarjeta</span>
+          <strong>{{ egresosTarjeta }} Bs.</strong>
         </div>
+
       </div>
     </div>
 
-    <ion-item lines="none">
-      <ion-label position="stacked">Ingresa el efectivo de tu caja</ion-label>
-      <ion-input type="number" [(ngModel)]="efectivoFinal" (ionInput)="calcularDiferenciaEfectivo()" placeholder="Efectivo"></ion-input>
-    </ion-item>
+    <div class="cierre-input-container">
+      <ion-item lines="none" class="input-item">
+        <ion-label position="stacked">Ingresa el efectivo de tu caja</ion-label>
+        <ion-input
+          type="number"
+          [(ngModel)]="efectivoFinal"
+          (ionInput)="calcularDiferenciaEfectivo()"
+          placeholder="Efectivo">
+        </ion-input>
+      </ion-item>
 
-    <div *ngIf="mensajeCaja" [style.color]="colorMensaje" style="margin: 8px 0; text-align: center; font-weight: bold;">
-      {{ mensajeCaja }}
+      <div
+        *ngIf="mensajeCaja"
+        [style.color]="colorMensaje"
+        class="mensaje-caja">
+        {{ mensajeCaja }}
+      </div>
     </div>
+  </div>
 
-    <ion-button expand="block" (click)="confirmarCierre()">CONFIRMAR</ion-button>
+  <div class="acciones-inferiores">
+    <ion-button class="confirmar-button" (click)="confirmarCierre()">
+      Confirmar
+    </ion-button>
   </div>
 </ion-content>

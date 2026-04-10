@@ -1,57 +1,82 @@
 <ion-header>
-  <ion-toolbar color="mycolor">
+  <ion-toolbar color="mycolor" class="top-toolbar">
     <ion-buttons slot="start">
       <ion-button (click)="cancelar()">
         <ion-icon name="arrow-back-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>Crear Deuda</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
+<ion-content [fullscreen]="true" class="crear-deuda-content">
+  <div class="crear-deuda-container">
+    <div class="deuda-card">
+      <div class="deuda-header">
+        <span class="deuda-titulo">CREAR DEUDA</span>
+      </div>
 
-  <ion-item>
-    <ion-label position="stacked">Cliente</ion-label>
-    <ion-select [(ngModel)]="clienteId" placeholder="Seleccionar cliente">
-      <ion-select-option *ngFor="let c of clientes" [value]="c.cliente_id">
-        {{ c.nombre }} {{ c.apellido }}
-      </ion-select-option>
-    </ion-select>
-  </ion-item>
+      <div class="formulario-deuda">
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Cliente</ion-label>
+          </div>
+          <div class="select-item">
+            <ion-select [(ngModel)]="clienteId" placeholder="Seleccionar cliente">
+              <ion-select-option *ngFor="let c of clientes" [value]="c.cliente_id">
+                {{ c.nombre }} {{ c.apellido }}
+              </ion-select-option>
+            </ion-select>
+          </div>
+        </div>
 
-  <!--selector para Deuda / Préstamo -->
-  <ion-item>
-    <ion-label position="stacked">Tipo</ion-label>
-    <ion-select [(ngModel)]="tipoOperacion" placeholder="Seleccionar tipo">
-      <ion-select-option value="deuda">Deuda (no afecta caja)</ion-select-option>
-      <ion-select-option value="prestamo">Préstamo (descuenta de caja)</ion-select-option>
-    </ion-select>
-  </ion-item>
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Tipo</ion-label>
+          </div>
+          <div class="select-item">
+            <ion-select [(ngModel)]="tipoOperacion" placeholder="Seleccionar tipo">
+              <ion-select-option value="deuda">Deuda (no afecta caja)</ion-select-option>
+              <ion-select-option value="prestamo">Préstamo (descuenta de caja)</ion-select-option>
+            </ion-select>
+          </div>
+        </div>
 
-  <!--Tipo de pago SOLO para Préstamo -->
-  <ion-item *ngIf="tipoOperacion === 'prestamo'">
-    <ion-label position="stacked">Tipo de pago</ion-label>
-    <ion-select [(ngModel)]="tipoPagoId" placeholder="Seleccionar tipo de pago">
-      <ion-select-option *ngFor="let tp of tiposDePago" [value]="tp.tipo_pago_id">
-        {{ tp.nombre }}
-      </ion-select-option>
-    </ion-select>
-  </ion-item>
+        <div class="campo-grupo" *ngIf="tipoOperacion === 'prestamo'">
+          <div class="campo-title-container">
+            <ion-label>Tipo de pago</ion-label>
+          </div>
+          <div class="select-item">
+            <ion-select [(ngModel)]="tipoPagoId" placeholder="Seleccionar tipo de pago">
+              <ion-select-option *ngFor="let tp of tiposDePago" [value]="tp.tipo_pago_id">
+                {{ tp.nombre }}
+              </ion-select-option>
+            </ion-select>
+          </div>
+        </div>
 
-  <ion-item>
-    <ion-label position="stacked">Descripción</ion-label>
-    <ion-textarea [(ngModel)]="descripcion" placeholder="Ej: Préstamo, producto fiado..."></ion-textarea>
-  </ion-item>
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Descripción</ion-label>
+          </div>
+          <ion-item lines="none" class="textarea-item">
+            <ion-textarea [(ngModel)]="descripcion" placeholder="Ej: Préstamo, producto fiado..."></ion-textarea>
+          </ion-item>
+        </div>
 
-  <ion-item>
-    <ion-label position="stacked">Total deuda (Bs.)</ion-label>
-    <ion-input [(ngModel)]="totalDeuda" type="number" placeholder="0"></ion-input>
-  </ion-item>
-
-  <div class="acciones">
-    <ion-button expand="block" class="btn-guardar" (click)="guardarDeuda()">Guardar</ion-button>
-    <ion-button expand="block" fill="outline" class="btn-cancelar" (click)="cancelar()">Cancelar</ion-button>
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Total deuda (Bs.)</ion-label>
+          </div>
+          <ion-item lines="none" class="input-item">
+            <ion-input [(ngModel)]="totalDeuda" type="number" placeholder="0"></ion-input>
+          </ion-item>
+        </div>
+      </div>
+    </div>
   </div>
 
+  <div class="acciones-inferiores">
+    <ion-button class="btn-guardar" (click)="guardarDeuda()">Guardar</ion-button>
+    <ion-button fill="outline" class="btn-cancelar" (click)="cancelar()">Cancelar</ion-button>
+  </div>
 </ion-content>

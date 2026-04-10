@@ -1,25 +1,155 @@
-ion-content {
-  --padding-bottom: 90px;
+ion-toolbar {
+  background-color: var(--ion-color-mycolor);
 }
 
-ion-card {
-  margin: 16px;
-  border-radius: 16px;
+ion-header {
+  ion-toolbar {
+    --background: #001E87;
+    color: white;
+
+    ion-title,
+    ion-icon,
+    ion-button,
+    ion-label {
+      color: white;
+    }
+  }
 }
 
-ion-card-title {
-  font-weight: 700;
+.top-toolbar {
+  --min-height: 66px;
 }
 
-ion-item {
-  --padding-start: 8px;
-  --inner-padding-end: 8px;
-  margin-bottom: 8px;
-  border-radius: 12px;
+.metodo-pago-content {
+  --background: #f5f7fb;
+}
+
+.metodo-pago-container {
+  padding: 16px 16px 120px 16px;
+}
+
+.metodo-pago-card {
+  background-color: #edf2fa;
+  border-radius: 22px;
+  padding: 18px 16px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+}
+
+.metodo-pago-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  border-bottom: 1px solid #cfd8e3;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+
+  .metodo-pago-titulo {
+    font-size: 22px;
+    color: #2d3d55;
+  }
+}
+
+.metodo-pago-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input-item {
+  --background: #ffffff;
+  --border-radius: 12px;
+  --min-height: 64px;
+  border: 1px solid #d9e1ea;
+  width: 100%;
+
+  ion-label {
+    color: #4f6178 !important;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+
+  ion-input {
+    font-size: 1rem;
+    color: #1f2d3d;
+  }
+}
+
+.resumen-pago {
+  border-top: 1px solid #cfd8e3;
+  padding-top: 16px;
+  margin-top: 18px;
+}
+
+.resumen-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #d9e1ea;
+
+  span {
+    font-size: 15px;
+    font-weight: bold;
+    color: #4f6178;
+  }
+
+  strong {
+    font-size: 16px;
+    color: #1f2d3d;
+    text-align: right;
+  }
+}
+
+.resumen-cliente {
+  align-items: flex-start;
+
+  strong {
+    max-width: 60%;
+    word-break: break-word;
+  }
+}
+
+.acciones-inferiores {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  display: flex;
+  z-index: 20;
 }
 
 .confirmar-pago-button {
-  min-width: 220px;
-  --border-radius: 14px;
-  font-weight: 600;
+  width: 100%;
+  height: 46px;
+  --border-radius: 10px;
+  --background: #93C572;
+  --color: #ffffff;
+  --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  font-weight: bold;
+  text-transform: none;
+  font-size: 1rem;
+}
+
+@media (max-width: 480px) {
+  .metodo-pago-header {
+    .metodo-pago-titulo {
+      font-size: 19px;
+    }
+  }
+
+  .input-item {
+    --min-height: 60px;
+
+    ion-input {
+      font-size: 0.95rem;
+    }
+  }
+
+  .resumen-item {
+    strong {
+      font-size: 15px;
+    }
+  }
 }

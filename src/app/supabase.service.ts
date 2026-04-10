@@ -486,6 +486,33 @@ export class SupabaseService {
     return data;
   }
 
+  async obtenerOtrosEgresos(fechaInicio?: string, fechaFin?: string) {
+    let query = this.supabase
+      .from('egreso')
+      .select(`
+        egreso_id,
+        total,
+        descripcion,
+        fecha,
+        tipo_egreso,
+        tipo_pago_id,
+        tipo_de_pago:tipo_pago_id(nombre)
+      `)
+      .in('tipo_egreso', ['ajuste_negativo', 'retiro_caja'])
+      .order('fecha', { ascending: false });
+
+    if (fechaInicio && fechaFin) {
+      query = query.gte('fecha', fechaInicio).lte('fecha', fechaFin);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error('Error al obtener otros egresos:', error);
+      return [];
+    }
+    return data;
+  }
+
   async registrarGasto(payload: {
     monto: number;
     descripcion: string;
@@ -539,6 +566,24 @@ export class SupabaseService {
       console.error('Error al obtener cierre anterior:', error);
       return null;
     }
+    return data;
+  }
+
+  async obtenerCierreDelDia(fechaInicio: string, fechaFin: string) {
+    const { data, error } = await this.supabase
+      .from('cierre')
+      .select('cierre_id, fecha, saldo_final')
+      .gte('fecha', fechaInicio)
+      .lte('fecha', fechaFin)
+      .order('fecha', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error al obtener cierre del día:', error);
+      return null;
+    }
+
     return data;
   }
 

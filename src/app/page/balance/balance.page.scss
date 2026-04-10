@@ -7,17 +7,27 @@ ion-header {
     --background: #001E87;
     color: white;
 
-    ion-title, ion-icon, ion-button {
+    ion-title,
+    ion-icon,
+    ion-button,
+    ion-label {
       color: white;
     }
   }
 
   ion-segment {
-    --background: #001E87;
+    --background: transparent;
+
     ion-segment-button {
+      min-width: 95px;
+      color: rgba(255, 255, 255, 0.85);
+      --color: rgba(255, 255, 255, 0.85);
       --color-checked: white;
-      --indicator-color: white;
-      color: white;
+      --indicator-color: transparent;
+      text-transform: none;
+      font-size: 15px;
+      border-radius: 12px;
+      margin: 0 4px;
     }
   }
 
@@ -26,167 +36,312 @@ ion-header {
   }
 }
 
-body{
+body {
   padding: 20px;
 }
 
+.top-toolbar {
+  --min-height: 66px;
+
+  .usuario-btn {
+    text-transform: none;
+    font-weight: 600;
+  }
+}
+
+.fecha-toolbar {
+  --min-height: 68px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+
+  .fecha-toolbar-contenido {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+  }
+
+  ion-segment {
+    flex: 1;
+  }
+
+  .btn-calendario {
+    --padding-start: 8px;
+    --padding-end: 8px;
+    --background: #001E87;
+    --border-radius: 10px;
+    margin: 0;
+    height: 46px;
+  }
+}
+
+.search-toolbar {
+  --background: #ffffff;
+
+  ion-searchbar {
+    --background: #edf2fa;
+    --border-radius: 14px;
+    --box-shadow: none;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+}
+
+ion-segment-button.selected-date {
+  font-weight: bold;
+  background-color: #0327aa;
+  color: white;
+  --color: white;
+  border-radius: 12px;
+}
+
+.balance-content {
+  --background: #f5f7fb;
+}
+
 .balance-container {
-  padding: 16px;
+  padding: 16px 16px 0 16px;
+
   .balance-card {
-    background-color: #EDF2FA;
-    border-radius: 10px;
-    padding: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    .balance-header {
-      display: flex;
-      justify-content: space-between;
-      font-weight: bold;
-    }
-    .balance-details {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 16px;
-      font-weight: bold;
-      .balance-income, .balance-expense {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        span {
-          display: block;
-        }
-      }
-      .balance-expense {
-        color: red;
-      }
-    }
+    background-color: #edf2fa;
+    border-radius: 22px;
+    padding: 18px 16px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
   }
 }
 
-.balance-segment {
-  margin-top: 32px;
-}
-
-.balance-segment-button {
-  margin: 0 8px;
-  --background: var(--ion-color-light);
-  &.segment-checked {
-    background-color: var(--ion-color-primary);
-    color: #001E87;
-    border-radius: 45%;
-  }
-}
-
-ion-list {
-  margin-top: 16px;
-  ion-item {
-    --background: #EDF2FA;
-    margin: 8px;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    ion-label h2 {
-      font-size: 16px;
-      font-weight: semi-bold;
-    }
-    ion-label p {
-      font-size: 14px;
-      color: #607389;
-      font-weight: bold;
-    }
-    strong {
-      font-size: 16px;
-      font-weight: bold;
-    }
-  }
-}
-
-ion-fab-button {
-  --background: var(--ion-color-primary);
-}
-
-ion-fab-list ion-fab-button {
-  --background: white;
-  --color: black;
-  --border-radius: 10px;
+.balance-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  ion-icon {
-    margin-right: 8px;
+  font-weight: bold;
+  border-bottom: 1px solid #cfd8e3;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+
+  .balance-titulo {
+    font-size: 22px;
+    color: #2d3d55;
   }
-  ion-label {
+
+  .balance-total {
+    font-size: 22px;
     font-weight: bold;
   }
 }
 
-ion-fab-list {
-  position: absolute;
-  bottom: 70px;
-}
-
-.balance-header {
+.balance-saldo-inicial {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
   font-weight: bold;
-  font-size: 18px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 8px;
+  font-size: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #cfd8e3;
+  color: #4f6178;
 }
 
 .balance-details {
   display: flex;
   justify-content: space-between;
+  align-items: stretch;
   margin-top: 16px;
+  gap: 12px;
 
-  .balance-income, .balance-expense {
+  .balance-income,
+  .balance-expense {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    span {
-      display: block;
+    align-items: flex-start;
+    gap: 10px;
+
+    strong {
+      font-size: 24px;
+      color: #2d3d55;
     }
+  }
+
+  .detalle-titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #4f6178;
+  }
+
+  .balance-income ion-icon {
+    color: #16a34a;
+    font-size: 22px;
+  }
+
+  .balance-expense ion-icon {
+    color: #d70000;
+    font-size: 22px;
   }
 
   .balance-divider {
     width: 1px;
-    background-color: #ccc;
-    margin: 0 16px;
-  }
-
-  .balance-expense {
-    color: red;
+    background-color: #cfd8e3;
   }
 }
 
-.balance-segment-button-ingresos{
-  border-radius: 15px;
-  background-color: green;
-  color: white;
-  font-weight: bold;
+.balance-card-actions {
   display: flex;
-  margin: 0 8px;
+  justify-content: center;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #cfd8e3;
+
+  .btn-card-accion {
+    --background: #001E87;
+    --color: white;
+    font-weight: bold;
+    text-transform: none;
+    --border-radius: 10px;
+  }
 }
 
-.balance-segment-button-egresos{
-  border-radius: 15px;
-  background-color: red;
-  color: white;
+.tabs-balance {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-top: 22px;
+  margin-bottom: 8px;
+}
+
+.tab-balance {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #7a8ca5;
+  border-bottom: 4px solid transparent;
+}
+
+.tab-balance.tab-activa {
+  color: #001E87;
+  border-bottom: 4px solid #001E87;
+}
+
+.lista-balance {
+  padding: 0 16px 120px 16px;
+}
+
+ion-list {
+  margin-top: 4px;
+  background: transparent;
+}
+
+ion-item.item-balance {
+  --background: #ffffff;
+  --padding-start: 12px;
+  --inner-padding-end: 12px;
+  margin: 10px 0;
+  border-radius: 18px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  align-items: center;
+
+  .item-icono {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #d9f5e4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+
+    ion-icon {
+      font-size: 24px;
+      color: #16a34a;
+    }
+  }
+
+  ion-label {
+    h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #2d3d55;
+      margin-bottom: 6px;
+    }
+
+    p {
+      font-size: 14px;
+      color: #607389;
+      margin: 2px 0;
+      font-weight: 500;
+    }
+
+    .cliente-texto {
+      font-weight: bold;
+      color: #4f6178;
+    }
+  }
+
+  .item-monto {
+    strong {
+      font-size: 18px;
+      font-weight: bold;
+      color: #1f2d3d;
+      white-space: nowrap;
+    }
+  }
+}
+
+.sin-registros {
+  --background: transparent;
+  color: #607389;
+}
+
+.acciones-inferiores {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(10px + env(safe-area-inset-bottom)); 
+  /* aqui se agrega compatibilidad con celulares modernos para que no choque con la barra inferior */
+  display: flex;
+  gap: 12px;
+  z-index: 20;
+}
+
+.btn-accion {
+  flex: 1;
+  height: 46px;
+  --border-radius: 12px;
   font-weight: bold;
-  margin: 0 8px;
+  text-transform: none;
+  font-size: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
 }
 
-iion-modal.calendar-modal {
+.btn-venta {
+  --background: #16a34a;
+  --color: #ffffff;
+}
+
+.btn-gasto {
+  --background: #d70000;
+  --color: #ffffff;
+}
+
+ion-fab,
+ion-fab-list,
+ion-fab-button {
+  display: none;
+}
+
+ion-modal.calendar-modal {
   --background: #fff;
   --border-radius: 30px;
   --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-ion-segment-button.selected-date {
-  font-weight: bold;
-  background-color: #0327aa;
-  border-radius: 15px;
-  height: 5px;
 }
 
 .cierre-caja-container {
@@ -202,13 +357,28 @@ ion-segment-button.selected-date {
   padding: 8px 16px;
 }
 
-/* saldo inicial dentro del recuadro */
-.balance-saldo-inicial{
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-  font-weight: bold;
-  font-size: 14px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #ccc;
+@media (max-width: 480px) {
+  .balance-header {
+    .balance-titulo,
+    .balance-total {
+      font-size: 19px;
+    }
+  }
+
+  .balance-details {
+    .balance-income,
+    .balance-expense {
+      strong {
+        font-size: 20px;
+      }
+    }
+  }
+
+  .tab-balance {
+    font-size: 16px;
+  }
+
+  .btn-accion {
+    font-size: 15px;
+  }
 }

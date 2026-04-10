@@ -193,6 +193,8 @@ export class DeudasPage implements OnInit, OnDestroy {
     this.tipoPagoId = 0;
     this.selectedCliente = null;
 
+    this.mensajeService.enviarMensaje('actualizar ingresos');
+
     await this.cargarDeudas();
   }
 

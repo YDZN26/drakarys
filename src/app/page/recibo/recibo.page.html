@@ -1,67 +1,64 @@
-<ion-content>
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title><strong>Recibo</strong></ion-card-title>
-    </ion-card-header>
+<ion-content [fullscreen]="true" class="recibo-content">
+  <div class="recibo-container">
+    <div class="recibo-card">
+      <div class="recibo-header">
+        <span class="recibo-titulo">RECIBO</span>
+      </div>
 
-    <ion-card-content>
-      <!-- Iteramos sobre los productos seleccionados -->
-      <ion-list>
-        <ion-item *ngFor="let producto of recibo.productos">
-          <ion-label>
-            <h2><strong>
+      <div class="productos-lista">
+        <div class="producto-item" *ngFor="let producto of recibo.productos">
+          <div class="producto-info">
+            <h2>
               {{ producto.producto?.nombre || producto.descripcion || producto.nombre }}
-            </strong></h2>
+            </h2>
+
             <p *ngIf="producto.cantidad">Cantidad: {{ producto.cantidad }}</p>
             <p *ngIf="producto.precio_unitario">Precio Unitario: Bs. {{ producto.precio_unitario }}</p>
             <p *ngIf="producto.subtotal">Subtotal: Bs. {{ producto.subtotal }}</p>
-          </ion-label>
-        </ion-item>
-      </ion-list>
-
-      <ion-item>
-        <ion-label>Total de Venta</ion-label>
-        <ion-note slot="end">Bs. {{ recibo.totalVenta }}</ion-note>
-      </ion-item>
-
-      <ion-item>
-        <ion-label>Cliente</ion-label>
-        <ion-note slot="end">{{ recibo.cliente }}</ion-note>
-      </ion-item>
-
-      <ion-item>
-        <ion-label>Método de Pago</ion-label>
-
-        <ion-note
-          slot="end"
-          *ngIf="recibo.metodosPago && recibo.metodosPago.length === 1"
-        >
-          {{ recibo.metodosPago[0].nombre }}: Bs. {{ recibo.metodosPago[0].monto }}
-        </ion-note>
-
-        <ion-note
-          slot="end"
-          *ngIf="recibo.metodosPago && recibo.metodosPago.length > 1"
-        >
-          <div *ngFor="let metodo of recibo.metodosPago">
-            {{ metodo.nombre }}: Bs. {{ metodo.monto }}
           </div>
-        </ion-note>
+        </div>
+      </div>
 
-        <ion-note
-          slot="end"
-          *ngIf="!recibo.metodosPago || recibo.metodosPago.length === 0"
-        >
-          {{ recibo.metodoPago }}
-        </ion-note>
-      </ion-item>
+      <div class="resumen-recibo">
+        <div class="resumen-item">
+          <span>Total de Venta</span>
+          <strong>Bs. {{ recibo.totalVenta }}</strong>
+        </div>
 
-      <ion-item>
-        <ion-label>Fecha de Venta</ion-label>
-        <ion-note slot="end">{{ recibo.fechaVenta }}</ion-note>
-      </ion-item>
-    </ion-card-content>
-  </ion-card>
+        <div class="resumen-item">
+          <span>Cliente</span>
+          <strong>{{ recibo.cliente }}</strong>
+        </div>
 
-  <ion-button expand="full" (click)="irABalance()">Listo</ion-button>
+        <div class="resumen-item resumen-metodo-pago">
+          <span>Método de Pago</span>
+
+          <div class="metodo-pago-valor" *ngIf="recibo.metodosPago && recibo.metodosPago.length === 1">
+            <strong>{{ recibo.metodosPago[0].nombre }}: Bs. {{ recibo.metodosPago[0].monto }}</strong>
+          </div>
+
+          <div class="metodo-pago-valor" *ngIf="recibo.metodosPago && recibo.metodosPago.length > 1">
+            <strong *ngFor="let metodo of recibo.metodosPago">
+              {{ metodo.nombre }}: Bs. {{ metodo.monto }}
+            </strong>
+          </div>
+
+          <div class="metodo-pago-valor" *ngIf="!recibo.metodosPago || recibo.metodosPago.length === 0">
+            <strong>{{ recibo.metodoPago }}</strong>
+          </div>
+        </div>
+
+        <div class="resumen-item">
+          <span>Fecha de Venta</span>
+          <strong>{{ recibo.fechaVenta }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="acciones-inferiores">
+    <ion-button class="listo-button" (click)="irABalance()">
+      Listo
+    </ion-button>
+  </div>
 </ion-content>
