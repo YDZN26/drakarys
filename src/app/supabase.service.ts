@@ -701,18 +701,43 @@ export class SupabaseService {
       return [];
     }
 
-    for (const producto of productos) {
-      const stock = await this.obtenerStockPorProducto(producto.producto_id);
+    if (!productos || productos.length === 0) {
+      return [];
+    }
 
-      producto.stock_exhibicion = stock.find(s => s.ubicacion === 'exhibicion')?.cantidad || 0;
-      producto.stock_almacen_tienda = stock.find(s => s.ubicacion === 'almacen_tienda')?.cantidad || 0;
-      producto.stock_almacen_casa = stock.find(s => s.ubicacion === 'almacen_casa')?.cantidad || 0;
-      producto.stock_danado = stock.find(s => s.ubicacion === 'danado')?.cantidad || 0;
+    const idsProductos = productos.map(producto => producto.producto_id);
+
+    const { data: stocks, error: errorStocks } = await this.supabase
+      .from('producto_stock')
+      .select('*')
+      .in('producto_id', idsProductos);
+
+    if (errorStocks) {
+      console.error('Error al obtener stock de productos:', errorStocks);
+      return [];
+    }
+
+    for (const producto of productos) {
+      const stockProducto = (stocks || []).filter(
+        stock => stock.producto_id === producto.producto_id
+      );
+
+      producto.stock_exhibicion =
+        stockProducto.find(s => s.ubicacion === 'exhibicion')?.cantidad || 0;
+
+      producto.stock_almacen_tienda =
+        stockProducto.find(s => s.ubicacion === 'almacen_tienda')?.cantidad || 0;
+
+      producto.stock_almacen_casa =
+        stockProducto.find(s => s.ubicacion === 'almacen_casa')?.cantidad || 0;
+
+      producto.stock_danado =
+        stockProducto.find(s => s.ubicacion === 'danado')?.cantidad || 0;
 
       producto.stock_total =
-        producto.stock_exhibicion +
-        producto.stock_almacen_tienda +
-        producto.stock_almacen_casa;
+        Number(producto.stock_exhibicion) +
+        Number(producto.stock_almacen_tienda) +
+        Number(producto.stock_almacen_casa);
     }
 
     return productos;
