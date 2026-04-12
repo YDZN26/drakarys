@@ -48,7 +48,10 @@ export class SupabaseService {
   async agregarProducto(producto: any) {
     const { data, error } = await this.supabase
       .from('producto')
-      .insert([producto])
+      .insert([{
+        ...producto,
+        estado: true
+      }])
       .select('*');
 
     if (error) {
@@ -105,6 +108,22 @@ export class SupabaseService {
 
     if (error) {
       console.error('Error al actualizar producto:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  async eliminarProductoLogico(productoId: number) {
+    const { data, error } = await this.supabase
+      .from('producto')
+      .update({ estado: false })
+      .eq('producto_id', productoId)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error al eliminar lógicamente el producto:', error);
       return null;
     }
 
@@ -562,6 +581,106 @@ export class SupabaseService {
     return true;
   }
 
+  async enviarDanadoAProveedor(productoId: number, cantidad: number) {
+    if (!productoId || cantidad <= 0) {
+      console.error('Datos inválidos para enviar a proveedor');
+      return null;
+    }
+
+    const { data: stockDanado, error: errorDanado } = await this.supabase
+      .from('producto_stock')
+      .select('*')
+      .eq('producto_id', productoId)
+      .eq('ubicacion', 'danado')
+      .single();
+
+    if (errorDanado || !stockDanado) {
+      console.error('No se encontró el stock dañado:', errorDanado);
+      return null;
+    }
+
+    const cantidadDanadoActual = Number(stockDanado.cantidad || 0);
+
+    if (cantidadDanadoActual < cantidad) {
+      console.error('No hay suficiente stock dañado para enviar al proveedor');
+      return null;
+    }
+
+    const nuevoStockDanado = cantidadDanadoActual - cantidad;
+
+    const actualizadoDanado = await this.actualizarStockPorUbicacion(
+      productoId,
+      'danado',
+      nuevoStockDanado
+    );
+
+    if (!actualizadoDanado) {
+      console.error('No se pudo actualizar el stock dañado');
+      return null;
+    }
+
+    await this.registrarMovimientoInventario({
+      producto_id: productoId,
+      tipo_movimiento: 'salida_proveedor',
+      ubicacion_origen: 'danado',
+      ubicacion_destino: 'proveedor',
+      cantidad: cantidad,
+      motivo: 'Producto dañado enviado al proveedor',
+      usuario_id: this.obtenerUsuarioLogueadoId()
+    });
+
+    return true;
+  }
+
+  async recibirCambioProveedor(
+    productoId: number,
+    destino: 'exhibicion' | 'almacen_tienda' | 'almacen_casa',
+    cantidad: number
+  ) {
+    if (!productoId || cantidad <= 0) {
+      console.error('Datos inválidos para recibir cambio del proveedor');
+      return null;
+    }
+
+    const { data: stockDestino, error: errorDestino } = await this.supabase
+      .from('producto_stock')
+      .select('*')
+      .eq('producto_id', productoId)
+      .eq('ubicacion', destino)
+      .single();
+
+    if (errorDestino || !stockDestino) {
+      console.error('No se encontró el stock de destino:', errorDestino);
+      return null;
+    }
+
+    const cantidadDestinoActual = Number(stockDestino.cantidad || 0);
+    const nuevoStockDestino = cantidadDestinoActual + cantidad;
+
+    const actualizadoDestino = await this.actualizarStockPorUbicacion(
+      productoId,
+      destino,
+      nuevoStockDestino
+    );
+
+    if (!actualizadoDestino) {
+      console.error('No se pudo actualizar el stock de destino');
+      return null;
+    }
+
+    await this.registrarMovimientoInventario({
+      producto_id: productoId,
+      tipo_movimiento: 'ingreso_cambio_proveedor',
+      ubicacion_origen: 'proveedor',
+      ubicacion_destino: destino,
+      cantidad: cantidad,
+      motivo: 'Producto nuevo recibido por cambio de proveedor',
+      usuario_id: this.obtenerUsuarioLogueadoId()
+    });
+
+    return true;
+  }
+
   async obtenerCategorias() {
     const { data, error } = await this.supabase.from('categoria').select('*');
     if (error) {
@@ -574,7 +693,8 @@ export class SupabaseService {
   async obtenerProductos() {
     const { data: productos, error } = await this.supabase
       .from('producto')
-      .select('*');
+      .select('*')
+      .eq('estado', true);
 
     if (error) {
       console.error('Error al obtener productos:', error);

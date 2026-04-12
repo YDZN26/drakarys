@@ -8,214 +8,360 @@
 
 <ion-content [fullscreen]="true" class="agregar-producto-content">
   <div class="agregar-producto-container">
-    <div class="producto-card">
-      <div class="producto-header">
-        <span class="producto-titulo">
-          {{ isEditMode ? 'ACTUALIZAR PRODUCTO' : 'AGREGAR PRODUCTO' }}
-        </span>
-      </div>
-
-      <div class="scan-product">
-        <div class="camera-container" (click)="showActionSheet()">
-          <img *ngIf="imagenUrl" [src]="imagenUrl" class="preview-image" />
-          <ion-icon *ngIf="!imagenUrl" name="camera"></ion-icon>
-        </div>
-
-        <div class="bar-code">
-          <div class="codigo-title-container">
-            <ion-label>Código Barras</ion-label>
-          </div>
-
-          <div class="text-container">
-            <ion-item lines="none" class="codigo-row input-item">
-              <ion-input placeholder="Agregar código" [(ngModel)]="codigo"></ion-input>
-
-              <ion-button fill="clear" class="scan-btn" (click)="abrirScannerCodigo()">
-                <ion-icon name="camera-outline"></ion-icon>
-              </ion-button>
-            </ion-item>
-          </div>
-        </div>
-      </div>
-
-      <div class="datos">
-        <div class="campo-grupo">
-          <div class="campo-title-container">
-            <ion-label>Stock en Exhibición</ion-label>
-          </div>
-          <div class="counter-container">
-            <ion-button class="counter-button" (click)="disminuirStock('exhibicion')">-</ion-button>
-            <ion-label class="counter-label">{{ stockExhibicion }}</ion-label>
-            <ion-button class="counter-button" (click)="aumentarStock('exhibicion')">+</ion-button>
-          </div>
-        </div>
-
-        <div class="campo-grupo">
-          <div class="campo-title-container">
-            <ion-label>Stock en Almacén Tienda</ion-label>
-          </div>
-          <div class="counter-container">
-            <ion-button class="counter-button" (click)="disminuirStock('almacen_tienda')">-</ion-button>
-            <ion-label class="counter-label">{{ stockAlmacenTienda }}</ion-label>
-            <ion-button class="counter-button" (click)="aumentarStock('almacen_tienda')">+</ion-button>
-          </div>
-        </div>
-
-        <div class="campo-grupo">
-          <div class="campo-title-container">
-            <ion-label>Stock en Almacén Casa</ion-label>
-          </div>
-          <div class="counter-container">
-            <ion-button class="counter-button" (click)="disminuirStock('almacen_casa')">-</ion-button>
-            <ion-label class="counter-label">{{ stockAlmacenCasa }}</ion-label>
-            <ion-button class="counter-button" (click)="aumentarStock('almacen_casa')">+</ion-button>
-          </div>
-        </div>
-
-        <div class="campo-grupo">
-          <div class="campo-title-container">
-            <ion-label>Stock Dañado</ion-label>
-          </div>
-          <div class="counter-container">
-            <ion-button class="counter-button" (click)="disminuirStock('danado')">-</ion-button>
-            <ion-label class="counter-label">{{ stockDanado }}</ion-label>
-            <ion-button class="counter-button" (click)="aumentarStock('danado')">+</ion-button>
-          </div>
-        </div>
-
-        <div class="campo-grupo" *ngIf="isEditMode">
-          <div class="campo-title-container">
-            <ion-label>Mover Stock</ion-label>
-          </div>
-
-          <div class="campo-text-container">
-            <ion-item lines="none" class="input-item">
-              <ion-label position="stacked">Tipo de traslado</ion-label>
-              <ion-select [(ngModel)]="trasladoSeleccionado" interface="action-sheet">
-                <ion-select-option value="casa_a_tienda">
-                  Almacén casa → Almacén tienda
-                </ion-select-option>
-                <ion-select-option value="tienda_a_exhibicion">
-                  Almacén tienda → Exhibición
-                </ion-select-option>
-              </ion-select>
-            </ion-item>
-          </div>
-
-          <div class="campo-text-container">
-            <ion-item lines="none" class="input-item">
-              <ion-label position="stacked">Cantidad</ion-label>
-              <ion-input
-                type="number"
-                min="1"
-                [(ngModel)]="cantidadTraslado"
-                placeholder="Ingrese cantidad">
-              </ion-input>
-            </ion-item>
-          </div>
-
-          <ion-button expand="block" class="btn-guardar" (click)="moverStock()">
-            Mover stock
-          </ion-button>
-        </div>
-
-        <div class="campo-grupo" *ngIf="isEditMode">
-          <div class="campo-title-container">
-            <ion-label>Registrar Dañado</ion-label>
-          </div>
-
-          <div class="campo-text-container">
-            <ion-item lines="none" class="input-item">
-              <ion-label position="stacked">Origen</ion-label>
-              <ion-select [(ngModel)]="origenDanado" interface="action-sheet">
-                <ion-select-option value="exhibicion">
-                  Exhibición
-                </ion-select-option>
-                <ion-select-option value="almacen_tienda">
-                  Almacén tienda
-                </ion-select-option>
-                <ion-select-option value="almacen_casa">
-                  Almacén casa
-                </ion-select-option>
-              </ion-select>
-            </ion-item>
-          </div>
-
-          <div class="campo-text-container">
-            <ion-item lines="none" class="input-item">
-              <ion-label position="stacked">Cantidad</ion-label>
-              <ion-input
-                type="number"
-                min="1"
-                [(ngModel)]="cantidadDanado"
-                placeholder="Ingrese cantidad">
-              </ion-input>
-            </ion-item>
-          </div>
-
-          <ion-button expand="block" class="btn-guardar" (click)="registrarDanado()">
-            Registrar dañado
-          </ion-button>
-        </div>
-
-        <div class="campo-grupo">
-          <div class="campo-title-container">
-            <ion-label>Nombre del Producto</ion-label>
-          </div>
-          <div class="campo-text-container">
-            <ion-item lines="none" class="input-item">
-              <ion-input placeholder="Ingrese el nombre del producto" [(ngModel)]="nombre"></ion-input>
-            </ion-item>
-          </div>
-        </div>
-
-        <div class="campo-grupo">
-          <div class="campo-title-container">
-            <ion-label>Precio Unitario</ion-label>
-          </div>
-          <div class="campo-text-container">
-            <ion-item lines="none" class="input-item">
-              <ion-input type="number" placeholder="Ingrese el precio unitario" [(ngModel)]="precioUnitario"></ion-input>
-            </ion-item>
-          </div>
-        </div>
-
-        <div class="campo-grupo">
-          <div class="campo-title-container">
-            <ion-label>Costo Unitario</ion-label>
-          </div>
-          <div class="campo-text-container">
-            <ion-item lines="none" class="input-item">
-              <ion-input type="number" placeholder="Ingrese el costo unitario" [(ngModel)]="costoUnitario"></ion-input>
-            </ion-item>
-          </div>
-        </div>
-
-        <div class="campo-grupo">
-          <div class="campo-title-container">
-            <ion-label>Categoría</ion-label>
-          </div>
-          <div class="dropdown-container select-item">
-            <ion-select interface="action-sheet" [(ngModel)]="selectedOption" (ionChange)="onOptionChange($event)">
-              <ion-select-option *ngFor="let categoria of categorias" [value]="categoria.categoria_id.toString()">
-                {{ categoria.nombre }}
-              </ion-select-option>
-            </ion-select>
-          </div>
-        </div>
-
-        <div class="campo-grupo">
-          <div class="campo-title-container">
-            <ion-label>Descripción</ion-label>
-          </div>
-          <div class="campo-text-container">
-            <ion-item lines="none" class="textarea-item">
-              <ion-textarea placeholder="Escribir descripción del producto" [(ngModel)]="descripcion"></ion-textarea>
-            </ion-item>
-          </div>
-        </div>
-      </div>
+    <div class="producto-header">
+      <span class="producto-titulo">
+        {{ isEditMode ? 'ACTUALIZAR PRODUCTO' : 'AGREGAR PRODUCTO' }}
+      </span>
     </div>
+
+    <ion-accordion-group value="detalles" expand="inset" class="producto-accordion-group">
+
+      <ion-accordion value="detalles" class="producto-accordion">
+        <ion-item slot="header" lines="none" class="accordion-header-item">
+          <ion-label>Detalles del producto</ion-label>
+        </ion-item>
+
+        <div slot="content" class="accordion-content">
+          <div class="scan-product">
+            <div class="camera-container" (click)="showActionSheet()">
+              <img *ngIf="imagenUrl" [src]="imagenUrl" class="preview-image" />
+              <ion-icon *ngIf="!imagenUrl" name="camera"></ion-icon>
+            </div>
+
+            <div class="bar-code">
+              <div class="codigo-title-container">
+                <ion-label>Código Barras</ion-label>
+              </div>
+
+              <div class="text-container">
+                <ion-item lines="none" class="codigo-row input-item">
+                  <ion-input
+                    placeholder="Agregar código"
+                    [(ngModel)]="codigo">
+                  </ion-input>
+
+                  <ion-button fill="clear" class="scan-btn" (click)="abrirScannerCodigo()">
+                    <ion-icon name="camera-outline"></ion-icon>
+                  </ion-button>
+                </ion-item>
+              </div>
+            </div>
+          </div>
+
+          <div class="datos">
+            <div class="campo-grupo">
+              <div class="campo-title-container">
+                <ion-label>Nombre del Producto</ion-label>
+              </div>
+              <div class="campo-text-container">
+                <ion-item lines="none" class="input-item">
+                  <ion-input
+                    placeholder="Ingrese el nombre del producto"
+                    [(ngModel)]="nombre">
+                  </ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="campo-grupo">
+              <div class="campo-title-container">
+                <ion-label>Precio Unitario</ion-label>
+              </div>
+              <div class="campo-text-container">
+                <ion-item lines="none" class="input-item">
+                  <ion-input
+                    type="number"
+                    placeholder="Ingrese el precio unitario"
+                    [(ngModel)]="precioUnitario">
+                  </ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="campo-grupo">
+              <div class="campo-title-container">
+                <ion-label>Costo Unitario</ion-label>
+              </div>
+              <div class="campo-text-container">
+                <ion-item lines="none" class="input-item">
+                  <ion-input
+                    type="number"
+                    placeholder="Ingrese el costo unitario"
+                    [(ngModel)]="costoUnitario">
+                  </ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="campo-grupo">
+              <div class="campo-title-container">
+                <ion-label>Categoría</ion-label>
+              </div>
+              <div class="dropdown-container select-item">
+                <ion-select
+                  interface="action-sheet"
+                  [(ngModel)]="selectedOption"
+                  (ionChange)="onOptionChange($event)">
+                  <ion-select-option
+                    *ngFor="let categoria of categorias"
+                    [value]="categoria.categoria_id.toString()">
+                    {{ categoria.nombre }}
+                  </ion-select-option>
+                </ion-select>
+              </div>
+            </div>
+
+            <div class="campo-grupo">
+              <div class="campo-title-container">
+                <ion-label>Descripción</ion-label>
+              </div>
+              <div class="campo-text-container">
+                <ion-item lines="none" class="textarea-item">
+                  <ion-textarea
+                    placeholder="Escribir descripción del producto"
+                    [(ngModel)]="descripcion">
+                  </ion-textarea>
+                </ion-item>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ion-accordion>
+
+      <ion-accordion value="inventario" class="producto-accordion">
+        <ion-item slot="header" lines="none" class="accordion-header-item">
+          <ion-label>Inventario</ion-label>
+        </ion-item>
+
+        <div slot="content" class="accordion-content">
+          <div class="datos">
+            <div class="campo-grupo">
+              <div class="campo-title-container">
+                <ion-label>Stock en Exhibición</ion-label>
+              </div>
+              <div class="campo-text-container">
+                <ion-item lines="none" class="input-item">
+                  <ion-input
+                    type="number"
+                    min="0"
+                    placeholder="Ingrese stock en exhibición"
+                    [(ngModel)]="stockExhibicion">
+                  </ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="campo-grupo">
+              <div class="campo-title-container">
+                <ion-label>Stock en Almacén Tienda</ion-label>
+              </div>
+              <div class="campo-text-container">
+                <ion-item lines="none" class="input-item">
+                  <ion-input
+                    type="number"
+                    min="0"
+                    placeholder="Ingrese stock en almacén tienda"
+                    [(ngModel)]="stockAlmacenTienda">
+                  </ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="campo-grupo">
+              <div class="campo-title-container">
+                <ion-label>Stock en Almacén Casa</ion-label>
+              </div>
+              <div class="campo-text-container">
+                <ion-item lines="none" class="input-item">
+                  <ion-input
+                    type="number"
+                    min="0"
+                    placeholder="Ingrese stock en almacén casa"
+                    [(ngModel)]="stockAlmacenCasa">
+                  </ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="campo-grupo">
+              <div class="campo-title-container">
+                <ion-label>Stock Dañado</ion-label>
+              </div>
+              <div class="campo-text-container">
+                <ion-item lines="none" class="input-item">
+                  <ion-input
+                    type="number"
+                    min="0"
+                    placeholder="Ingrese stock dañado"
+                    [(ngModel)]="stockDanado">
+                  </ion-input>
+                </ion-item>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ion-accordion>
+
+      <ion-accordion value="movimientos" class="producto-accordion" *ngIf="isEditMode">
+        <ion-item slot="header" lines="none" class="accordion-header-item">
+          <ion-label>Movimientos de stock</ion-label>
+        </ion-item>
+
+        <div slot="content" class="accordion-content">
+          <div class="datos">
+            <div class="campo-grupo">
+              <div class="campo-title-container">
+                <ion-label>Mover Stock</ion-label>
+              </div>
+
+              <div class="campo-text-container">
+                <ion-item lines="none" class="input-item">
+                  <ion-select
+                    [(ngModel)]="trasladoSeleccionado"
+                    interface="action-sheet"
+                    label="Tipo de traslado"
+                    labelPlacement="stacked">
+                    <ion-select-option value="casa_a_tienda">
+                      Almacén casa → Almacén tienda
+                    </ion-select-option>
+                    <ion-select-option value="tienda_a_exhibicion">
+                      Almacén tienda → Exhibición
+                    </ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </div>
+
+              <div class="campo-text-container">
+                <ion-item lines="none" class="input-item">
+                  <ion-input
+                    type="number"
+                    min="1"
+                    [(ngModel)]="cantidadTraslado"
+                    placeholder="Ingrese cantidad"
+                    label="Cantidad"
+                    labelPlacement="stacked">
+                  </ion-input>
+                </ion-item>
+              </div>
+
+              <ion-button expand="block" class="btn-secundario" (click)="moverStock()">
+                Mover stock
+              </ion-button>
+            </div>
+
+            <div class="campo-grupo">
+              <div class="campo-title-container">
+                <ion-label>Registrar Dañado</ion-label>
+              </div>
+
+              <div class="campo-text-container">
+                <ion-item lines="none" class="input-item">
+                  <ion-select
+                    [(ngModel)]="origenDanado"
+                    interface="action-sheet"
+                    label="Origen"
+                    labelPlacement="stacked">
+                    <ion-select-option value="exhibicion">
+                      Exhibición
+                    </ion-select-option>
+                    <ion-select-option value="almacen_tienda">
+                      Almacén tienda
+                    </ion-select-option>
+                    <ion-select-option value="almacen_casa">
+                      Almacén casa
+                    </ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </div>
+
+              <div class="campo-text-container">
+                <ion-item lines="none" class="input-item">
+                  <ion-input
+                    type="number"
+                    min="1"
+                    [(ngModel)]="cantidadDanado"
+                    placeholder="Ingrese cantidad"
+                    label="Cantidad"
+                    labelPlacement="stacked">
+                  </ion-input>
+                </ion-item>
+              </div>
+
+              <ion-button expand="block" class="btn-secundario" (click)="registrarDanado()">
+                Registrar dañado
+              </ion-button>
+            </div>
+
+            <div class="campo-grupo">
+              <div class="campo-title-container">
+                <ion-label>Enviar a Proveedor</ion-label>
+              </div>
+
+              <div class="campo-text-container">
+                <ion-item lines="none" class="input-item">
+                  <ion-input
+                    type="number"
+                    min="1"
+                    [(ngModel)]="cantidadSalidaProveedor"
+                    placeholder="Ingrese cantidad"
+                    label="Cantidad a enviar"
+                    labelPlacement="stacked">
+                  </ion-input>
+                </ion-item>
+              </div>
+
+              <ion-button expand="block" class="btn-secundario" (click)="enviarAProveedor()">
+                Enviar a proveedor
+              </ion-button>
+            </div>
+
+            <div class="campo-grupo">
+              <div class="campo-title-container">
+                <ion-label>Recibir Cambio del Proveedor</ion-label>
+              </div>
+
+              <div class="campo-text-container">
+                <ion-item lines="none" class="input-item">
+                  <ion-select
+                    [(ngModel)]="destinoCambioProveedor"
+                    interface="action-sheet"
+                    label="Destino"
+                    labelPlacement="stacked">
+                    <ion-select-option value="exhibicion">
+                      Exhibición
+                    </ion-select-option>
+                    <ion-select-option value="almacen_tienda">
+                      Almacén tienda
+                    </ion-select-option>
+                    <ion-select-option value="almacen_casa">
+                      Almacén casa
+                    </ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </div>
+
+              <div class="campo-text-container">
+                <ion-item lines="none" class="input-item">
+                  <ion-input
+                    type="number"
+                    min="1"
+                    [(ngModel)]="cantidadCambioProveedor"
+                    placeholder="Ingrese cantidad"
+                    label="Cantidad recibida"
+                    labelPlacement="stacked">
+                  </ion-input>
+                </ion-item>
+              </div>
+
+              <ion-button expand="block" class="btn-secundario" (click)="recibirCambioProveedor()">
+                Recibir cambio
+              </ion-button>
+            </div>
+          </div>
+        </div>
+      </ion-accordion>
+
+    </ion-accordion-group>
   </div>
 
   <ion-modal
@@ -246,6 +392,15 @@
 
 <ion-footer>
   <ion-toolbar class="footer-toolbar">
+    <ion-button
+      *ngIf="isEditMode"
+      expand="block"
+      color="danger"
+      class="btn-eliminar"
+      (click)="eliminarProducto()">
+      Eliminar Producto
+    </ion-button>
+
     <ion-button expand="block" class="btn-guardar" (click)="guardarProducto()">
       {{ isEditMode ? 'Actualizar Producto' : 'Agregar Producto' }}
     </ion-button>

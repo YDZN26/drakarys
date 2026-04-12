@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Output, NgZone, ViewChild, ElementRef, OnInit } from '@angular/core';
-import { NavController, ActionSheetController } from '@ionic/angular';
+import { NavController, ActionSheetController, AlertController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
 import { SupabaseService } from '../../supabase.service';
 import { ActivatedRoute } from '@angular/router';
@@ -36,6 +36,10 @@ export class AgregarProductoPage implements OnInit {
   origenDanado: string = '';
   cantidadDanado: number = 0;
 
+  cantidadSalidaProveedor: number = 0;
+  destinoCambioProveedor: string = '';
+  cantidadCambioProveedor: number = 0;
+
   isEditMode: boolean = false;
   productoId: number | null = null;
 
@@ -52,6 +56,7 @@ export class AgregarProductoPage implements OnInit {
   constructor(
     private navCtrl: NavController,
     private actionSheetController: ActionSheetController,
+    private alertController: AlertController,
     private http: HttpClient,
     private supabaseService: SupabaseService,
     private route: ActivatedRoute,
@@ -151,10 +156,10 @@ export class AgregarProductoPage implements OnInit {
       const stockGuardado = await this.supabaseService.guardarStockInicialProducto(
         productoGuardado.producto_id,
         {
-          exhibicion: this.stockExhibicion,
-          almacen_tienda: this.stockAlmacenTienda,
-          almacen_casa: this.stockAlmacenCasa,
-          danado: this.stockDanado
+          exhibicion: Number(this.stockExhibicion || 0),
+          almacen_tienda: Number(this.stockAlmacenTienda || 0),
+          almacen_casa: Number(this.stockAlmacenCasa || 0),
+          danado: Number(this.stockDanado || 0)
         }
       );
 
@@ -212,10 +217,10 @@ export class AgregarProductoPage implements OnInit {
       const stockActualizado = await this.supabaseService.guardarStockCompletoProducto(
         Number(this.productoId),
         {
-          exhibicion: this.stockExhibicion,
-          almacen_tienda: this.stockAlmacenTienda,
-          almacen_casa: this.stockAlmacenCasa,
-          danado: this.stockDanado
+          exhibicion: Number(this.stockExhibicion || 0),
+          almacen_tienda: Number(this.stockAlmacenTienda || 0),
+          almacen_casa: Number(this.stockAlmacenCasa || 0),
+          danado: Number(this.stockDanado || 0)
         }
       );
 
@@ -229,6 +234,40 @@ export class AgregarProductoPage implements OnInit {
     } catch (error) {
       console.error('Error al actualizar producto:', error);
     }
+  }
+
+  async eliminarProducto() {
+    if (!this.isEditMode || !this.productoId) {
+      console.error('No se puede eliminar un producto que aún no fue guardado');
+      return;
+    }
+
+    const alert = await this.alertController.create({
+      header: 'Eliminar producto',
+      message: '¿Deseas eliminar este producto?',
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Eliminar',
+          handler: async () => {
+            const eliminado = await this.supabaseService.eliminarProductoLogico(this.productoId!);
+
+            if (!eliminado) {
+              console.error('No se pudo eliminar el producto');
+              return;
+            }
+
+            this.mensajeService.enviarMensaje('eliminado');
+            this.navCtrl.back();
+          }
+        }
+      ]
+    });
+
+    await alert.present();
   }
 
   async moverStock() {
@@ -310,6 +349,69 @@ export class AgregarProductoPage implements OnInit {
     this.mensajeService.enviarMensaje('actualizado');
   }
 
+  async enviarAProveedor() {
+    if (!this.isEditMode || !this.productoId) {
+      console.error('El producto debe estar guardado antes de enviar al proveedor');
+      return;
+    }
+
+    if (Number(this.cantidadSalidaProveedor) <= 0) {
+      console.error('La cantidad a enviar al proveedor debe ser mayor a 0');
+      return;
+    }
+
+    const enviado = await this.supabaseService.enviarDanadoAProveedor(
+      this.productoId,
+      Number(this.cantidadSalidaProveedor)
+    );
+
+    if (!enviado) {
+      console.error('No se pudo enviar el producto al proveedor');
+      return;
+    }
+
+    this.cantidadSalidaProveedor = 0;
+
+    await this.cargarProducto();
+    this.mensajeService.enviarMensaje('actualizado');
+  }
+
+  async recibirCambioProveedor() {
+    if (!this.isEditMode || !this.productoId) {
+      console.error('El producto debe estar guardado antes de recibir cambio del proveedor');
+      return;
+    }
+
+    if (!this.destinoCambioProveedor) {
+      console.error('Debes seleccionar el destino del cambio del proveedor');
+      return;
+    }
+
+    if (Number(this.cantidadCambioProveedor) <= 0) {
+      console.error('La cantidad recibida del proveedor debe ser mayor a 0');
+      return;
+    }
+
+    const destino = this.destinoCambioProveedor as 'exhibicion' | 'almacen_tienda' | 'almacen_casa';
+
+    const recibido = await this.supabaseService.recibirCambioProveedor(
+      this.productoId,
+      destino,
+      Number(this.cantidadCambioProveedor)
+    );
+
+    if (!recibido) {
+      console.error('No se pudo registrar el cambio del proveedor');
+      return;
+    }
+
+    this.destinoCambioProveedor = '';
+    this.cantidadCambioProveedor = 0;
+
+    await this.cargarProducto();
+    this.mensajeService.enviarMensaje('actualizado');
+  }
+
   getOrigenTraslado(): 'almacen_casa' | 'almacen_tienda' | null {
     if (this.trasladoSeleccionado === 'casa_a_tienda') {
       return 'almacen_casa';
@@ -344,42 +446,6 @@ export class AgregarProductoPage implements OnInit {
 
   retroceder() {
     this.navCtrl.back();
-  }
-
-  disminuirStock(tipo: 'exhibicion' | 'almacen_tienda' | 'almacen_casa' | 'danado') {
-    if (tipo === 'exhibicion' && this.stockExhibicion > 0) {
-      this.stockExhibicion--;
-    }
-
-    if (tipo === 'almacen_tienda' && this.stockAlmacenTienda > 0) {
-      this.stockAlmacenTienda--;
-    }
-
-    if (tipo === 'almacen_casa' && this.stockAlmacenCasa > 0) {
-      this.stockAlmacenCasa--;
-    }
-
-    if (tipo === 'danado' && this.stockDanado > 0) {
-      this.stockDanado--;
-    }
-  }
-
-  aumentarStock(tipo: 'exhibicion' | 'almacen_tienda' | 'almacen_casa' | 'danado') {
-    if (tipo === 'exhibicion') {
-      this.stockExhibicion++;
-    }
-
-    if (tipo === 'almacen_tienda') {
-      this.stockAlmacenTienda++;
-    }
-
-    if (tipo === 'almacen_casa') {
-      this.stockAlmacenCasa++;
-    }
-
-    if (tipo === 'danado') {
-      this.stockDanado++;
-    }
   }
 
   onOptionChange(event: any) {
