@@ -35,7 +35,7 @@ export class InventarioPage implements OnInit, OnDestroy {
     private supabaseService: SupabaseService,
     private mensajeService: MensajeService,
     private zone: NgZone
-  ) { }
+  ) {}
 
   ngOnInit() {
     const usuarioGuardado = localStorage.getItem('usuario');
@@ -96,8 +96,9 @@ export class InventarioPage implements OnInit, OnDestroy {
   async cargarProductos(categoriaId: number | null = null) {
     try {
       const todos = await this.supabaseService.obtenerProductos();
+
       this.productos = categoriaId
-        ? todos.filter(p => p.categoria_id === categoriaId)
+        ? todos.filter((p: any) => p.categoria_id === categoriaId)
         : todos;
 
       this.productosFiltrados = this.productos;
@@ -140,11 +141,29 @@ export class InventarioPage implements OnInit, OnDestroy {
     this.navCtrl.navigateForward(`/agregar-producto/${producto.producto_id}`);
   }
 
+  obtenerTotalVendible(producto: any): number {
+    if (!producto) {
+      return 0;
+    }
+
+    return Number(producto.stock_exhibicion || 0)
+      + Number(producto.stock_almacen_tienda || 0)
+      + Number(producto.stock_almacen_casa || 0);
+  }
+
+  obtenerTotalFisico(producto: any): number {
+    if (!producto) {
+      return 0;
+    }
+
+    return this.obtenerTotalVendible(producto) + Number(producto.stock_danado || 0);
+  }
+
   calcularValorTotal(): number {
     return this.productos.reduce((total, p) => {
-      const precio = p.precio || 0;
-      const stock = p.stock || 0;
-      return total + precio * stock;
+      const precio = Number(p?.precio || 0);
+      const stockTotal = Number(p?.stock_total || 0);
+      return total + precio * stockTotal;
     }, 0);
   }
 
@@ -154,7 +173,6 @@ export class InventarioPage implements OnInit, OnDestroy {
 
   async cerrarScanner() {
     this.scannerAbierto = false;
-
     this.codeReader = null;
 
     if (this.streamActual) {
@@ -165,7 +183,9 @@ export class InventarioPage implements OnInit, OnDestroy {
 
   async iniciarLectura() {
     try {
-      if (!this.videoScanner || !this.videoScanner.nativeElement) return;
+      if (!this.videoScanner || !this.videoScanner.nativeElement) {
+        return;
+      }
 
       this.codeReader = new BrowserMultiFormatReader();
 
@@ -179,7 +199,9 @@ export class InventarioPage implements OnInit, OnDestroy {
 
       try {
         await videoEl.play();
-      } catch (e) {}
+      } catch (e) {
+        console.error('Error al reproducir video del scanner:', e);
+      }
 
       this.codeReader.decodeFromStream(
         this.streamActual,
@@ -187,6 +209,7 @@ export class InventarioPage implements OnInit, OnDestroy {
         (result: Result | undefined, err: unknown) => {
           if (result) {
             const codigo = (result.getText() || '').trim();
+
             if (codigo) {
               this.zone.run(() => {
                 this.textoBusqueda = codigo;
@@ -195,6 +218,10 @@ export class InventarioPage implements OnInit, OnDestroy {
 
               this.cerrarScanner();
             }
+          }
+
+          if (err) {
+            // aqui se ignoran errores normales de lectura mientras sigue escaneando
           }
         }
       );

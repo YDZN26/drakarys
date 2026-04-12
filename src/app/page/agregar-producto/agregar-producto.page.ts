@@ -16,7 +16,6 @@ import type { Result } from '@zxing/library';
   styleUrls: ['./agregar-producto.page.scss'],
 })
 export class AgregarProductoPage implements OnInit {
-  counterValue: number = 0;
   selectedOption: string = '';
   codigo: string = '';
   nombre: string = '';
@@ -25,6 +24,17 @@ export class AgregarProductoPage implements OnInit {
   descripcion: string = '';
   imagenUrl: string = '';
   categorias: any[] = [];
+
+  stockExhibicion: number = 0;
+  stockAlmacenTienda: number = 0;
+  stockAlmacenCasa: number = 0;
+  stockDanado: number = 0;
+
+  trasladoSeleccionado: string = '';
+  cantidadTraslado: number = 0;
+
+  origenDanado: string = '';
+  cantidadDanado: number = 0;
 
   isEditMode: boolean = false;
   productoId: number | null = null;
@@ -74,16 +84,21 @@ export class AgregarProductoPage implements OnInit {
   async cargarProducto() {
     if (this.productoId !== null) {
       const producto = await this.supabaseService.obtenerProductoPorId(this.productoId);
+
       if (producto) {
         this.codigo = producto.codigo_barras ? producto.codigo_barras.toString() : '';
         this.nombre = producto.nombre || '';
         this.precioUnitario = Number(producto.precio || 0);
         this.costoUnitario = Number(producto.costo || 0);
         this.descripcion = producto.descripcion || '';
-        this.counterValue = Number(producto.stock || 0);
         this.selectedOption = producto.categoria_id ? producto.categoria_id.toString() : '';
         this.imagenUrl = producto.imagen || '';
         this.imagenNuevaSeleccionada = false;
+
+        this.stockExhibicion = Number(producto.stock_exhibicion || 0);
+        this.stockAlmacenTienda = Number(producto.stock_almacen_tienda || 0);
+        this.stockAlmacenCasa = Number(producto.stock_almacen_casa || 0);
+        this.stockDanado = Number(producto.stock_danado || 0);
       }
     }
   }
@@ -107,28 +122,47 @@ export class AgregarProductoPage implements OnInit {
       imagenFinal = urlSubida;
     }
 
+    const stockTotal =
+      Number(this.stockExhibicion || 0) +
+      Number(this.stockAlmacenTienda || 0) +
+      Number(this.stockAlmacenCasa || 0);
+
     const producto = {
       codigo_barras: Number(this.codigo),
       nombre: this.nombre,
       precio: Number(this.precioUnitario),
       costo: Number(this.costoUnitario),
       descripcion: this.descripcion,
-      stock: Number(this.counterValue),
+      stock: stockTotal,
       categoria_id: Number(this.selectedOption),
       imagen: imagenFinal
     };
 
-    console.log('Producto a enviar:', producto);
-
     try {
       const data = await this.supabaseService.agregarProducto(producto);
 
-      if (!data) {
+      if (!data || !data[0]) {
         console.error('Supabase no insertó el producto');
         return;
       }
 
-      console.log('Producto agregado:', data);
+      const productoGuardado = data[0];
+
+      const stockGuardado = await this.supabaseService.guardarStockInicialProducto(
+        productoGuardado.producto_id,
+        {
+          exhibicion: this.stockExhibicion,
+          almacen_tienda: this.stockAlmacenTienda,
+          almacen_casa: this.stockAlmacenCasa,
+          danado: this.stockDanado
+        }
+      );
+
+      if (!stockGuardado) {
+        console.error('No se pudo guardar el stock por ubicación');
+        return;
+      }
+
       this.mensajeService.enviarMensaje('agregado');
       this.navCtrl.back();
     } catch (error) {
@@ -150,6 +184,11 @@ export class AgregarProductoPage implements OnInit {
       imagenFinal = urlSubida;
     }
 
+    const stockTotal =
+      Number(this.stockExhibicion || 0) +
+      Number(this.stockAlmacenTienda || 0) +
+      Number(this.stockAlmacenCasa || 0);
+
     const producto = {
       producto_id: this.productoId,
       codigo_barras: parseInt(this.codigo, 10),
@@ -157,23 +196,145 @@ export class AgregarProductoPage implements OnInit {
       precio: Number(this.precioUnitario),
       costo: Number(this.costoUnitario),
       descripcion: this.descripcion,
-      stock: Number(this.counterValue),
+      stock: stockTotal,
       categoria_id: parseInt(this.selectedOption, 10),
       imagen: imagenFinal
     };
 
-    this.supabaseService.actualizarProducto(producto).then(data => {
-      console.log('Producto actualizado:', data);
+    try {
+      const data = await this.supabaseService.actualizarProducto(producto);
+
+      if (!data) {
+        console.error('No se pudo actualizar el producto');
+        return;
+      }
+
+      const stockActualizado = await this.supabaseService.guardarStockCompletoProducto(
+        Number(this.productoId),
+        {
+          exhibicion: this.stockExhibicion,
+          almacen_tienda: this.stockAlmacenTienda,
+          almacen_casa: this.stockAlmacenCasa,
+          danado: this.stockDanado
+        }
+      );
+
+      if (!stockActualizado) {
+        console.error('No se pudo actualizar el stock por ubicación');
+        return;
+      }
+
       this.mensajeService.enviarMensaje('actualizado');
       this.navCtrl.back();
-    }).catch(error => {
+    } catch (error) {
       console.error('Error al actualizar producto:', error);
-    });
+    }
+  }
+
+  async moverStock() {
+    if (!this.isEditMode || !this.productoId) {
+      console.error('El producto debe estar guardado antes de mover stock');
+      return;
+    }
+
+    if (!this.trasladoSeleccionado) {
+      console.error('Debes seleccionar un tipo de traslado');
+      return;
+    }
+
+    if (Number(this.cantidadTraslado) <= 0) {
+      console.error('La cantidad de traslado debe ser mayor a 0');
+      return;
+    }
+
+    const origen = this.getOrigenTraslado();
+    const destino = this.getDestinoTraslado();
+
+    if (!origen || !destino) {
+      console.error('No se pudo determinar el origen y destino del traslado');
+      return;
+    }
+
+    const movido = await this.supabaseService.moverStockEntreUbicaciones(
+      this.productoId,
+      origen,
+      destino,
+      Number(this.cantidadTraslado)
+    );
+
+    if (!movido) {
+      console.error('No se pudo mover el stock');
+      return;
+    }
+
+    this.trasladoSeleccionado = '';
+    this.cantidadTraslado = 0;
+
+    await this.cargarProducto();
+    this.mensajeService.enviarMensaje('actualizado');
+  }
+
+  async registrarDanado() {
+    if (!this.isEditMode || !this.productoId) {
+      console.error('El producto debe estar guardado antes de registrar dañados');
+      return;
+    }
+
+    if (!this.origenDanado) {
+      console.error('Debes seleccionar el origen del dañado');
+      return;
+    }
+
+    if (Number(this.cantidadDanado) <= 0) {
+      console.error('La cantidad de dañado debe ser mayor a 0');
+      return;
+    }
+
+    const origen = this.origenDanado as 'exhibicion' | 'almacen_tienda' | 'almacen_casa';
+
+    const registrado = await this.supabaseService.moverStockADanado(
+      this.productoId,
+      origen,
+      Number(this.cantidadDanado)
+    );
+
+    if (!registrado) {
+      console.error('No se pudo registrar el producto dañado');
+      return;
+    }
+
+    this.origenDanado = '';
+    this.cantidadDanado = 0;
+
+    await this.cargarProducto();
+    this.mensajeService.enviarMensaje('actualizado');
+  }
+
+  getOrigenTraslado(): 'almacen_casa' | 'almacen_tienda' | null {
+    if (this.trasladoSeleccionado === 'casa_a_tienda') {
+      return 'almacen_casa';
+    }
+
+    if (this.trasladoSeleccionado === 'tienda_a_exhibicion') {
+      return 'almacen_tienda';
+    }
+
+    return null;
+  }
+
+  getDestinoTraslado(): 'almacen_tienda' | 'exhibicion' | null {
+    if (this.trasladoSeleccionado === 'casa_a_tienda') {
+      return 'almacen_tienda';
+    }
+
+    if (this.trasladoSeleccionado === 'tienda_a_exhibicion') {
+      return 'exhibicion';
+    }
+
+    return null;
   }
 
   guardarProducto() {
-    console.log('CLICK guardarProducto', { isEditMode: this.isEditMode });
-
     if (this.isEditMode) {
       this.actualizarProducto();
     } else {
@@ -185,14 +346,40 @@ export class AgregarProductoPage implements OnInit {
     this.navCtrl.back();
   }
 
-  decreaseCounter() {
-    if (this.counterValue > 0) {
-      this.counterValue--;
+  disminuirStock(tipo: 'exhibicion' | 'almacen_tienda' | 'almacen_casa' | 'danado') {
+    if (tipo === 'exhibicion' && this.stockExhibicion > 0) {
+      this.stockExhibicion--;
+    }
+
+    if (tipo === 'almacen_tienda' && this.stockAlmacenTienda > 0) {
+      this.stockAlmacenTienda--;
+    }
+
+    if (tipo === 'almacen_casa' && this.stockAlmacenCasa > 0) {
+      this.stockAlmacenCasa--;
+    }
+
+    if (tipo === 'danado' && this.stockDanado > 0) {
+      this.stockDanado--;
     }
   }
 
-  increaseCounter() {
-    this.counterValue++;
+  aumentarStock(tipo: 'exhibicion' | 'almacen_tienda' | 'almacen_casa' | 'danado') {
+    if (tipo === 'exhibicion') {
+      this.stockExhibicion++;
+    }
+
+    if (tipo === 'almacen_tienda') {
+      this.stockAlmacenTienda++;
+    }
+
+    if (tipo === 'almacen_casa') {
+      this.stockAlmacenCasa++;
+    }
+
+    if (tipo === 'danado') {
+      this.stockDanado++;
+    }
   }
 
   onOptionChange(event: any) {
@@ -305,7 +492,6 @@ export class AgregarProductoPage implements OnInit {
           }
         }
       );
-
     } catch (error) {
       console.error('Error al abrir cámara o escanear:', error);
       this.cerrarScannerCodigo();

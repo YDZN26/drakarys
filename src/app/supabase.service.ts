@@ -70,19 +70,44 @@ export class SupabaseService {
       console.error('Error al obtener producto:', error);
       return null;
     }
-    return data;
+
+    const stock = await this.obtenerStockPorProducto(productoId);
+
+    return {
+      ...data,
+      stock_exhibicion: stock.find(s => s.ubicacion === 'exhibicion')?.cantidad || 0,
+      stock_almacen_tienda: stock.find(s => s.ubicacion === 'almacen_tienda')?.cantidad || 0,
+      stock_almacen_casa: stock.find(s => s.ubicacion === 'almacen_casa')?.cantidad || 0,
+      stock_danado: stock.find(s => s.ubicacion === 'danado')?.cantidad || 0,
+      stock_total:
+        (stock.find(s => s.ubicacion === 'exhibicion')?.cantidad || 0) +
+        (stock.find(s => s.ubicacion === 'almacen_tienda')?.cantidad || 0) +
+        (stock.find(s => s.ubicacion === 'almacen_casa')?.cantidad || 0)
+    };
   }
 
   async actualizarProducto(producto: any) {
     const { data, error } = await this.supabase
       .from('producto')
-      .update(producto)
-      .eq('producto_id', producto.producto_id);
+      .update({
+        codigo_barras: producto.codigo_barras,
+        nombre: producto.nombre,
+        precio: producto.precio,
+        costo: producto.costo,
+        descripcion: producto.descripcion,
+        stock: producto.stock,
+        categoria_id: producto.categoria_id,
+        imagen: producto.imagen
+      })
+      .eq('producto_id', producto.producto_id)
+      .select('*')
+      .single();
 
     if (error) {
       console.error('Error al actualizar producto:', error);
       return null;
     }
+
     return data;
   }
 
@@ -136,6 +161,407 @@ export class SupabaseService {
     return true;
   }
 
+  async obtenerStockPorProducto(productoId: number) {
+    const { data, error } = await this.supabase
+      .from('producto_stock')
+      .select('*')
+      .eq('producto_id', productoId);
+
+    if (error) {
+      console.error('Error al obtener stock por producto:', error);
+      return [];
+    }
+
+    return data || [];
+  }
+
+  async actualizarStockPorUbicacion(
+    productoId: number,
+    ubicacion: 'exhibicion' | 'almacen_tienda' | 'almacen_casa' | 'danado',
+    cantidad: number
+  ) {
+    const { data, error } = await this.supabase
+      .from('producto_stock')
+      .update({ cantidad })
+      .eq('producto_id', productoId)
+      .eq('ubicacion', ubicacion)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error(`Error al actualizar stock en ${ubicacion}:`, error);
+      return null;
+    }
+
+    return data;
+  }
+
+  async guardarStockInicialProducto(productoId: number, stock: {
+    exhibicion: number;
+    almacen_tienda: number;
+    almacen_casa: number;
+    danado: number;
+  }) {
+    const dataInsert = [
+      {
+        producto_id: productoId,
+        ubicacion: 'exhibicion',
+        cantidad: Number(stock.exhibicion || 0)
+      },
+      {
+        producto_id: productoId,
+        ubicacion: 'almacen_tienda',
+        cantidad: Number(stock.almacen_tienda || 0)
+      },
+      {
+        producto_id: productoId,
+        ubicacion: 'almacen_casa',
+        cantidad: Number(stock.almacen_casa || 0)
+      },
+      {
+        producto_id: productoId,
+        ubicacion: 'danado',
+        cantidad: Number(stock.danado || 0)
+      }
+    ];
+
+    const { data, error } = await this.supabase
+      .from('producto_stock')
+      .insert(dataInsert)
+      .select('*');
+
+    if (error) {
+      console.error('Error al guardar stock inicial del producto:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  async guardarStockCompletoProducto(productoId: number, stock: {
+    exhibicion: number;
+    almacen_tienda: number;
+    almacen_casa: number;
+    danado: number;
+  }) {
+    const ubicaciones: Array<{
+      ubicacion: 'exhibicion' | 'almacen_tienda' | 'almacen_casa' | 'danado';
+      cantidad: number;
+    }> = [
+      { ubicacion: 'exhibicion', cantidad: Number(stock.exhibicion || 0) },
+      { ubicacion: 'almacen_tienda', cantidad: Number(stock.almacen_tienda || 0) },
+      { ubicacion: 'almacen_casa', cantidad: Number(stock.almacen_casa || 0) },
+      { ubicacion: 'danado', cantidad: Number(stock.danado || 0) }
+    ];
+
+    for (const item of ubicaciones) {
+      const { data: existe, error: errorConsulta } = await this.supabase
+        .from('producto_stock')
+        .select('*')
+        .eq('producto_id', productoId)
+        .eq('ubicacion', item.ubicacion)
+        .maybeSingle();
+
+      if (errorConsulta) {
+        console.error(`Error al consultar stock de ${item.ubicacion}:`, errorConsulta);
+        return null;
+      }
+
+      if (existe) {
+        const { error: errorUpdate } = await this.supabase
+          .from('producto_stock')
+          .update({ cantidad: item.cantidad })
+          .eq('producto_id', productoId)
+          .eq('ubicacion', item.ubicacion);
+
+        if (errorUpdate) {
+          console.error(`Error al actualizar stock de ${item.ubicacion}:`, errorUpdate);
+          return null;
+        }
+      } else {
+        const { error: errorInsert } = await this.supabase
+          .from('producto_stock')
+          .insert([{
+            producto_id: productoId,
+            ubicacion: item.ubicacion,
+            cantidad: item.cantidad
+          }]);
+
+        if (errorInsert) {
+          console.error(`Error al insertar stock de ${item.ubicacion}:`, errorInsert);
+          return null;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  async registrarMovimientoInventario(payload: {
+    producto_id: number;
+    tipo_movimiento:
+      | 'ingreso'
+      | 'venta'
+      | 'traslado'
+      | 'danado'
+      | 'salida_proveedor'
+      | 'ingreso_cambio_proveedor'
+      | 'ajuste_positivo'
+      | 'ajuste_negativo';
+    ubicacion_origen?: 'exhibicion' | 'almacen_tienda' | 'almacen_casa' | 'danado' | 'proveedor' | null;
+    ubicacion_destino?: 'exhibicion' | 'almacen_tienda' | 'almacen_casa' | 'danado' | 'proveedor' | null;
+    cantidad: number;
+    motivo?: string | null;
+    usuario_id?: number | null;
+  }) {
+    const dataInsert = {
+      producto_id: payload.producto_id,
+      tipo_movimiento: payload.tipo_movimiento,
+      ubicacion_origen: payload.ubicacion_origen ?? null,
+      ubicacion_destino: payload.ubicacion_destino ?? null,
+      cantidad: payload.cantidad,
+      motivo: payload.motivo ?? null,
+      usuario_id: payload.usuario_id ?? null,
+      fecha: new Date().toISOString()
+    };
+
+    const { data, error } = await this.supabase
+      .from('movimiento_inventario')
+      .insert([dataInsert])
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error al registrar movimiento de inventario:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  async descontarStockExhibicion(productos: any[]) {
+    for (const producto of productos) {
+      const { data: stockData, error } = await this.supabase
+        .from('producto_stock')
+        .select('*')
+        .eq('producto_id', producto.producto_id)
+        .eq('ubicacion', 'exhibicion')
+        .single();
+
+      if (error || !stockData) {
+        console.error('No se encontró stock en exhibición para el producto:', producto.nombre);
+        return null;
+      }
+
+      const stockActual = Number(stockData.cantidad || 0);
+      const cantidadVendida = Number(producto.cantidadSeleccionada || 0);
+      const nuevoStock = stockActual - cantidadVendida;
+
+      if (cantidadVendida <= 0) {
+        console.error('Cantidad vendida inválida para el producto:', producto.nombre);
+        return null;
+      }
+
+      if (nuevoStock < 0) {
+        console.error('Stock insuficiente en exhibición para el producto:', producto.nombre);
+        return null;
+      }
+
+      const actualizado = await this.actualizarStockPorUbicacion(
+        producto.producto_id,
+        'exhibicion',
+        nuevoStock
+      );
+
+      if (!actualizado) {
+        console.error('No se pudo actualizar el stock en exhibición del producto:', producto.nombre);
+        return null;
+      }
+
+      await this.registrarMovimientoInventario({
+        producto_id: producto.producto_id,
+        tipo_movimiento: 'venta',
+        ubicacion_origen: 'exhibicion',
+        ubicacion_destino: null,
+        cantidad: cantidadVendida,
+        motivo: 'Venta de producto',
+        usuario_id: this.obtenerUsuarioLogueadoId()
+      });
+    }
+
+    return true;
+  }
+
+  async moverStockEntreUbicaciones(
+    productoId: number,
+    origen: 'almacen_casa' | 'almacen_tienda',
+    destino: 'almacen_tienda' | 'exhibicion',
+    cantidad: number
+  ) {
+    if (!productoId || cantidad <= 0) {
+      console.error('Datos inválidos para mover stock');
+      return null;
+    }
+
+    const movimientoValido =
+      (origen === 'almacen_casa' && destino === 'almacen_tienda') ||
+      (origen === 'almacen_tienda' && destino === 'exhibicion');
+
+    if (!movimientoValido) {
+      console.error('Movimiento no permitido');
+      return null;
+    }
+
+    const { data: stockOrigen, error: errorOrigen } = await this.supabase
+      .from('producto_stock')
+      .select('*')
+      .eq('producto_id', productoId)
+      .eq('ubicacion', origen)
+      .single();
+
+    if (errorOrigen || !stockOrigen) {
+      console.error('No se encontró el stock de origen:', errorOrigen);
+      return null;
+    }
+
+    const { data: stockDestino, error: errorDestino } = await this.supabase
+      .from('producto_stock')
+      .select('*')
+      .eq('producto_id', productoId)
+      .eq('ubicacion', destino)
+      .single();
+
+    if (errorDestino || !stockDestino) {
+      console.error('No se encontró el stock de destino:', errorDestino);
+      return null;
+    }
+
+    const cantidadOrigenActual = Number(stockOrigen.cantidad || 0);
+    const cantidadDestinoActual = Number(stockDestino.cantidad || 0);
+
+    if (cantidadOrigenActual < cantidad) {
+      console.error('No hay suficiente stock en la ubicación de origen');
+      return null;
+    }
+
+    const nuevoStockOrigen = cantidadOrigenActual - cantidad;
+    const nuevoStockDestino = cantidadDestinoActual + cantidad;
+
+    const actualizadoOrigen = await this.actualizarStockPorUbicacion(
+      productoId,
+      origen,
+      nuevoStockOrigen
+    );
+
+    if (!actualizadoOrigen) {
+      console.error('No se pudo actualizar el stock de origen');
+      return null;
+    }
+
+    const actualizadoDestino = await this.actualizarStockPorUbicacion(
+      productoId,
+      destino,
+      nuevoStockDestino
+    );
+
+    if (!actualizadoDestino) {
+      console.error('No se pudo actualizar el stock de destino');
+      return null;
+    }
+
+    await this.registrarMovimientoInventario({
+      producto_id: productoId,
+      tipo_movimiento: 'traslado',
+      ubicacion_origen: origen,
+      ubicacion_destino: destino,
+      cantidad: cantidad,
+      motivo: 'Movimiento interno de stock',
+      usuario_id: this.obtenerUsuarioLogueadoId()
+    });
+
+    return true;
+  }
+
+  async moverStockADanado(
+    productoId: number,
+    origen: 'exhibicion' | 'almacen_tienda' | 'almacen_casa',
+    cantidad: number
+  ) {
+    if (!productoId || cantidad <= 0) {
+      console.error('Datos inválidos para registrar dañado');
+      return null;
+    }
+
+    const { data: stockOrigen, error: errorOrigen } = await this.supabase
+      .from('producto_stock')
+      .select('*')
+      .eq('producto_id', productoId)
+      .eq('ubicacion', origen)
+      .single();
+
+    if (errorOrigen || !stockOrigen) {
+      console.error('No se encontró el stock de origen:', errorOrigen);
+      return null;
+    }
+
+    const { data: stockDanado, error: errorDanado } = await this.supabase
+      .from('producto_stock')
+      .select('*')
+      .eq('producto_id', productoId)
+      .eq('ubicacion', 'danado')
+      .single();
+
+    if (errorDanado || !stockDanado) {
+      console.error('No se encontró el stock dañado:', errorDanado);
+      return null;
+    }
+
+    const cantidadOrigenActual = Number(stockOrigen.cantidad || 0);
+    const cantidadDanadoActual = Number(stockDanado.cantidad || 0);
+
+    if (cantidadOrigenActual < cantidad) {
+      console.error('No hay suficiente stock en la ubicación de origen');
+      return null;
+    }
+
+    const nuevoStockOrigen = cantidadOrigenActual - cantidad;
+    const nuevoStockDanado = cantidadDanadoActual + cantidad;
+
+    const actualizadoOrigen = await this.actualizarStockPorUbicacion(
+      productoId,
+      origen,
+      nuevoStockOrigen
+    );
+
+    if (!actualizadoOrigen) {
+      console.error('No se pudo actualizar el stock de origen');
+      return null;
+    }
+
+    const actualizadoDanado = await this.actualizarStockPorUbicacion(
+      productoId,
+      'danado',
+      nuevoStockDanado
+    );
+
+    if (!actualizadoDanado) {
+      console.error('No se pudo actualizar el stock dañado');
+      return null;
+    }
+
+    await this.registrarMovimientoInventario({
+      producto_id: productoId,
+      tipo_movimiento: 'danado',
+      ubicacion_origen: origen,
+      ubicacion_destino: 'danado',
+      cantidad: cantidad,
+      motivo: 'Producto marcado como dañado',
+      usuario_id: this.obtenerUsuarioLogueadoId()
+    });
+
+    return true;
+  }
+
   async obtenerCategorias() {
     const { data, error } = await this.supabase.from('categoria').select('*');
     if (error) {
@@ -146,12 +572,30 @@ export class SupabaseService {
   }
 
   async obtenerProductos() {
-    const { data, error } = await this.supabase.from('producto').select('*');
+    const { data: productos, error } = await this.supabase
+      .from('producto')
+      .select('*');
+
     if (error) {
       console.error('Error al obtener productos:', error);
       return [];
     }
-    return data;
+
+    for (const producto of productos) {
+      const stock = await this.obtenerStockPorProducto(producto.producto_id);
+
+      producto.stock_exhibicion = stock.find(s => s.ubicacion === 'exhibicion')?.cantidad || 0;
+      producto.stock_almacen_tienda = stock.find(s => s.ubicacion === 'almacen_tienda')?.cantidad || 0;
+      producto.stock_almacen_casa = stock.find(s => s.ubicacion === 'almacen_casa')?.cantidad || 0;
+      producto.stock_danado = stock.find(s => s.ubicacion === 'danado')?.cantidad || 0;
+
+      producto.stock_total =
+        producto.stock_exhibicion +
+        producto.stock_almacen_tienda +
+        producto.stock_almacen_casa;
+    }
+
+    return productos;
   }
 
   async obtenerLogin(username: string, password: string) {
@@ -378,7 +822,7 @@ export class SupabaseService {
 
     if (!ingresos) return null;
 
-    const stockActualizado = await this.descontarStockProductos(productos);
+    const stockActualizado = await this.descontarStockExhibicion(productos);
     if (!stockActualizado) return null;
 
     return { venta, detalles, ingresos };

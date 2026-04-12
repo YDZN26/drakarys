@@ -81,8 +81,8 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
       this.productos = (data || []).map((producto: any) => ({
         ...producto,
         cantidadSeleccionada: 0,
-        disponibles: typeof producto.stock === 'number' ? producto.stock : 0,
-        precio: typeof producto.precio === 'number' ? producto.precio : 0,
+        disponibles: Number(producto.stock_exhibicion || 0),
+        precio: Number(producto.precio || 0),
       }));
 
       this.actualizarTotales();

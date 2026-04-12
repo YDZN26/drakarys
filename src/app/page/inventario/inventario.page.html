@@ -75,7 +75,11 @@
 
         <ion-label>
           <h2>{{ producto.nombre }}</h2>
-          <p>{{ producto.stock }} Disponibles</p>
+          <p>Exhibición: {{ producto?.stock_exhibicion || 0 }}</p>
+          <p>Almacén tienda: {{ producto?.stock_almacen_tienda || 0 }}</p>
+          <p>Almacén casa: {{ producto?.stock_almacen_casa || 0 }}</p>
+          <p>Dañados: {{ producto?.stock_danado || 0 }}</p>
+          <p>Total vendible: {{ obtenerTotalVendible(producto) }}</p>
           <p>Precio unitario Bs {{ producto.precio }}</p>
         </ion-label>
 

@@ -36,21 +36,128 @@
             </ion-item>
           </div>
         </div>
-
-        <div class="stock">
-          <div class="stock-title-container">
-            <ion-label>Stock</ion-label>
-          </div>
-
-          <div class="counter-container">
-            <ion-button class="counter-button" (click)="decreaseCounter()">-</ion-button>
-            <ion-label class="counter-label">{{ counterValue }}</ion-label>
-            <ion-button class="counter-button" (click)="increaseCounter()">+</ion-button>
-          </div>
-        </div>
       </div>
 
       <div class="datos">
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Stock en Exhibición</ion-label>
+          </div>
+          <div class="counter-container">
+            <ion-button class="counter-button" (click)="disminuirStock('exhibicion')">-</ion-button>
+            <ion-label class="counter-label">{{ stockExhibicion }}</ion-label>
+            <ion-button class="counter-button" (click)="aumentarStock('exhibicion')">+</ion-button>
+          </div>
+        </div>
+
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Stock en Almacén Tienda</ion-label>
+          </div>
+          <div class="counter-container">
+            <ion-button class="counter-button" (click)="disminuirStock('almacen_tienda')">-</ion-button>
+            <ion-label class="counter-label">{{ stockAlmacenTienda }}</ion-label>
+            <ion-button class="counter-button" (click)="aumentarStock('almacen_tienda')">+</ion-button>
+          </div>
+        </div>
+
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Stock en Almacén Casa</ion-label>
+          </div>
+          <div class="counter-container">
+            <ion-button class="counter-button" (click)="disminuirStock('almacen_casa')">-</ion-button>
+            <ion-label class="counter-label">{{ stockAlmacenCasa }}</ion-label>
+            <ion-button class="counter-button" (click)="aumentarStock('almacen_casa')">+</ion-button>
+          </div>
+        </div>
+
+        <div class="campo-grupo">
+          <div class="campo-title-container">
+            <ion-label>Stock Dañado</ion-label>
+          </div>
+          <div class="counter-container">
+            <ion-button class="counter-button" (click)="disminuirStock('danado')">-</ion-button>
+            <ion-label class="counter-label">{{ stockDanado }}</ion-label>
+            <ion-button class="counter-button" (click)="aumentarStock('danado')">+</ion-button>
+          </div>
+        </div>
+
+        <div class="campo-grupo" *ngIf="isEditMode">
+          <div class="campo-title-container">
+            <ion-label>Mover Stock</ion-label>
+          </div>
+
+          <div class="campo-text-container">
+            <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Tipo de traslado</ion-label>
+              <ion-select [(ngModel)]="trasladoSeleccionado" interface="action-sheet">
+                <ion-select-option value="casa_a_tienda">
+                  Almacén casa → Almacén tienda
+                </ion-select-option>
+                <ion-select-option value="tienda_a_exhibicion">
+                  Almacén tienda → Exhibición
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
+          </div>
+
+          <div class="campo-text-container">
+            <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Cantidad</ion-label>
+              <ion-input
+                type="number"
+                min="1"
+                [(ngModel)]="cantidadTraslado"
+                placeholder="Ingrese cantidad">
+              </ion-input>
+            </ion-item>
+          </div>
+
+          <ion-button expand="block" class="btn-guardar" (click)="moverStock()">
+            Mover stock
+          </ion-button>
+        </div>
+
+        <div class="campo-grupo" *ngIf="isEditMode">
+          <div class="campo-title-container">
+            <ion-label>Registrar Dañado</ion-label>
+          </div>
+
+          <div class="campo-text-container">
+            <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Origen</ion-label>
+              <ion-select [(ngModel)]="origenDanado" interface="action-sheet">
+                <ion-select-option value="exhibicion">
+                  Exhibición
+                </ion-select-option>
+                <ion-select-option value="almacen_tienda">
+                  Almacén tienda
+                </ion-select-option>
+                <ion-select-option value="almacen_casa">
+                  Almacén casa
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
+          </div>
+
+          <div class="campo-text-container">
+            <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Cantidad</ion-label>
+              <ion-input
+                type="number"
+                min="1"
+                [(ngModel)]="cantidadDanado"
+                placeholder="Ingrese cantidad">
+              </ion-input>
+            </ion-item>
+          </div>
+
+          <ion-button expand="block" class="btn-guardar" (click)="registrarDanado()">
+            Registrar dañado
+          </ion-button>
+        </div>
+
         <div class="campo-grupo">
           <div class="campo-title-container">
             <ion-label>Nombre del Producto</ion-label>
