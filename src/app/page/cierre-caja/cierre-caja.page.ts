@@ -43,6 +43,10 @@ export class CierreCajaPage implements OnInit {
     await this.cargarDatosDelDia();
   }
 
+  cancelar() {
+    this.navCtrl.navigateBack('/tab-inicial/balance');
+  }
+
   private obtenerInicioDelDia(): Date {
     const inicioDelDia = new Date();
     inicioDelDia.setHours(0, 0, 0, 0);
@@ -74,7 +78,7 @@ export class CierreCajaPage implements OnInit {
           {
             text: 'ACEPTAR',
             handler: () => {
-              this.navCtrl.navigateBack('tab-inicial/balance');
+              this.navCtrl.navigateBack('/tab-inicial/balance');
             }
           }
         ]
@@ -93,8 +97,9 @@ export class CierreCajaPage implements OnInit {
 
     const { data: ingresos } = await this.supabaseService.getSupabase()
       .from('ingreso')
-      .select('total, tipo_pago_id, tipo_ingreso')
+      .select('total, tipo_pago_id, tipo_ingreso, estado')
       .in('tipo_ingreso', ['venta', 'venta_libre', 'ingresos_varios', 'pago_deuda', 'ajuste_positivo'])
+      .eq('estado', true)
       .gte('fecha', inicioDelDia.toISOString())
       .lte('fecha', finDelDia.toISOString());
 
@@ -106,13 +111,9 @@ export class CierreCajaPage implements OnInit {
     ingresos?.forEach(i => {
       const total = Number(i.total) || 0;
 
-      if (i.tipo_pago_id === 2) {
-        efectivoIngreso += total;
-      } else if (i.tipo_pago_id === 3) {
-        transferenciaIngreso += total;
-      } else if (i.tipo_pago_id === 4) {
-        tarjetaIngreso += total;
-      }
+      if (i.tipo_pago_id === 2) efectivoIngreso += total;
+      else if (i.tipo_pago_id === 3) transferenciaIngreso += total;
+      else if (i.tipo_pago_id === 4) tarjetaIngreso += total;
 
       totalIngreso += total;
     });
@@ -143,13 +144,9 @@ export class CierreCajaPage implements OnInit {
     gastos?.forEach(g => {
       const monto = Number(g.monto) || 0;
 
-      if (g.tipo_pago_id === 2) {
-        efectivoEgreso += monto;
-      } else if (g.tipo_pago_id === 3) {
-        transferenciaEgreso += monto;
-      } else if (g.tipo_pago_id === 4) {
-        tarjetaEgreso += monto;
-      }
+      if (g.tipo_pago_id === 2) efectivoEgreso += monto;
+      else if (g.tipo_pago_id === 3) transferenciaEgreso += monto;
+      else if (g.tipo_pago_id === 4) tarjetaEgreso += monto;
 
       totalEgreso += monto;
     });
@@ -157,13 +154,9 @@ export class CierreCajaPage implements OnInit {
     otrosEgresos?.forEach(e => {
       const monto = Number(e.total) || 0;
 
-      if (e.tipo_pago_id === 2) {
-        efectivoEgreso += monto;
-      } else if (e.tipo_pago_id === 3) {
-        transferenciaEgreso += monto;
-      } else if (e.tipo_pago_id === 4) {
-        tarjetaEgreso += monto;
-      }
+      if (e.tipo_pago_id === 2) efectivoEgreso += monto;
+      else if (e.tipo_pago_id === 3) transferenciaEgreso += monto;
+      else if (e.tipo_pago_id === 4) tarjetaEgreso += monto;
 
       totalEgreso += monto;
     });
@@ -179,78 +172,34 @@ export class CierreCajaPage implements OnInit {
   }
 
   calcularDiferenciaEfectivo() {
-    const efectivoEsperado = this.obtenerEfectivoEsperado();
-    const efectivoIngresado = Number(this.efectivoFinal) || 0;
-    const diferencia = efectivoIngresado - efectivoEsperado;
+    const esperado = this.obtenerEfectivoEsperado();
+    const ingresado = Number(this.efectivoFinal) || 0;
+    const diferencia = ingresado - esperado;
 
-    if (efectivoIngresado <= 0) {
+    if (ingresado <= 0) {
       this.mensajeCaja = '';
-      this.colorMensaje = 'success';
       return;
     }
 
     if (diferencia === 0) {
-      this.mensajeCaja = `El efectivo coincide correctamente. Esperado: ${efectivoEsperado} Bs.`;
+      this.mensajeCaja = `El efectivo coincide correctamente.`;
       this.colorMensaje = 'success';
     } else if (diferencia > 0) {
-      this.mensajeCaja = `Sobran ${diferencia} Bs. (Saldo inicial ${this.saldoInicial} + ingresos en efectivo ${this.ingresosEfectivo} - egresos en efectivo ${this.egresosEfectivo} = esperado ${efectivoEsperado} Bs.)`;
+      this.mensajeCaja = `Sobran ${diferencia} Bs.`;
       this.colorMensaje = '#082FF2';
     } else {
-      this.mensajeCaja = `Faltan ${Math.abs(diferencia)} Bs. (Saldo inicial ${this.saldoInicial} + ingresos en efectivo ${this.ingresosEfectivo} - egresos en efectivo ${this.egresosEfectivo} = esperado ${efectivoEsperado} Bs.)`;
+      this.mensajeCaja = `Faltan ${Math.abs(diferencia)} Bs.`;
       this.colorMensaje = '#FF0000';
     }
   }
 
   async confirmarCierre() {
-    if (this.cierreYaRegistrado) {
-      const alerta = await this.alertCtrl.create({
-        header: 'Cierre ya registrado',
-        message: 'Ya existe un cierre de caja para el día de hoy.',
-        buttons: ['ACEPTAR']
-      });
-      await alerta.present();
-      return;
-    }
+    if (this.cierreYaRegistrado) return;
 
-    const inicioDelDia = this.obtenerInicioDelDia().toISOString();
-    const finDelDia = this.obtenerFinDelDia().toISOString();
-    const cierreDelDia = await this.supabaseService.obtenerCierreDelDia(inicioDelDia, finDelDia);
+    const efectivo = Number(this.efectivoFinal) || 0;
+    if (efectivo <= 0) return;
 
-    if (cierreDelDia) {
-      this.cierreYaRegistrado = true;
-      const alerta = await this.alertCtrl.create({
-        header: 'Cierre ya registrado',
-        message: 'Ya existe un cierre de caja para el día de hoy. No se puede registrar otro cierre.',
-        buttons: ['ACEPTAR']
-      });
-      await alerta.present();
-      return;
-    }
-
-    const efectivoIngresado = Number(this.efectivoFinal) || 0;
-
-    if (efectivoIngresado <= 0) {
-      const alerta = await this.alertCtrl.create({
-        header: 'Dato requerido',
-        message: 'Debes ingresar el efectivo final de tu caja.',
-        buttons: ['ACEPTAR']
-      });
-      await alerta.present();
-      return;
-    }
-
-    if (!this.usuarioId || this.usuarioId <= 0) {
-      const alerta = await this.alertCtrl.create({
-        header: 'Usuario no encontrado',
-        message: 'No se encontró el usuario logueado. Vuelve a iniciar sesión.',
-        buttons: ['ACEPTAR']
-      });
-      await alerta.present();
-      return;
-    }
-
-    const efectivoEsperado = this.obtenerEfectivoEsperado();
-    const diferencia = efectivoIngresado - efectivoEsperado;
+    const diferencia = efectivo - this.obtenerEfectivoEsperado();
 
     if (diferencia !== 0) {
       await this.mostrarModalAdvertencia(diferencia);
@@ -262,14 +211,12 @@ export class CierreCajaPage implements OnInit {
   async mostrarModalAdvertencia(diferencia: number) {
     const alerta = await this.alertCtrl.create({
       header: 'Montos no coinciden',
-      message: `¿Deseas continuar?\n\nEl sistema detectó una diferencia de ${diferencia} Bs.`,
+      message: `Diferencia: ${diferencia} Bs.`,
       buttons: [
-        { text: 'CANCELAR', role: 'cancel' },
+        { text: 'Cancelar', role: 'cancel' },
         {
-          text: 'SÍ, CONTINUAR',
-          handler: () => {
-            this.mostrarModalAjuste(diferencia);
-          }
+          text: 'Continuar',
+          handler: () => this.mostrarModalAjuste(diferencia)
         }
       ]
     });
@@ -278,20 +225,14 @@ export class CierreCajaPage implements OnInit {
   }
 
   async mostrarModalAjuste(diferencia: number) {
-    const mensaje = diferencia > 0
-      ? `Se añadirá ${diferencia} Bs. como ingreso por ajuste positivo.`
-      : `Se registrará ${Math.abs(diferencia)} Bs. como egreso por ajuste negativo.`;
-
     const alerta = await this.alertCtrl.create({
       header: 'Ajuste de caja',
-      message: mensaje,
+      message: diferencia > 0 ? 'Se añadirá como ingreso.' : 'Se registrará como egreso.',
       buttons: [
-        { text: 'CANCELAR', role: 'cancel' },
+        { text: 'Cancelar', role: 'cancel' },
         {
-          text: 'ACEPTAR',
-          handler: () => {
-            this.procesarRetiroYResumen(diferencia);
-          }
+          text: 'Aceptar',
+          handler: () => this.procesarRetiroYResumen(diferencia)
         }
       ]
     });
@@ -300,171 +241,25 @@ export class CierreCajaPage implements OnInit {
   }
 
   async procesarRetiroYResumen(diferencia: number) {
-    const alertaRetiro = await this.alertCtrl.create({
-      header: '¿Deseas retirar efectivo?',
-      inputs: [
-        {
-          name: 'retiro',
-          type: 'number',
-          placeholder: 'Monto a retirar (opcional)',
-        }
-      ],
-      buttons: [
-        { text: 'CANCELAR', role: 'cancel' },
-        {
-          text: 'ACEPTAR',
-          handler: async (data) => {
-            const montoRetiro = parseFloat(data.retiro) || 0;
-            const efectivoIngresado = Number(this.efectivoFinal) || 0;
-            const saldoFinalReal = efectivoIngresado - montoRetiro;
+    const retiro = 0;
+    const efectivo = Number(this.efectivoFinal) || 0;
+    const saldoFinal = efectivo - retiro;
 
-            if (montoRetiro < 0) {
-              const alertaError = await this.alertCtrl.create({
-                header: 'Monto inválido',
-                message: 'El retiro no puede ser menor a 0.',
-                buttons: ['ACEPTAR']
-              });
-              await alertaError.present();
-              return false;
-            }
+    const cierre = {
+      saldo_inicial: this.saldoInicial,
+      ingresos_total: this.totalIngresos,
+      egresos_total: this.totalEgresos,
+      saldo_final: saldoFinal,
+      efectivo_caja: efectivo,
+      diferencia: diferencia,
+      usuario_id: this.usuarioId
+    };
 
-            if (saldoFinalReal < 0) {
-              const alertaError = await this.alertCtrl.create({
-                header: 'Monto inválido',
-                message: 'El retiro no puede ser mayor al efectivo ingresado en caja.',
-                buttons: ['ACEPTAR']
-              });
-              await alertaError.present();
-              return false;
-            }
+    const ok = await this.supabaseService.registrarCierre(cierre);
 
-            let ajustePositivo = 0;
-            let ajusteNegativo = 0;
-
-            if (diferencia > 0) {
-              const ajusteOk = await this.supabaseService.registrarAjustePositivo({
-                total: diferencia,
-                tipo_pago_id: 2,
-                usuario_id: this.usuarioId,
-                descripcion: 'Ajuste positivo por cierre de caja'
-              });
-
-              if (!ajusteOk) {
-                const alertaError = await this.alertCtrl.create({
-                  header: 'Error',
-                  message: 'No se pudo registrar el ajuste positivo.',
-                  buttons: ['ACEPTAR']
-                });
-                await alertaError.present();
-                return false;
-              }
-
-              ajustePositivo = diferencia;
-            }
-
-            if (diferencia < 0) {
-              const ajusteOk = await this.supabaseService.registrarAjusteNegativo({
-                total: Math.abs(diferencia),
-                tipo_pago_id: 2,
-                usuario_id: this.usuarioId,
-                descripcion: 'Ajuste negativo por cierre de caja'
-              });
-
-              if (!ajusteOk) {
-                const alertaError = await this.alertCtrl.create({
-                  header: 'Error',
-                  message: 'No se pudo registrar el ajuste negativo.',
-                  buttons: ['ACEPTAR']
-                });
-                await alertaError.present();
-                return false;
-              }
-
-              ajusteNegativo = Math.abs(diferencia);
-            }
-
-            if (montoRetiro > 0) {
-              const retiroOk = await this.supabaseService.registrarRetiroCaja({
-                total: montoRetiro,
-                tipo_pago_id: 2,
-                usuario_id: this.usuarioId,
-                descripcion: 'Retiro de efectivo realizado en cierre de caja'
-              });
-
-              if (!retiroOk) {
-                const alertaError = await this.alertCtrl.create({
-                  header: 'Error',
-                  message: 'No se pudo registrar el retiro de caja.',
-                  buttons: ['ACEPTAR']
-                });
-                await alertaError.present();
-                return false;
-              }
-            }
-
-            const totalIngresosFinal = this.totalIngresos + ajustePositivo;
-            const totalEgresosFinal = this.totalEgresos + ajusteNegativo + montoRetiro;
-            const ingresosEfectivoFinal = this.ingresosEfectivo + ajustePositivo;
-            const egresosEfectivoFinal = this.egresosEfectivo + ajusteNegativo + montoRetiro;
-
-            const cierre = {
-              saldo_inicial: this.saldoInicial,
-              ingresos_total: totalIngresosFinal,
-              ingresos_efectivo: ingresosEfectivoFinal,
-              ingresos_transferencia: this.ingresosTransferencia,
-              ingresos_tarjeta: this.ingresosTarjeta,
-              egresos_total: totalEgresosFinal,
-              egresos_efectivo: egresosEfectivoFinal,
-              egresos_transferencia: this.egresosTransferencia,
-              egresos_tarjeta: this.egresosTarjeta,
-              saldo_final: saldoFinalReal,
-              efectivo_caja: efectivoIngresado,
-              diferencia: diferencia,
-              total_ingresos: totalIngresosFinal,
-              total_egresos: totalEgresosFinal,
-              usuario_id: this.usuarioId
-            };
-
-            const resultado = await this.supabaseService.registrarCierre(cierre);
-
-            if (resultado) {
-              this.cierreYaRegistrado = true;
-
-              const alertaResumen = await this.alertCtrl.create({
-                header: 'Resumen del Cierre',
-                message:
-`Ingresos: ${totalIngresosFinal} Bs.
-Egresos: ${totalEgresosFinal} Bs.
-Diferencia: ${diferencia > 0 ? '+' : ''}${diferencia} Bs.
-Retiro: ${montoRetiro} Bs.
-Saldo Final en Caja: ${saldoFinalReal} Bs.`,
-                buttons: [
-                  {
-                    text: 'ACEPTAR',
-                    handler: () => {
-                      this.mensajeService.enviarMensaje('actualizar cierre');
-                      this.navCtrl.navigateBack('tab-inicial/balance');
-                    }
-                  }
-                ]
-              });
-
-              await alertaResumen.present();
-            } else {
-              const alertaError = await this.alertCtrl.create({
-                header: 'Error',
-                message: 'No se pudo registrar el cierre de caja.',
-                buttons: ['ACEPTAR']
-              });
-              await alertaError.present();
-            }
-
-            return true;
-          }
-        }
-      ]
-    });
-
-    await alertaRetiro.present();
+    if (ok) {
+      this.mensajeService.enviarMensaje('actualizar cierre');
+      this.navCtrl.navigateBack('/tab-inicial/balance');
+    }
   }
 }

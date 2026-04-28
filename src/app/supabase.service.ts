@@ -874,7 +874,8 @@ export class SupabaseService {
       producto_id: p.producto_id,
       cantidad: p.cantidadSeleccionada,
       precio_unitario: p.precio,
-      subtotal: p.precio * p.cantidadSeleccionada
+      subtotal: p.precio * p.cantidadSeleccionada,
+      estado: true
     }));
 
     const { data, error } = await this.supabase
@@ -886,6 +887,7 @@ export class SupabaseService {
       console.error('Error al registrar los detalles de la venta:', error);
       return null;
     }
+
     return data;
   }
 
@@ -974,32 +976,28 @@ export class SupabaseService {
   }
 
   async obtenerVentaPorId(ventaId: number) {
-    const { data, error } = await this.supabase
-      .from('venta')
-      .select(`
-        venta_id,
-        usuario_id,
-        cliente_id,
-        monto,
-        fecha,
-        ingresos:ingreso(
-          ingreso_id,
-          tipo_pago_id,
-          total,
-          descripcion,
-          fecha,
-          tipo_de_pago:tipo_pago_id(nombre)
-        )
-      `)
-      .eq('venta_id', ventaId)
-      .single();
+  const { data, error } = await this.supabase
+    .from('venta')
+    .select(`
+      *,
+      ingresos:ingreso(
+        ingreso_id,
+        tipo_pago_id,
+        total,
+        estado
+      )
+    `)
+    .eq('venta_id', ventaId)
+    .eq('estado', true)
+    .single();
 
-    if (error) {
-      console.error('Error al obtener la venta:', error);
-      return null;
-    }
-    return data;
+  if (error) {
+    console.error('Error al obtener venta por ID:', error);
+    return null;
   }
+
+  return data;
+}
 
   async obtenerVentaDetalles(ventaId: number) {
     const { data, error } = await this.supabase
@@ -1008,12 +1006,14 @@ export class SupabaseService {
         *,
         producto(nombre)
       `)
-      .eq('venta_id', ventaId);
+      .eq('venta_id', ventaId)
+      .eq('estado', true);
 
     if (error) {
       console.error('Error al obtener los detalles de la venta:', error);
       return [];
     }
+
     return data;
   }
 
@@ -1025,20 +1025,25 @@ export class SupabaseService {
         cantidad,
         precio_unitario,
         subtotal,
+        estado,
         producto:producto_id(nombre),
         venta:venta_id!inner(
           venta_id,
           fecha,
           monto,
+          estado,
           cliente:cliente_id(nombre,apellido),
           ingresos:ingreso(
             ingreso_id,
             tipo_pago_id,
             total,
+            estado,
             tipo_de_pago:tipo_pago_id(nombre)
           )
         )
       `)
+      .eq('estado', true)
+      .eq('venta.estado', true)
       .gte('venta.fecha', fechaInicio)
       .lte('venta.fecha', fechaFin)
       .order('venta_id', { ascending: false });
@@ -1047,6 +1052,7 @@ export class SupabaseService {
       console.error('Error al obtener detalles de ventas por fecha:', error);
       return [];
     }
+
     return data;
   }
 
@@ -1473,6 +1479,644 @@ export class SupabaseService {
       console.error('Error al procesar la imagen:', error);
       return null;
     }
+  }
+
+  async devolverStockAExhibicion(productoId: number, cantidad: number) {
+    if (!productoId || cantidad <= 0) {
+      console.error('Datos inválidos para devolver stock a exhibición');
+      return null;
+    }
+
+    const { data: stockData, error } = await this.supabase
+      .from('producto_stock')
+      .select('*')
+      .eq('producto_id', productoId)
+      .eq('ubicacion', 'exhibicion')
+      .single();
+
+    if (error || !stockData) {
+      console.error('No se encontró stock en exhibición:', error);
+      return null;
+    }
+
+    const stockActual = Number(stockData.cantidad || 0);
+    const nuevoStock = stockActual + cantidad;
+
+    const actualizado = await this.actualizarStockPorUbicacion(
+      productoId,
+      'exhibicion',
+      nuevoStock
+    );
+
+    if (!actualizado) {
+      return null;
+    }
+
+    await this.registrarMovimientoInventario({
+      producto_id: productoId,
+      tipo_movimiento: 'ajuste_positivo',
+      ubicacion_origen: null,
+      ubicacion_destino: 'exhibicion',
+      cantidad: cantidad,
+      motivo: 'Devolución por edición o eliminación de venta',
+      usuario_id: this.obtenerUsuarioLogueadoId()
+    });
+
+    return actualizado;
+  }
+
+  async recalcularTotalVenta(ventaId: number) {
+    const { data: detalles, error } = await this.supabase
+      .from('venta_detallada')
+      .select('subtotal')
+      .eq('venta_id', ventaId)
+      .eq('estado', true);
+
+    if (error) {
+      console.error('Error al obtener detalles para recalcular venta:', error);
+      return null;
+    }
+
+    const nuevoTotal = (detalles || []).reduce((sum, item: any) => {
+      return sum + Number(item.subtotal || 0);
+    }, 0);
+
+    const { data: ventaActual, error: errorVentaActual } = await this.supabase
+      .from('venta')
+      .select('monto')
+      .eq('venta_id', ventaId)
+      .single();
+
+    if (errorVentaActual || !ventaActual) {
+      console.error('Error al obtener monto actual de venta:', errorVentaActual);
+      return null;
+    }
+
+    const montoAnterior = Number(ventaActual.monto || 0);
+
+    const { data: ventaActualizada, error: errorVenta } = await this.supabase
+      .from('venta')
+      .update({
+        monto: nuevoTotal,
+        estado: nuevoTotal > 0
+      })
+      .eq('venta_id', ventaId)
+      .select('*')
+      .single();
+
+    if (errorVenta) {
+      console.error('Error al actualizar total de venta:', errorVenta);
+      return null;
+    }
+
+    const { data: ingresos, error: errorIngresos } = await this.supabase
+      .from('ingreso')
+      .select('*')
+      .eq('venta_id', ventaId)
+      .eq('estado', true);
+
+    if (errorIngresos) {
+      console.error('Error al obtener ingresos de la venta:', errorIngresos);
+      return null;
+    }
+
+    if (!ingresos || ingresos.length === 0) {
+      return ventaActualizada;
+    }
+
+    if (nuevoTotal <= 0) {
+      const { error: errorEliminarIngresos } = await this.supabase
+        .from('ingreso')
+        .update({ estado: false, total: 0 })
+        .eq('venta_id', ventaId);
+
+      if (errorEliminarIngresos) {
+        console.error('Error al eliminar ingresos lógicamente:', errorEliminarIngresos);
+        return null;
+      }
+
+      return ventaActualizada;
+    }
+
+    if (ingresos.length === 1 || montoAnterior <= 0) {
+      const { error: errorUnicoIngreso } = await this.supabase
+        .from('ingreso')
+        .update({ total: nuevoTotal })
+        .eq('ingreso_id', ingresos[0].ingreso_id);
+
+      if (errorUnicoIngreso) {
+        console.error('Error al actualizar ingreso único:', errorUnicoIngreso);
+        return null;
+      }
+
+      return ventaActualizada;
+    }
+
+    let totalAsignado = 0;
+
+    for (let i = 0; i < ingresos.length; i++) {
+      const ingreso = ingresos[i];
+
+      let nuevoMontoIngreso = 0;
+
+      if (i === ingresos.length - 1) {
+        nuevoMontoIngreso = Number((nuevoTotal - totalAsignado).toFixed(2));
+      } else {
+        const porcentaje = Number(ingreso.total || 0) / montoAnterior;
+        nuevoMontoIngreso = Number((nuevoTotal * porcentaje).toFixed(2));
+        totalAsignado += nuevoMontoIngreso;
+      }
+
+      const { error: errorActualizarIngreso } = await this.supabase
+        .from('ingreso')
+        .update({ total: nuevoMontoIngreso })
+        .eq('ingreso_id', ingreso.ingreso_id);
+
+      if (errorActualizarIngreso) {
+        console.error('Error al actualizar ingreso proporcional:', errorActualizarIngreso);
+        return null;
+      }
+    }
+
+    return ventaActualizada;
+  }
+
+  async editarProductoDeVenta(ventaDetalladaId: number, nuevaCantidad: number) {
+    if (!ventaDetalladaId || nuevaCantidad <= 0) {
+      console.error('Datos inválidos para editar producto de venta');
+      return null;
+    }
+
+    const { data: detalle, error } = await this.supabase
+      .from('venta_detallada')
+      .select('*')
+      .eq('venta_detallada_id', ventaDetalladaId)
+      .eq('estado', true)
+      .single();
+
+    if (error || !detalle) {
+      console.error('No se encontró el detalle de venta:', error);
+      return null;
+    }
+
+    const cantidadActual = Number(detalle.cantidad || 0);
+    const productoId = Number(detalle.producto_id);
+    const diferencia = nuevaCantidad - cantidadActual;
+
+    if (diferencia > 0) {
+      const { data: stockData, error: errorStock } = await this.supabase
+        .from('producto_stock')
+        .select('*')
+        .eq('producto_id', productoId)
+        .eq('ubicacion', 'exhibicion')
+        .single();
+
+      if (errorStock || !stockData) {
+        console.error('No se encontró stock en exhibición:', errorStock);
+        return null;
+      }
+
+      const stockActual = Number(stockData.cantidad || 0);
+
+      if (stockActual < diferencia) {
+        console.error('Stock insuficiente para aumentar la cantidad');
+        return null;
+      }
+
+      const actualizado = await this.actualizarStockPorUbicacion(
+        productoId,
+        'exhibicion',
+        stockActual - diferencia
+      );
+
+      if (!actualizado) {
+        return null;
+      }
+
+      await this.registrarMovimientoInventario({
+        producto_id: productoId,
+        tipo_movimiento: 'venta',
+        ubicacion_origen: 'exhibicion',
+        ubicacion_destino: null,
+        cantidad: diferencia,
+        motivo: 'Aumento de cantidad en venta editada',
+        usuario_id: this.obtenerUsuarioLogueadoId()
+      });
+    }
+
+    if (diferencia < 0) {
+      const cantidadDevuelta = Math.abs(diferencia);
+      const devuelto = await this.devolverStockAExhibicion(productoId, cantidadDevuelta);
+
+      if (!devuelto) {
+        return null;
+      }
+    }
+
+    const precioUnitario = Number(detalle.precio_unitario || 0);
+    const nuevoSubtotal = precioUnitario * nuevaCantidad;
+
+    const { data: detalleActualizado, error: errorUpdate } = await this.supabase
+      .from('venta_detallada')
+      .update({
+        cantidad: nuevaCantidad,
+        subtotal: nuevoSubtotal
+      })
+      .eq('venta_detallada_id', ventaDetalladaId)
+      .select('*')
+      .single();
+
+    if (errorUpdate) {
+      console.error('Error al actualizar producto de venta:', errorUpdate);
+      return null;
+    }
+
+    const ventaActualizada = await this.recalcularTotalVenta(Number(detalle.venta_id));
+
+    if (!ventaActualizada) {
+      return null;
+    }
+
+    return detalleActualizado;
+  }
+
+  async eliminarProductoDeVenta(ventaDetalladaId: number) {
+    if (!ventaDetalladaId) {
+      console.error('Detalle de venta inválido');
+      return null;
+    }
+
+    const { data: detalle, error } = await this.supabase
+      .from('venta_detallada')
+      .select('*')
+      .eq('venta_detallada_id', ventaDetalladaId)
+      .eq('estado', true)
+      .single();
+
+    if (error || !detalle) {
+      console.error('No se encontró el detalle de venta:', error);
+      return null;
+    }
+
+    const devuelto = await this.devolverStockAExhibicion(
+      Number(detalle.producto_id),
+      Number(detalle.cantidad || 0)
+    );
+
+    if (!devuelto) {
+      return null;
+    }
+
+    const { data, error: errorEliminar } = await this.supabase
+      .from('venta_detallada')
+      .update({ estado: false })
+      .eq('venta_detallada_id', ventaDetalladaId)
+      .select('*')
+      .single();
+
+    if (errorEliminar) {
+      console.error('Error al eliminar producto de venta:', errorEliminar);
+      return null;
+    }
+
+    const ventaActualizada = await this.recalcularTotalVenta(Number(detalle.venta_id));
+
+    if (!ventaActualizada) {
+      return null;
+    }
+
+    return data;
+  }
+
+  async eliminarVentaLogica(ventaId: number) {
+    if (!ventaId) {
+      console.error('Venta inválida');
+      return null;
+    }
+
+    const { data: detalles, error } = await this.supabase
+      .from('venta_detallada')
+      .select('*')
+      .eq('venta_id', ventaId)
+      .eq('estado', true);
+
+    if (error) {
+      console.error('Error al obtener detalles de venta:', error);
+      return null;
+    }
+
+    for (const detalle of detalles || []) {
+      const devuelto = await this.devolverStockAExhibicion(
+        Number(detalle.producto_id),
+        Number(detalle.cantidad || 0)
+      );
+
+      if (!devuelto) {
+        return null;
+      }
+    }
+
+    const { error: errorDetalles } = await this.supabase
+      .from('venta_detallada')
+      .update({ estado: false })
+      .eq('venta_id', ventaId)
+      .eq('estado', true);
+
+    if (errorDetalles) {
+      console.error('Error al eliminar detalles de venta:', errorDetalles);
+      return null;
+    }
+
+    const { error: errorIngresos } = await this.supabase
+      .from('ingreso')
+      .update({ estado: false })
+      .eq('venta_id', ventaId)
+      .eq('tipo_ingreso', 'venta');
+
+    if (errorIngresos) {
+      console.error('Error al eliminar ingresos de venta:', errorIngresos);
+      return null;
+    }
+
+    const { data, error: errorVenta } = await this.supabase
+      .from('venta')
+      .update({ estado: false })
+      .eq('venta_id', ventaId)
+      .select('*')
+      .single();
+
+    if (errorVenta) {
+      console.error('Error al eliminar venta:', errorVenta);
+      return null;
+    }
+
+    return data;
+  }
+
+  async obtenerStockExhibicionProducto(productoId: number) {
+    const { data, error } = await this.supabase
+      .from('producto_stock')
+      .select('*')
+      .eq('producto_id', productoId)
+      .eq('ubicacion', 'exhibicion')
+      .single();
+
+    if (error || !data) {
+      console.error('No se encontró stock en exhibición:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  async actualizarIngresosDeVentaEditada(
+    ventaId: number,
+    usuarioId: number,
+    pagos: { tipo_pago_id: number; monto: number }[]
+  ) {
+    const { error: errorEliminarIngresos } = await this.supabase
+      .from('ingreso')
+      .update({
+        estado: false
+      })
+      .eq('venta_id', ventaId)
+      .eq('tipo_ingreso', 'venta');
+
+    if (errorEliminarIngresos) {
+      console.error('Error al desactivar ingresos anteriores:', errorEliminarIngresos);
+      return null;
+    }
+
+    const ingresos = pagos.map(pago => ({
+      tipo_pago_id: pago.tipo_pago_id,
+      usuario_id: usuarioId,
+      total: pago.monto,
+      tipo_ingreso: 'venta' as TipoIngreso,
+      descripcion: 'Venta editada',
+      venta_id: ventaId,
+      fecha: new Date().toISOString(),
+      id_deuda: null,
+      estado: true
+    }));
+
+    const { data, error } = await this.supabase
+      .from('ingreso')
+      .insert(ingresos)
+      .select('*');
+
+    if (error) {
+      console.error('Error al registrar nuevos ingresos de la venta editada:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  async actualizarVentaExistente(
+    ventaId: number,
+    productos: any[],
+    clienteId: number,
+    usuarioId: number,
+    pagos: { tipo_pago_id: number; monto: number }[]
+  ) {
+    if (!ventaId) {
+      console.error('No se recibió ventaId para editar.');
+      return null;
+    }
+
+    const total = productos.reduce((sum, p) => {
+      return sum + (Number(p.precio || 0) * Number(p.cantidadSeleccionada || 0));
+    }, 0);
+
+    const totalPagos = pagos.reduce((sum, p) => {
+      return sum + Number(p.monto || 0);
+    }, 0);
+
+    if (Number(totalPagos) !== Number(total)) {
+      console.error('La suma de los pagos no coincide con el total de la venta editada.');
+      return null;
+    }
+
+    const { data: detallesAnteriores, error: errorDetalles } = await this.supabase
+      .from('venta_detallada')
+      .select('*')
+      .eq('venta_id', ventaId)
+      .eq('estado', true);
+
+    if (errorDetalles) {
+      console.error('Error al obtener detalles anteriores:', errorDetalles);
+      return null;
+    }
+
+    for (const producto of productos) {
+      const productoId = Number(producto.producto_id);
+      const nuevaCantidad = Number(producto.cantidadSeleccionada || 0);
+
+      const cantidadAnterior = (detallesAnteriores || [])
+        .filter((detalle: any) => Number(detalle.producto_id) === productoId)
+        .reduce((sum: number, detalle: any) => {
+          return sum + Number(detalle.cantidad || 0);
+        }, 0);
+
+      const stockExhibicion = await this.obtenerStockExhibicionProducto(productoId);
+
+      if (!stockExhibicion) {
+        return null;
+      }
+
+      const stockActual = Number(stockExhibicion.cantidad || 0);
+      const stockDisponibleParaEditar = stockActual + cantidadAnterior;
+
+      if (nuevaCantidad > stockDisponibleParaEditar) {
+        console.error('Stock insuficiente para editar el producto:', producto.nombre);
+        return null;
+      }
+    }
+
+    const productosProcesados: number[] = [];
+
+    for (const producto of productos) {
+      const productoId = Number(producto.producto_id);
+      const nuevaCantidad = Number(producto.cantidadSeleccionada || 0);
+
+      const cantidadAnterior = (detallesAnteriores || [])
+        .filter((detalle: any) => Number(detalle.producto_id) === productoId)
+        .reduce((sum: number, detalle: any) => {
+          return sum + Number(detalle.cantidad || 0);
+        }, 0);
+
+      const stockExhibicion = await this.obtenerStockExhibicionProducto(productoId);
+
+      if (!stockExhibicion) {
+        return null;
+      }
+
+      const stockActual = Number(stockExhibicion.cantidad || 0);
+      const nuevoStock = stockActual + cantidadAnterior - nuevaCantidad;
+
+      const actualizado = await this.actualizarStockPorUbicacion(
+        productoId,
+        'exhibicion',
+        nuevoStock
+      );
+
+      if (!actualizado) {
+        return null;
+      }
+
+      const diferencia = nuevaCantidad - cantidadAnterior;
+
+      if (diferencia > 0) {
+        await this.registrarMovimientoInventario({
+          producto_id: productoId,
+          tipo_movimiento: 'venta',
+          ubicacion_origen: 'exhibicion',
+          ubicacion_destino: null,
+          cantidad: diferencia,
+          motivo: 'Aumento de cantidad por edición de venta',
+          usuario_id: usuarioId
+        });
+      }
+
+      if (diferencia < 0) {
+        await this.registrarMovimientoInventario({
+          producto_id: productoId,
+          tipo_movimiento: 'ajuste_positivo',
+          ubicacion_origen: null,
+          ubicacion_destino: 'exhibicion',
+          cantidad: Math.abs(diferencia),
+          motivo: 'Devolución por edición de venta',
+          usuario_id: usuarioId
+        });
+      }
+
+      productosProcesados.push(productoId);
+    }
+
+    for (const detalle of detallesAnteriores || []) {
+      const productoIdAnterior = Number(detalle.producto_id);
+
+      if (!productosProcesados.includes(productoIdAnterior)) {
+        const stockExhibicion = await this.obtenerStockExhibicionProducto(productoIdAnterior);
+
+        if (!stockExhibicion) {
+          return null;
+        }
+
+        const stockActual = Number(stockExhibicion.cantidad || 0);
+        const cantidadDevuelta = Number(detalle.cantidad || 0);
+
+        const actualizado = await this.actualizarStockPorUbicacion(
+          productoIdAnterior,
+          'exhibicion',
+          stockActual + cantidadDevuelta
+        );
+
+        if (!actualizado) {
+          return null;
+        }
+
+        await this.registrarMovimientoInventario({
+          producto_id: productoIdAnterior,
+          tipo_movimiento: 'ajuste_positivo',
+          ubicacion_origen: null,
+          ubicacion_destino: 'exhibicion',
+          cantidad: cantidadDevuelta,
+          motivo: 'Producto eliminado de la venta editada',
+          usuario_id: usuarioId
+        });
+      }
+    }
+
+    const { error: errorEliminarDetalles } = await this.supabase
+      .from('venta_detallada')
+      .update({ estado: false })
+      .eq('venta_id', ventaId)
+      .eq('estado', true);
+
+    if (errorEliminarDetalles) {
+      console.error('Error al eliminar detalles anteriores:', errorEliminarDetalles);
+      return null;
+    }
+
+    const detallesNuevos = await this.registrarVentaDetallesPorVenta(ventaId, productos);
+
+    if (!detallesNuevos) {
+      return null;
+    }
+
+    const { data: ventaActualizada, error: errorVenta } = await this.supabase
+      .from('venta')
+      .update({
+        cliente_id: clienteId,
+        usuario_id: usuarioId,
+        monto: total,
+        estado: true
+      })
+      .eq('venta_id', ventaId)
+      .select('*')
+      .single();
+
+    if (errorVenta) {
+      console.error('Error al actualizar la venta:', errorVenta);
+      return null;
+    }
+
+    const ingresos = await this.actualizarIngresosDeVentaEditada(
+      ventaId,
+      usuarioId,
+      pagos
+    );
+
+    if (!ingresos) {
+      return null;
+    }
+
+    return {
+      venta: ventaActualizada,
+      detalles: detallesNuevos,
+      ingresos: ingresos
+    };
   }
 
   getSupabase() {

@@ -209,7 +209,10 @@ export class BalancePage implements OnInit, AfterViewInit {
       const clienteObj = venta.cliente;
       const clienteStr = clienteObj ? `${clienteObj.nombre} ${clienteObj.apellido}` : '-';
 
-      const ingresosVenta = Array.isArray(venta.ingresos) ? venta.ingresos : [];
+      const ingresosVenta = Array.isArray(venta.ingresos)
+        ? venta.ingresos.filter((ingreso: any) => ingreso.estado !== false)
+        : [];
+
       const tipoPago = this.obtenerTextoMetodosPago(ingresosVenta);
 
       const fechaObj = venta?.fecha ? new Date(venta.fecha + 'Z') : new Date();
@@ -217,7 +220,7 @@ export class BalancePage implements OnInit, AfterViewInit {
       const fechaLocal = fechaObj.toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' });
 
       const productos = items.map(i => `${i.cantidad} ${i.producto?.nombre}`);
-      const total = items.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
+      const total = Number(venta.monto || 0);
 
       return {
         venta_id: venta.venta_id,

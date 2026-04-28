@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, NgZone, ViewChild, ElementRef } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { NavController } from '@ionic/angular';
 import { SupabaseService } from '../../supabase.service';
 import { MensajeService } from 'src/app/mensaje.service';
@@ -29,26 +30,23 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
   private streamActual: MediaStream | null = null;
   private mensajeSub!: Subscription;
 
+  productosCargando: boolean = false;
+
+  modoEditar: boolean = false;
+  ventaIdEditar: number = 0;
+  detallesVentaEditar: any[] = [];
+
   @ViewChild('videoScanner', { static: false }) videoScanner!: ElementRef<HTMLVideoElement>;
 
   constructor(
     private navCtrl: NavController,
     private supabaseService: SupabaseService,
     private mensajeService: MensajeService,
-    private zone: NgZone
+    private zone: NgZone,
+    private route: ActivatedRoute
   ) {}
 
-  productosCargando: boolean = false;
-
   ngOnInit() {
-    setTimeout(() => {
-      this.cargarProductos();
-    }, 0);
-
-    setTimeout(() => {
-      this.cargarCategorias();
-    }, 0);
-
     this.mensajeSub = this.mensajeService.mensaje$.subscribe((mensaje: string) => {
       if (mensaje === 'actualizar inventario') {
         this.cargarProductos();
@@ -57,7 +55,20 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
   }
 
   ionViewWillEnter() {
+    const ventaIdParam = this.route.snapshot.queryParamMap.get('ventaId');
+    const modoParam = this.route.snapshot.queryParamMap.get('modo');
+
+    this.modoEditar = false;
+    this.ventaIdEditar = 0;
+    this.detallesVentaEditar = [];
+
+    if (ventaIdParam && modoParam === 'editar') {
+      this.modoEditar = true;
+      this.ventaIdEditar = Number(ventaIdParam);
+    }
+
     this.cargarProductos();
+    this.cargarCategorias();
   }
 
   ngOnDestroy() {
@@ -78,17 +89,29 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
     try {
       const data = await this.supabaseService.obtenerProductos();
 
-      this.productos = (data || []).map((producto: any) => ({
-        ...producto,
-        cantidadSeleccionada: 0,
-        disponibles: Number(producto.stock_exhibicion || 0),
-        precio: Number(producto.precio || 0),
-      }));
+      if (this.modoEditar && this.ventaIdEditar > 0) {
+        this.detallesVentaEditar = await this.supabaseService.obtenerVentaDetalles(this.ventaIdEditar);
+      }
+
+      this.productos = (data || []).map((producto: any) => {
+        const detalleEncontrado = this.detallesVentaEditar.find((detalle: any) => {
+          return Number(detalle.producto_id) === Number(producto.producto_id);
+        });
+
+        const cantidadVendida = detalleEncontrado ? Number(detalleEncontrado.cantidad || 0) : 0;
+        const stockExhibicion = Number(producto.stock_exhibicion || 0);
+
+        return {
+          ...producto,
+          cantidadSeleccionada: cantidadVendida,
+          disponibles: this.modoEditar ? stockExhibicion + cantidadVendida : stockExhibicion,
+          precio: Number(producto.precio || 0),
+        };
+      });
 
       this.actualizarTotales();
       this.aplicarFiltros();
 
-      console.log(this.productosFiltrados);
     } catch (error) {
       console.error('Error al cargar productos:', error);
     }
@@ -114,6 +137,7 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
         const codigoBarras = producto.codigo_barras
           ? producto.codigo_barras.toString().toLowerCase()
           : '';
+
         return nombre.includes(searchTerm) || codigoBarras.includes(searchTerm);
       });
     }
@@ -130,6 +154,7 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
     const disponibles = Number(producto.disponibles || 0);
     const cantidadSeleccionada = Number(producto.cantidadSeleccionada || 0);
     const restante = disponibles - cantidadSeleccionada;
+
     return restante < 0 ? 0 : restante;
   }
 
@@ -171,6 +196,7 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
         (result: Result | undefined, err: unknown) => {
           if (result) {
             const codigo = (result.getText() || '').trim();
+
             if (codigo) {
               this.zone.run(() => {
                 this.textoBusqueda = codigo;
@@ -182,6 +208,7 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
           }
         }
       );
+
     } catch (error) {
       console.error('Error al abrir cámara o escanear:', error);
       this.cerrarScanner();
@@ -228,9 +255,6 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
         const precio = producto.precio || 0;
         return total + seleccionados * precio;
       }, 0);
-
-      console.log('Total productos seleccionados:', this.totalProductosSeleccionados);
-      console.log('Valor total:', this.valorTotalSeleccionado);
     });
   }
 
@@ -238,6 +262,18 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
     const productosSeleccionados = this.productos.filter(producto => producto.cantidadSeleccionada > 0);
 
     if (productosSeleccionados.length === 0) {
+      return;
+    }
+
+    if (this.modoEditar) {
+      this.navCtrl.navigateForward('/preview', {
+        queryParams: {
+          productos: JSON.stringify(productosSeleccionados),
+          totalVenta: this.valorTotalSeleccionado,
+          ventaId: this.ventaIdEditar,
+          modo: 'editar'
+        }
+      });
       return;
     }
 

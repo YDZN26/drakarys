@@ -161,4 +161,30 @@ ion-header {
       font-size: 15px;
     }
   }
+
+  .precio-item {
+    --background: #ffffff;
+    --border-radius: 12px;
+    --padding-start: 0;
+    --inner-padding-end: 0;
+    margin: 8px 0;
+
+    ion-label {
+      color: #607389;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    ion-input {
+      border: 1px solid #d9e1ea;
+      border-radius: 12px;
+      margin-top: 6px;
+      --padding-start: 12px;
+      --padding-end: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #1f2d3d;
+      background: #ffffff;
+    }
+  }
 }

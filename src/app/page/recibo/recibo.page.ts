@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NavController } from '@ionic/angular';
+import { AlertController, NavController } from '@ionic/angular';
 import { SupabaseService } from '../../supabase.service';
 import { MensajeService } from 'src/app/mensaje.service';
 
@@ -31,7 +31,8 @@ export class ReciboPage implements OnInit {
     private route: ActivatedRoute,
     private navCtrl: NavController,
     private supabase: SupabaseService,
-    private mensajeService: MensajeService
+    private mensajeService: MensajeService,
+    private alertCtrl: AlertController
   ) {}
 
   ngOnInit() {
@@ -51,10 +52,12 @@ export class ReciboPage implements OnInit {
       return [];
     }
 
-    return ingresos.map((ingreso: any) => ({
-      nombre: this.tiposPago[Number(ingreso.tipo_pago_id)] || 'Sin tipo de pago',
-      monto: Number(ingreso.total || 0)
-    }));
+    return ingresos
+      .filter((ingreso: any) => ingreso.estado !== false)
+      .map((ingreso: any) => ({
+        nombre: this.tiposPago[Number(ingreso.tipo_pago_id)] || 'Sin tipo de pago',
+        monto: Number(ingreso.total || 0)
+      }));
   }
 
   private obtenerTextoMetodoPago(metodosPago: any[]) {
@@ -103,6 +106,53 @@ export class ReciboPage implements OnInit {
       cliente: clienteStr,
       productos: detalles || []
     };
+  }
+
+  editarVenta() {
+    this.navCtrl.navigateForward('/nueva-venta', {
+      queryParams: {
+        ventaId: this.recibo.venta_id,
+        modo: 'editar'
+      }
+    });
+  }
+
+  async eliminarVenta() {
+    const alerta = await this.alertCtrl.create({
+      header: 'Eliminar venta',
+      message: '¿Deseas eliminar esta venta? Los productos volverán a exhibición y la venta ya no contará en balance ni cierre de caja.',
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Eliminar',
+          role: 'destructive',
+          handler: async () => {
+            const resultado = await this.supabase.eliminarVentaLogica(this.recibo.venta_id);
+
+            if (!resultado) {
+              const error = await this.alertCtrl.create({
+                header: 'Error',
+                message: 'No se pudo eliminar la venta.',
+                buttons: ['OK']
+              });
+
+              await error.present();
+              return;
+            }
+
+            this.mensajeService.enviarMensaje('actualizar inventario');
+            this.mensajeService.enviarMensaje('actualizar ingresos');
+
+            this.navCtrl.navigateBack('/tab-inicial/balance');
+          }
+        }
+      ]
+    });
+
+    await alerta.present();
   }
 
   irABalance() {

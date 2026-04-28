@@ -20,6 +20,9 @@ export class PreviewPage implements OnInit {
   clientes: any[] = [];
   clienteSeleccionado: any = null;
 
+  modoEditar: boolean = false;
+  ventaIdEditar: number = 0;
+
   constructor(
     private route: ActivatedRoute,
     private navCtrl: NavController,
@@ -30,6 +33,14 @@ export class PreviewPage implements OnInit {
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
+      if (params['modo'] === 'editar') {
+        this.modoEditar = true;
+      }
+
+      if (params['ventaId']) {
+        this.ventaIdEditar = Number(params['ventaId']);
+      }
+
       if (params['metodoPago']) {
         this.venta.metodoPago = params['metodoPago'];
       }
@@ -42,11 +53,21 @@ export class PreviewPage implements OnInit {
         this.venta.totalVenta = Number(params['totalVenta']);
       }
 
+      this.actualizarTotalVenta();
+
       const now = new Date();
       this.venta.fechaVenta = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
     });
 
     this.cargarClientes();
+  }
+
+  actualizarTotalVenta() {
+    this.venta.totalVenta = this.venta.productos.reduce((total: number, producto: any) => {
+      const cantidad = Number(producto.cantidadSeleccionada || 0);
+      const precio = Number(producto.precio || 0);
+      return total + (cantidad * precio);
+    }, 0);
   }
 
   private async cargarClientes() {
@@ -145,10 +166,22 @@ export class PreviewPage implements OnInit {
   }
 
   async irAMetodoPago() {
+    this.actualizarTotalVenta();
+
     if (!this.clienteSeleccionado) {
       const a = await this.alertCtrl.create({
         header: 'Cliente requerido',
         message: 'Selecciona un cliente antes de continuar.',
+        buttons: ['OK']
+      });
+      await a.present();
+      return;
+    }
+
+    if (Number(this.venta.totalVenta) <= 0) {
+      const a = await this.alertCtrl.create({
+        header: 'Total inválido',
+        message: 'El total de la venta debe ser mayor a 0.',
         buttons: ['OK']
       });
       await a.present();
@@ -160,7 +193,9 @@ export class PreviewPage implements OnInit {
         productos: JSON.stringify(this.venta.productos),
         totalVenta: this.venta.totalVenta,
         fechaVenta: this.venta.fechaVenta,
-        cliente: JSON.stringify(this.clienteSeleccionado)
+        cliente: JSON.stringify(this.clienteSeleccionado),
+        modo: this.modoEditar ? 'editar' : 'crear',
+        ventaId: this.ventaIdEditar
       }
     });
   }

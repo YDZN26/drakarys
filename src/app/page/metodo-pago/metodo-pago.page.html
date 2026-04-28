@@ -70,7 +70,7 @@
 
   <div class="acciones-inferiores">
     <ion-button class="confirmar-pago-button" (click)="confirmarVenta()">
-      Confirmar Venta
+      {{ modoEditar ? 'Actualizar Venta' : 'Confirmar Venta' }}
     </ion-button>
   </div>
 </ion-content>

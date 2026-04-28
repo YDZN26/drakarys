@@ -22,6 +22,9 @@ export class MetodoPagoPage implements OnInit {
   montoTransferencia: number = 0;
   montoTarjeta: number = 0;
 
+  modoEditar: boolean = false;
+  ventaIdEditar: number = 0;
+
   constructor(
     private route: ActivatedRoute,
     private navCtrl: NavController,
@@ -46,6 +49,14 @@ export class MetodoPagoPage implements OnInit {
 
       if (params['cliente']) {
         this.venta.cliente = JSON.parse(params['cliente']);
+      }
+
+      if (params['modo'] === 'editar') {
+        this.modoEditar = true;
+      }
+
+      if (params['ventaId']) {
+        this.ventaIdEditar = Number(params['ventaId']);
       }
     });
   }
@@ -132,18 +143,32 @@ export class MetodoPagoPage implements OnInit {
     }
 
     try {
-      const res = await this.supabase.registrarVentaCompleta(
-        this.venta.productos,
-        0,
-        this.venta.cliente.cliente_id,
-        usuarioId,
-        pagos
-      );
+      let res: any = null;
+
+      if (this.modoEditar) {
+        res = await this.supabase.actualizarVentaExistente(
+          this.ventaIdEditar,
+          this.venta.productos,
+          this.venta.cliente.cliente_id,
+          usuarioId,
+          pagos
+        );
+      } else {
+        res = await this.supabase.registrarVentaCompleta(
+          this.venta.productos,
+          0,
+          this.venta.cliente.cliente_id,
+          usuarioId,
+          pagos
+        );
+      }
 
       if (!res || !res.venta) {
         const alerta = await this.alertCtrl.create({
           header: 'Error',
-          message: 'No se pudo registrar la venta.',
+          message: this.modoEditar
+            ? 'No se pudo actualizar la venta.'
+            : 'No se pudo registrar la venta.',
           buttons: ['OK']
         });
         await alerta.present();
@@ -159,7 +184,9 @@ export class MetodoPagoPage implements OnInit {
 
       const alerta = await this.alertCtrl.create({
         header: 'Error',
-        message: 'Ocurrió un error al registrar la venta.',
+        message: this.modoEditar
+          ? 'Ocurrió un error al actualizar la venta.'
+          : 'Ocurrió un error al registrar la venta.',
         buttons: ['OK']
       });
       await alerta.present();

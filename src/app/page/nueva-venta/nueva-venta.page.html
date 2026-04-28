@@ -89,7 +89,7 @@
       class="continuar-button"
       [disabled]="totalProductosSeleccionados === 0"
       (click)="agregarVenta()">
-      Continuar
+      {{ modoEditar ? 'Actualizar venta' : 'Continuar' }}
     </ion-button>
   </div>
 

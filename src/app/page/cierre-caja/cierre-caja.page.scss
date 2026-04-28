@@ -1,8 +1,9 @@
-ion-header {
-  ion-title {
-    color: white;
-    font-weight: bold;
-  }
+ion-toolbar {
+  background-color: var(--ion-color-mycolor);
+}
+
+ion-button {
+  --color: #ffffff;
 }
 
 .top-toolbar {
@@ -41,19 +42,19 @@ ion-header {
   .cierre-total {
     font-size: 22px;
     font-weight: bold;
+    color: #001E87;
   }
 }
 
 .cierre-details {
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
 .section-title {
   font-weight: bold;
-  margin-top: 14px;
-  margin-bottom: 4px;
+  margin-top: 16px;
+  margin-bottom: 6px;
   font-size: 15px;
 }
 
@@ -68,44 +69,51 @@ ion-header {
 .detail-row {
   display: flex;
   justify-content: space-between;
-  font-size: 15px;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid #d9e1ea;
 
   span {
-    color: #4f6178;
-    font-weight: bold;
+    font-size: 15px;
+    font-weight: 600;
+    color: #607389;
   }
 
   strong {
+    font-size: 15px;
+    font-weight: bold;
     color: #1f2d3d;
   }
 }
 
 .cierre-input-container {
-  margin-top: 20px;
+  margin-top: 16px;
+  background-color: #edf2fa;
+  border-radius: 22px;
+  padding: 16px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
 }
 
 .input-item {
   --background: #ffffff;
   --border-radius: 12px;
-  --min-height: 64px;
   border: 1px solid #d9e1ea;
-  width: 100%;
 
   ion-label {
-    color: #4f6178 !important;
     font-weight: bold;
-    margin-bottom: 8px;
+    color: #607389;
   }
 
   ion-input {
-    font-size: 1rem;
+    font-size: 20px;
+    font-weight: bold;
     color: #1f2d3d;
   }
 }
 
 .mensaje-caja {
-  margin: 10px 0;
-  text-align: center;
+  margin-top: 12px;
+  font-size: 14px;
   font-weight: bold;
 }
 
@@ -118,27 +126,14 @@ ion-header {
   z-index: 20;
 }
 
-.confirmar-button {
+.confirmar-cierre-button {
   width: 100%;
   height: 46px;
   --border-radius: 10px;
-  --background: #001E87;
-  --color: white;
+  --background: #93C572;
+  --color: #ffffff;
   font-weight: bold;
   text-transform: none;
   font-size: 1rem;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
-}
-
-@media (max-width: 480px) {
-  .cierre-header {
-    .cierre-titulo,
-    .cierre-total {
-      font-size: 19px;
-    }
-  }
-
-  .detail-row {
-    font-size: 14px;
-  }
 }

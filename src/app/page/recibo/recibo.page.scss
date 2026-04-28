@@ -101,6 +101,7 @@
   right: 16px;
   bottom: calc(10px + env(safe-area-inset-bottom));
   display: flex;
+  gap: 10px;
   z-index: 20;
 }
 
@@ -110,6 +111,18 @@
   --border-radius: 10px;
   --background: #93C572;
   --color: #ffffff;
+  --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  font-weight: bold;
+  text-transform: none;
+  font-size: 1rem;
+}
+
+.editar-button {
+  width: 100%;
+  height: 46px;
+  --border-radius: 10px;
+  --background: #f5c542;
+  --color: #1f2d3d;
   --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
   font-weight: bold;
   text-transform: none;
@@ -137,5 +150,17 @@
     strong {
       font-size: 15px;
     }
+  }
+
+  .eliminar-button {
+    width: 100%;
+    height: 46px;
+    --border-radius: 10px;
+    --background: #d94a3a;
+    --color: #ffffff;
+    --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+    font-weight: bold;
+    text-transform: none;
+    font-size: 1rem;
   }
 }
