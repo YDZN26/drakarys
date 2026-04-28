@@ -59,105 +59,121 @@
     </ion-toolbar>
   </ion-header>
 
-  <div class="balance-container">
-    <div class="balance-card">
-      <div class="balance-header">
-        <span class="balance-titulo">BALANCE</span>
-        <span class="balance-total" [ngStyle]="{ color: balance < 0 ? 'red' : '#001E87' }">
-          BS. {{ balance | number: '1.2-2' }}
-        </span>
-      </div>
+  <ion-grid class="content-grid">
+    <ion-row class="ion-justify-content-center">
 
-      <div class="balance-saldo-inicial">
-        <span>SALDO INICIAL</span>
-        <span>BS. {{ saldoInicial | number: '1.2-2' }}</span>
-      </div>
+      <ion-col size="12" size-md="5" size-lg="4" class="col-balance">
+        <div class="balance-container">
+          <div class="balance-card">
+            <div class="balance-header">
+              <span class="balance-titulo">BALANCE</span>
+              <span class="balance-total" [ngStyle]="{ color: balance < 0 ? '#d70000' : '#001E87' }">
+                BS. {{ balance | number: '1.2-2' }}
+              </span>
+            </div>
 
-      <div class="balance-details">
-        <div class="balance-income">
-          <div class="detalle-titulo">
-            <ion-icon name="wallet-outline"></ion-icon>
-            <span>INGRESOS</span>
+            <div class="balance-saldo-inicial">
+              <span>SALDO INICIAL</span>
+              <span>BS. {{ saldoInicial | number: '1.2-2' }}</span>
+            </div>
+
+            <div class="balance-details">
+              <div class="balance-income">
+                <div class="detalle-titulo">
+                  <ion-icon name="wallet-outline"></ion-icon>
+                  <span>INGRESOS</span>
+                </div>
+                <strong>BS. {{ totalIngresos | number: '1.2-2' }}</strong>
+              </div>
+
+              <div class="balance-divider"></div>
+
+              <div class="balance-expense">
+                <div class="detalle-titulo">
+                  <ion-icon name="cash-outline"></ion-icon>
+                  <span>EGRESOS</span>
+                </div>
+                <strong>BS. {{ totalEgresos | number: '1.2-2' }}</strong>
+              </div>
+            </div>
+
+            <div class="balance-card-actions">
+              <ion-button fill="solid" class="btn-card-accion" (click)="goToCierreCaja()">
+                Cierre de Caja
+              </ion-button>
+            </div>
           </div>
-          <strong>BS. {{ totalIngresos | number: '1.2-2' }}</strong>
-        </div>
 
-        <div class="balance-divider"></div>
+          <div class="tabs-balance">
+            <button
+              class="tab-balance"
+              [class.tab-activa]="vistaActual === 'ingresos'"
+              (click)="mostrarIngresos()">
+              Ingresos
+            </button>
 
-        <div class="balance-expense">
-          <div class="detalle-titulo">
-            <ion-icon name="cash-outline"></ion-icon>
-            <span>EGRESOS</span>
+            <button
+              class="tab-balance"
+              [class.tab-activa]="vistaActual === 'egresos'"
+              (click)="mostrarEgresos()">
+              Egresos
+            </button>
           </div>
-          <strong>BS. {{ totalEgresos | number: '1.2-2' }}</strong>
         </div>
-      </div>
+      </ion-col>
 
-      <div class="balance-card-actions">
-        <ion-button fill="solid" class="btn-card-accion" (click)="goToCierreCaja()">
-          Cierre de Caja
-        </ion-button>
-      </div>
-    </div>
+      <ion-col size="12" size-md="7" size-lg="6" class="col-lista">
+        <div class="lista-balance">
+          <ion-list lines="none">
+            <ion-item
+              button
+              detail
+              *ngFor="let item of filteredItems"
+              (click)="verRecibo(item)"
+              class="item-balance">
 
-    <div class="tabs-balance">
-      <button
-        class="tab-balance"
-        [class.tab-activa]="vistaActual === 'ingresos'"
-        (click)="mostrarIngresos()">
-        Ingresos
-      </button>
+              <div
+                class="item-icono"
+                slot="start"
+                [ngClass]="vistaActual === 'ingresos' ? 'icono-ingreso' : 'icono-egreso'">
+                <ion-icon
+                  [name]="vistaActual === 'ingresos' ? 'wallet-outline' : 'cash-outline'">
+                </ion-icon>
+              </div>
 
-      <button
-        class="tab-balance"
-        [class.tab-activa]="vistaActual === 'egresos'"
-        (click)="mostrarEgresos()">
-        Egresos
-      </button>
-    </div>
-  </div>
+              <ion-label>
+                <h2>{{ item.nombre }}</h2>
+                <p class="cliente-texto" *ngIf="item.cliente">{{ item.cliente }}</p>
+                <p>{{ item.descripcion }}</p>
+              </ion-label>
 
-  <div class="lista-balance">
-    <ion-list lines="none">
-      <ion-item
-        button
-        detail
-        *ngFor="let item of filteredItems"
-        (click)="verRecibo(item)"
-        class="item-balance">
-
-        <div class="item-icono" slot="start">
-          <ion-icon
-            [name]="vistaActual === 'ingresos' ? 'wallet-outline' : 'cash-outline'">
-          </ion-icon>
+              <div
+                slot="end"
+                class="item-monto"
+                [ngClass]="vistaActual === 'ingresos' ? 'monto-ingreso' : 'monto-egreso'">
+                <strong>Bs. {{ item.precio }}</strong>
+              </div>
+            </ion-item>
+          </ion-list>
         </div>
 
-        <ion-label>
-          <h2>{{ item.nombre }}</h2>
-          <p class="cliente-texto" *ngIf="item.cliente">{{ item.cliente }}</p>
-          <p>{{ item.descripcion }}</p>
-        </ion-label>
+        <ion-item
+          *ngIf="vistaActual === 'ingresos' && filteredItems.length === 0"
+          lines="none"
+          class="ion-text-center ion-padding sin-registros">
+          <strong>No se registraron ventas</strong>
+        </ion-item>
 
-        <div slot="end" class="item-monto">
-          <strong>Bs. {{ item.precio }}</strong>
-        </div>
-      </ion-item>
-    </ion-list>
-  </div>
+        <ion-item
+          *ngIf="vistaActual === 'egresos' && filteredItems.length === 0"
+          lines="none"
+          class="ion-text-center ion-padding sin-registros">
+          <strong>No se registraron gastos</strong>
+        </ion-item>
+      </ion-col>
 
-  <ion-item
-    *ngIf="vistaActual === 'ingresos' && filteredItems.length === 0"
-    lines="none"
-    class="ion-text-center ion-padding sin-registros">
-    <strong>No se registraron ventas</strong>
-  </ion-item>
-
-  <ion-item
-    *ngIf="vistaActual === 'egresos' && filteredItems.length === 0"
-    lines="none"
-    class="ion-text-center ion-padding sin-registros">
-    <strong>No se registraron gastos</strong>
-  </ion-item>
+    </ion-row>
+  </ion-grid>
 
   <div class="acciones-inferiores">
     <ion-button class="btn-accion btn-venta" id="btnNuevaVentaPopover">
@@ -179,6 +195,7 @@
         <ion-icon slot="start" name="pricetags-outline"></ion-icon>
         <ion-label>Venta con productos</ion-label>
       </ion-item>
+
       <ion-item button (click)="irAVentaLibre()">
         <ion-icon slot="start" name="create-outline"></ion-icon>
         <ion-label>Venta libre</ion-label>
@@ -197,6 +214,7 @@
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
+
     <ion-content>
       <ion-datetime
         presentation="date"

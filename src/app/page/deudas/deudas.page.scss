@@ -71,7 +71,7 @@ ion-searchbar {
 
   input {
     font-weight: 600;
-    color: #bdbdbd;
+    color: #1f2d3d;
   }
 }
 
@@ -173,12 +173,16 @@ ion-searchbar {
 .pagar-button {
   width: 100%;
   height: 46px;
-  --border-radius: 10px;
+  --border-radius: 16px;
+  border-radius: 16px;
   --background: #16a34a;
   --color: #ffffff;
+  --box-shadow: none !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.15));
   font-weight: bold;
   text-transform: none;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  margin: 0;
 }
 
 .acciones-inferiores {
@@ -193,13 +197,17 @@ ion-searchbar {
 .crear-deuda-button {
   width: 100%;
   height: 46px;
-  --border-radius: 10px;
-  --background: #93C572;
+  --border-radius: 16px;
+  border-radius: 16px;
+  --background: #16a34a;
   --color: #ffffff;
-  --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  --box-shadow: none !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.15));
   font-weight: bold;
   text-transform: none;
   font-size: 1rem;
+  margin: 0;
 }
 
 @media (max-width: 480px) {
@@ -223,5 +231,24 @@ ion-searchbar {
         font-size: 13px;
       }
     }
+  }
+
+  .crear-deuda-button,
+  .pagar-button {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 768px) {
+  .resumen-container,
+  .busqueda-container,
+  .cliente-lista-scroll {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .acciones-inferiores {
+    max-width: 720px;
+    margin: 0 auto;
   }
 }

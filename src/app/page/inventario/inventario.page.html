@@ -52,14 +52,16 @@
 
   <div class="category-buttons">
     <ion-button
-      [color]="categoriaSeleccionada === null ? 'primary' : 'light'"
+      class="categoria-button"
+      [class.categoria-activa]="categoriaSeleccionada === null"
       (click)="filtrarPorCategoria(null)">
       Todos
     </ion-button>
 
     <ion-button
+      class="categoria-button"
       *ngFor="let cat of categorias"
-      [color]="categoriaSeleccionada === cat.categoria_id ? 'primary' : 'light'"
+      [class.categoria-activa]="categoriaSeleccionada === cat.categoria_id"
       (click)="filtrarPorCategoria(cat.categoria_id)">
       {{ cat.nombre }}
     </ion-button>
