@@ -111,7 +111,7 @@
               </div>
             </div>
 
-            <div class="campo-grupo">
+            <div class="campo-grupo span-2">
               <div class="campo-title-container">
                 <ion-label>Descripción</ion-label>
               </div>
@@ -392,17 +392,19 @@
 
 <ion-footer>
   <ion-toolbar class="footer-toolbar">
-    <ion-button
-      *ngIf="isEditMode"
-      expand="block"
-      color="danger"
-      class="btn-eliminar"
-      (click)="eliminarProducto()">
-      Eliminar Producto
-    </ion-button>
+    <div class="footer-botones-grid">
+      <ion-button
+        *ngIf="isEditMode"
+        expand="block"
+        color="danger"
+        class="btn-eliminar"
+        (click)="eliminarProducto()">
+        Eliminar Producto
+      </ion-button>
 
-    <ion-button expand="block" class="btn-guardar" (click)="guardarProducto()">
-      {{ isEditMode ? 'Actualizar Producto' : 'Agregar Producto' }}
-    </ion-button>
+      <ion-button expand="block" class="btn-guardar" (click)="guardarProducto()">
+        {{ isEditMode ? 'Actualizar Producto' : 'Agregar Producto' }}
+      </ion-button>
+    </div>
   </ion-toolbar>
 </ion-footer>

@@ -21,102 +21,123 @@
 </ion-popover>
 
 <ion-content [fullscreen]="true" class="deuda-content">
-  <div class="resumen-container">
-    <div class="info-cards">
-      <div class="card">
-        <p>Por cobrar</p>
-        <h2>Bs {{ totalPorCobrar }}</h2>
-        <p>{{ cantidadClientesConDeuda }} clientes</p>
-      </div>
-    </div>
-  </div>
 
-  <div class="busqueda-container">
-    <ion-searchbar
-      color="light"
-      placeholder="Buscar deudas"
-      [(ngModel)]="textoBusqueda"
-      (ionInput)="buscarDeudas($event)">
-    </ion-searchbar>
-  </div>
+  <ion-grid class="content-grid ion-no-padding">
+    <ion-row class="ion-justify-content-center">
 
-  <div class="cliente-lista-scroll">
-    <ion-list lines="none">
-      <div *ngFor="let cliente of clientesFiltrados" class="cliente-bloque">
-        <ion-item button (click)="toggleMenu(cliente.id)" class="cliente-item">
-          <ion-avatar slot="start" class="cliente-avatar">
-            <ion-icon name="person-circle"></ion-icon>
-          </ion-avatar>
+      <ion-col size="12" size-md="5" size-lg="4" class="ion-no-padding col-panel-fijo">
 
-          <ion-label>
-            <h2>
-              {{ cliente.nombreCliente ? cliente.nombreCliente : ('Cliente #' + cliente.clienteId) }}
-            </h2>
-
-            <p *ngIf="cliente.descripcion">
-              {{ cliente.descripcion }}
-            </p>
-
-            <p>Total: Bs. {{ cliente.total }}</p>
-            <p>Pagado: Bs. {{ cliente.montoPagado }}</p>
-            <p>Saldo: Bs. {{ cliente.montoFaltante }}</p>
-          </ion-label>
-        </ion-item>
-
-        <div class="menu-desplegable" *ngIf="selectedCliente === cliente.id">
-          <div class="resumen-deuda">
-            <p>Monto Pagado: {{ cliente.montoPagado }} Bs.</p>
-            <p>Monto Faltante: {{ cliente.montoFaltante }} Bs.</p>
-
-            <p *ngIf="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'" class="deuda-pagada">
-              Deuda pagada
-            </p>
+        <div class="resumen-container">
+          <div class="info-cards">
+            <div class="card">
+              <p>Por cobrar</p>
+              <h2>Bs {{ totalPorCobrar }}</h2>
+              <p>{{ cantidadClientesConDeuda }} clientes</p>
+            </div>
           </div>
+        </div>
 
-          <ion-item lines="none" class="input-item">
-            <ion-label>Tipo de pago</ion-label>
-            <ion-select
-              [(ngModel)]="tipoPagoId"
-              placeholder="Seleccionar"
-              [disabled]="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
-              <ion-select-option *ngFor="let t of tiposDePago" [value]="t.tipo_pago_id">
-                {{ t.nombre }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
+        <div class="busqueda-container">
+          <ion-searchbar
+            color="light"
+            placeholder="Buscar deudas"
+            [(ngModel)]="textoBusqueda"
+            (ionInput)="buscarDeudas($event)">
+          </ion-searchbar>
+        </div>
 
-          <ion-item lines="none" class="input-item">
-            <ion-input
-              [(ngModel)]="pago"
-              type="number"
-              placeholder="Agregar monto a pagar"
-              [disabled]="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
-            </ion-input>
-          </ion-item>
-
-          <p
-            class="error-limite"
-            *ngIf="cliente.montoFaltante > 0
-              && cliente.estado !== 'pagada'
-              && pago
-              && toNumber(pago) > cliente.montoFaltante">
-            El monto ingresado supera el saldo de la deuda.
-          </p>
-
-          <ion-button
-            class="pagar-button"
-            (click)="pagar(cliente)"
-            [disabled]="cliente.montoFaltante <= 0
-              || cliente.estado === 'pagada'
-              || (pago && toNumber(pago) > cliente.montoFaltante)">
-            Pagar
+        <div class="acciones-desktop btn-solo-pc">
+          <ion-button class="crear-deuda-button" (click)="crearDeuda()">
+            Nueva Deuda
           </ion-button>
         </div>
-      </div>
-    </ion-list>
-  </div>
 
-  <div class="acciones-inferiores">
+      </ion-col>
+
+      <ion-col size="12" size-md="7" size-lg="6" class="ion-no-padding col-lista-datos">
+
+        <div class="cliente-lista-scroll">
+          <ion-list lines="none">
+            <div *ngFor="let cliente of clientesFiltrados" class="cliente-bloque">
+              <ion-item button (click)="toggleMenu(cliente.id)" class="cliente-item">
+                <ion-avatar slot="start" class="cliente-avatar">
+                  <ion-icon name="person-circle"></ion-icon>
+                </ion-avatar>
+
+                <ion-label>
+                  <h2>
+                    {{ cliente.nombreCliente ? cliente.nombreCliente : ('Cliente #' + cliente.clienteId) }}
+                  </h2>
+
+                  <p *ngIf="cliente.descripcion">
+                    {{ cliente.descripcion }}
+                  </p>
+
+                  <p>Total: Bs. {{ cliente.total }}</p>
+                  <p>Pagado: Bs. {{ cliente.montoPagado }}</p>
+                  <p>Saldo: Bs. {{ cliente.montoFaltante }}</p>
+                </ion-label>
+              </ion-item>
+
+              <div class="menu-desplegable" *ngIf="selectedCliente === cliente.id">
+                <div class="resumen-deuda">
+                  <p>Monto Pagado: {{ cliente.montoPagado }} Bs.</p>
+                  <p>Monto Faltante: {{ cliente.montoFaltante }} Bs.</p>
+
+                  <p *ngIf="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'" class="deuda-pagada">
+                    Deuda pagada
+                  </p>
+                </div>
+
+                <ion-item lines="none" class="input-item">
+                  <ion-label>Tipo de pago</ion-label>
+                  <ion-select
+                    [(ngModel)]="tipoPagoId"
+                    placeholder="Seleccionar"
+                    [disabled]="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
+                    <ion-select-option *ngFor="let t of tiposDePago" [value]="t.tipo_pago_id">
+                      {{ t.nombre }}
+                    </ion-select-option>
+                  </ion-select>
+                </ion-item>
+
+                <ion-item lines="none" class="input-item">
+                  <ion-input
+                    [(ngModel)]="pago"
+                    type="number"
+                    placeholder="Agregar monto a pagar"
+                    [disabled]="cliente.montoFaltante <= 0 || cliente.estado === 'pagada'">
+                  </ion-input>
+                </ion-item>
+
+                <p
+                  class="error-limite"
+                  *ngIf="cliente.montoFaltante > 0
+                    && cliente.estado !== 'pagada'
+                    && pago
+                    && toNumber(pago) > cliente.montoFaltante">
+                  El monto ingresado supera el saldo de la deuda.
+                </p>
+
+                <ion-button
+                  class="pagar-button"
+                  (click)="pagar(cliente)"
+                  [disabled]="cliente.montoFaltante <= 0
+                    || cliente.estado === 'pagada'
+                    || (pago && toNumber(pago) > cliente.montoFaltante)">
+                  Pagar
+                </ion-button>
+              </div>
+            </div>
+          </ion-list>
+        </div>
+
+      </ion-col>
+
+    </ion-row>
+  </ion-grid>
+
+  <div class="acciones-inferiores btn-solo-movil">
     <ion-button class="crear-deuda-button" (click)="crearDeuda()">
       Nueva Deuda
     </ion-button>

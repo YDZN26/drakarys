@@ -69,26 +69,41 @@
 
   <div class="productos-container">
     <ion-list lines="none">
-      <ion-item
-        button
-        *ngFor="let producto of productosFiltrados"
-        (click)="verDetalleProducto(producto)"
-        class="producto-item">
+      <ion-grid class="ion-no-padding">
+        <ion-row>
 
-        <ion-label>
-          <h2>{{ producto.nombre }}</h2>
-          <p>Exhibición: {{ producto?.stock_exhibicion || 0 }}</p>
-          <p>Almacén tienda: {{ producto?.stock_almacen_tienda || 0 }}</p>
-          <p>Almacén casa: {{ producto?.stock_almacen_casa || 0 }}</p>
-          <p>Dañados: {{ producto?.stock_danado || 0 }}</p>
-          <p>Total vendible: {{ obtenerTotalVendible(producto) }}</p>
-          <p>Precio unitario Bs {{ producto.precio }}</p>
-        </ion-label>
+          <ion-col
+            size="12"
+            size-md="6"
+            size-lg="4"
+            size-xl="3"
+            *ngFor="let producto of productosFiltrados"
+            class="grid-columna-producto">
 
-        <ion-thumbnail slot="end" class="producto-thumbnail">
-          <img [src]="producto.imagen" />
-        </ion-thumbnail>
-      </ion-item>
+            <ion-item
+              button
+              (click)="verDetalleProducto(producto)"
+              class="producto-item">
+
+              <ion-label>
+                <h2>{{ producto.nombre }}</h2>
+                <p>Exhibición: {{ producto?.stock_exhibicion || 0 }}</p>
+                <p>Almacén tienda: {{ producto?.stock_almacen_tienda || 0 }}</p>
+                <p>Almacén casa: {{ producto?.stock_almacen_casa || 0 }}</p>
+                <p>Dañados: {{ producto?.stock_danado || 0 }}</p>
+                <p>Total vendible: {{ obtenerTotalVendible(producto) }}</p>
+                <p class="precio-destacado">Precio unitario Bs {{ producto.precio }}</p>
+              </ion-label>
+
+              <ion-thumbnail slot="end" class="producto-thumbnail">
+                <img [src]="producto.imagen" />
+              </ion-thumbnail>
+            </ion-item>
+
+          </ion-col>
+
+        </ion-row>
+      </ion-grid>
     </ion-list>
   </div>
 

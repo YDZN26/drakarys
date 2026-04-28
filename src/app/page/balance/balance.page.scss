@@ -388,6 +388,11 @@ ion-modal.calendar-modal {
   padding: 8px 16px;
 }
 
+/* Configuramos botones por defecto (Móvil) */
+.btn-solo-pc {
+  display: none !important;
+}
+
 @media (max-width: 480px) {
   .balance-header {
     .balance-titulo,
@@ -418,6 +423,7 @@ ion-modal.calendar-modal {
   padding-bottom: 120px;
 }
 
+/* Configuramos responsividad para PC / Tablets grandes */
 @media (min-width: 768px) {
   .content-grid {
     padding: 24px 18px 120px 18px;
@@ -438,7 +444,16 @@ ion-modal.calendar-modal {
   }
 
   .acciones-inferiores {
-    max-width: 720px;
+    max-width: 850px; /* Un poco más amplio para que quepan 3 botones perfectamente */
     margin: 0 auto;
+  }
+
+  /* Lógica de intercambio de botones */
+  .btn-solo-movil {
+    display: none !important; /* Oculta el botón que abre el popover */
+  }
+
+  .btn-solo-pc {
+    display: block !important; /* Muestra los botones desglosados en pantalla grande */
   }
 }

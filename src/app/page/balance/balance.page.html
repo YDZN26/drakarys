@@ -176,9 +176,19 @@
   </ion-grid>
 
   <div class="acciones-inferiores">
-    <ion-button class="btn-accion btn-venta" id="btnNuevaVentaPopover">
+    <ion-button class="btn-accion btn-venta btn-solo-movil" id="btnNuevaVentaPopover">
       <ion-icon slot="start" name="add-circle-outline"></ion-icon>
       Nueva venta
+    </ion-button>
+
+    <ion-button class="btn-accion btn-venta btn-solo-pc" (click)="irAVentaProductos()">
+      <ion-icon slot="start" name="pricetags-outline"></ion-icon>
+      Venta con productos
+    </ion-button>
+
+    <ion-button class="btn-accion btn-venta btn-solo-pc" (click)="irAVentaLibre()">
+      <ion-icon slot="start" name="create-outline"></ion-icon>
+      Venta libre
     </ion-button>
 
     <ion-button class="btn-accion btn-gasto" (click)="goToNuevoGastoPage()">

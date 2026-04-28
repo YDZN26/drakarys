@@ -131,7 +131,9 @@ ion-header {
 
 ion-list {
   margin-top: 4px;
-  background: transparent;
+  /* FORZAMOS FONDO TRANSPARENTE PARA MATAR EL FONDO BLANCO DE IONIC */
+  background: transparent !important;
+  --background: transparent !important;
 }
 
 .producto-item {
@@ -142,6 +144,7 @@ ion-list {
   border-radius: 18px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   align-items: center;
+  width: 100%;
 
   ion-label {
     h2 {
@@ -157,12 +160,18 @@ ion-list {
       margin: 2px 0;
       font-weight: 500;
     }
+
+    .precio-destacado {
+      font-weight: bold;
+      color: #16a34a;
+      margin-top: 6px;
+    }
   }
 }
 
 .producto-thumbnail {
-  width: 56px;
-  height: 56px;
+  width: 65px;
+  height: 65px;
   --border-radius: 12px;
   overflow: hidden;
 
@@ -223,6 +232,7 @@ ion-list {
   font-weight: bold;
 }
 
+/* ======== MÓVIL ======== */
 @media (max-width: 480px) {
   .info-cards {
     .card {
@@ -249,17 +259,45 @@ ion-list {
   }
 }
 
+/* ======== PC / TABLET ======== */
 @media (min-width: 768px) {
   .resumen-container,
   .busqueda-container,
   .category-buttons,
   .productos-container {
-    max-width: 720px;
+    max-width: 1200px;
     margin: 0 auto;
   }
 
   .acciones-inferiores {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .info-cards {
     max-width: 720px;
     margin: 0 auto;
+  }
+
+  /* REGLAS PARA HACER QUE TODAS LAS TARJETAS MIDAN EXACTAMENTE LO MISMO */
+  .grid-columna-producto {
+    display: flex;
+    flex-direction: column; /* Transforma la columna en un flexbox vertical */
+    padding: 8px; /* Separación de las tarjetas en PC */
+  }
+
+  .producto-item {
+    margin: 0;
+    flex-grow: 1; /* Obliga a la tarjeta a estirarse para igualar a la más alta de la fila */
+    width: 100%;
+    --min-height: 100%; /* Forzamos a la caja interna a crecer */
+  }
+
+  /* Ajustamos el Shadow DOM interno de Ionic para alinear contenido arriba */
+  .producto-item::part(native) {
+    height: 100%;
+    align-items: flex-start; /* Alinea los textos arriba por si hay nombres muy largos */
+    padding-top: 10px;
+    padding-bottom: 10px;
   }
 }

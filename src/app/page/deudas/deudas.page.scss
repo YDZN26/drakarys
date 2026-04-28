@@ -210,6 +210,16 @@ ion-searchbar {
   margin: 0;
 }
 
+/* Clases de utilidad para el control responsivo */
+.btn-solo-pc {
+  display: none !important;
+}
+
+.acciones-desktop {
+  padding: 0 16px; /* Alineación perfecta con el buscador */
+}
+
+/* ======== MÓVIL ======== */
 @media (max-width: 480px) {
   .info-cards {
     .card {
@@ -239,16 +249,43 @@ ion-searchbar {
   }
 }
 
+/* ======== PC / TABLET ======== */
 @media (min-width: 768px) {
-  .resumen-container,
-  .busqueda-container,
-  .cliente-lista-scroll {
-    max-width: 720px;
-    margin: 0 auto;
+  /* Añadimos un pequeño margen superior global en PC para respirar */
+  .content-grid {
+    padding: 24px 18px 120px 18px;
   }
 
-  .acciones-inferiores {
-    max-width: 720px;
-    margin: 0 auto;
+  /* El panel fijo de la izquierda se queda pegado arriba mientras scrolleas la derecha */
+  .col-panel-fijo {
+    position: sticky;
+    top: 16px;
+    height: fit-content;
+  }
+
+  /* Ajustamos el resumen para que parezca una tarjeta independiente en PC */
+  .resumen-container {
+    border-radius: 22px; /* Redondeamos también arriba en PC */
+    margin: 0 16px; /* Separación de los bordes laterales */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Sombra suave Material */
+  }
+
+  /* Ajustamos el buscador en PC */
+  .busqueda-container {
+    padding-bottom: 16px;
+  }
+
+  /* Quitamos el padding gigante de abajo porque los botones ya no flotan en la lista */
+  .cliente-lista-scroll {
+    padding: 0 16px 16px 16px;
+  }
+
+  /* Intercambio mágico de visibilidad de botones */
+  .btn-solo-movil {
+    display: none !important;
+  }
+
+  .btn-solo-pc {
+    display: block !important;
   }
 }
