@@ -1,10 +1,12 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { AuthGuard } from './guards/auth.guard';
 
 const routes: Routes = [
   {
     path: 'home',
-    loadChildren: () => import('./home/home.module').then( m => m.HomePageModule)
+    loadChildren: () => import('./home/home.module').then( m => m.HomePageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: '',
@@ -14,19 +16,23 @@ const routes: Routes = [
 
   {
     path: 'tab-inicial',
-    loadChildren: () => import('./page/tab-inicial/tab-inicial.module').then( m => m.TabInicialPageModule)
+    loadChildren: () => import('./page/tab-inicial/tab-inicial.module').then( m => m.TabInicialPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'nueva-venta',
-    loadChildren: () => import('./page/nueva-venta/nueva-venta.module').then( m => m.NuevaVentaPageModule)
+    loadChildren: () => import('./page/nueva-venta/nueva-venta.module').then( m => m.NuevaVentaPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'agregar-producto',
-    loadChildren: () => import('./page/agregar-producto/agregar-producto.module').then( m => m.AgregarProductoPageModule)
+    loadChildren: () => import('./page/agregar-producto/agregar-producto.module').then( m => m.AgregarProductoPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'nuevo-gasto',
-    loadChildren: () => import('./page/nuevo-gasto/nuevo-gasto.module').then( m => m.NuevoGastoPageModule)
+    loadChildren: () => import('./page/nuevo-gasto/nuevo-gasto.module').then( m => m.NuevoGastoPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'login',
@@ -35,42 +41,51 @@ const routes: Routes = [
 
   {
     path: 'balance',
-    loadChildren: () => import('./page/balance/balance.module').then( m => m.BalancePageModule)
+    loadChildren: () => import('./page/balance/balance.module').then( m => m.BalancePageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'recibo/:ventaId',
-    loadChildren: () => import('./page/recibo/recibo.module').then( m => m.ReciboPageModule)
+    loadChildren: () => import('./page/recibo/recibo.module').then( m => m.ReciboPageModule),
+    canActivate: [AuthGuard]
   },
 
   {
     path: 'recibo',
-    loadChildren: () => import('./page/recibo/recibo.module').then(m => m.ReciboPageModule)
+    loadChildren: () => import('./page/recibo/recibo.module').then(m => m.ReciboPageModule),
+    canActivate: [AuthGuard]
   },
 
   {
     path: 'cuotas-modal',
-    loadChildren: () => import('./page/cuotas-modal/cuotas-modal.module').then( m => m.CuotasModalPageModule)
+    loadChildren: () => import('./page/cuotas-modal/cuotas-modal.module').then( m => m.CuotasModalPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'preview',
-    loadChildren: () => import('./page/preview/preview.module').then( m => m.PreviewPageModule)
+    loadChildren: () => import('./page/preview/preview.module').then( m => m.PreviewPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'metodo-pago',
-    loadChildren: () => import('./page/metodo-pago/metodo-pago.module').then( m => m.MetodoPagoPageModule)
+    loadChildren: () => import('./page/metodo-pago/metodo-pago.module').then( m => m.MetodoPagoPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'cierre-caja',
-    loadChildren: () => import('./page/cierre-caja/cierre-caja.module').then( m => m.CierreCajaPageModule)
+    loadChildren: () => import('./page/cierre-caja/cierre-caja.module').then( m => m.CierreCajaPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'venta-libre',
-    loadChildren: () => import('./page/venta-libre/venta-libre.module').then( m => m.VentaLibrePageModule)
+    loadChildren: () => import('./page/venta-libre/venta-libre.module').then( m => m.VentaLibrePageModule),
+    canActivate: [AuthGuard]
   },
 
   {
     path: 'crear-deuda',
-    loadChildren: () => import('./page/crear-deuda/crear-deuda.module').then(m => m.CrearDeudaPageModule)
+    loadChildren: () => import('./page/crear-deuda/crear-deuda.module').then(m => m.CrearDeudaPageModule),
+    canActivate: [AuthGuard]
   },
 ];
 

@@ -45,6 +45,26 @@ export class SupabaseService {
     }
   }
 
+  obtenerUsuario() {
+    try {
+      const usuarioGuardado = localStorage.getItem('usuario');
+
+      if (!usuarioGuardado) {
+        return null;
+      }
+
+      return JSON.parse(usuarioGuardado);
+    } catch (error) {
+      console.error('Error al obtener usuario:', error);
+      return null;
+    }
+  }
+
+  cerrarSesion() {
+    localStorage.removeItem('usuario');
+    localStorage.removeItem('usuario_id');
+  }
+
   async agregarProducto(producto: any) {
     const { data, error } = await this.supabase
       .from('producto')
