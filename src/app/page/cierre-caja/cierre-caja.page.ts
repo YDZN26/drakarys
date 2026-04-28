@@ -95,76 +95,20 @@ export class CierreCajaPage implements OnInit {
     const cierreAnterior = await this.supabaseService.obtenerUltimoCierreAntesDe(inicioDelDia.toISOString());
     this.saldoInicial = Number(cierreAnterior?.saldo_final) || 0;
 
-    const { data: ingresos } = await this.supabaseService.getSupabase()
-      .from('ingreso')
-      .select('total, tipo_pago_id, tipo_ingreso, estado')
-      .in('tipo_ingreso', ['venta', 'venta_libre', 'ingresos_varios', 'pago_deuda', 'ajuste_positivo'])
-      .eq('estado', true)
-      .gte('fecha', inicioDelDia.toISOString())
-      .lte('fecha', finDelDia.toISOString());
+    const resumen = await this.supabaseService.calcularResumenCajaPorFecha(
+      inicioDelDia.toISOString(),
+      finDelDia.toISOString()
+    );
 
-    let efectivoIngreso = 0;
-    let transferenciaIngreso = 0;
-    let tarjetaIngreso = 0;
-    let totalIngreso = 0;
+    this.ingresosEfectivo = resumen.ingresosEfectivo;
+    this.ingresosTransferencia = resumen.ingresosTransferencia;
+    this.ingresosTarjeta = resumen.ingresosTarjeta;
+    this.totalIngresos = resumen.ingresosTotal;
 
-    ingresos?.forEach(i => {
-      const total = Number(i.total) || 0;
-
-      if (i.tipo_pago_id === 2) efectivoIngreso += total;
-      else if (i.tipo_pago_id === 3) transferenciaIngreso += total;
-      else if (i.tipo_pago_id === 4) tarjetaIngreso += total;
-
-      totalIngreso += total;
-    });
-
-    this.ingresosEfectivo = efectivoIngreso;
-    this.ingresosTransferencia = transferenciaIngreso;
-    this.ingresosTarjeta = tarjetaIngreso;
-    this.totalIngresos = totalIngreso;
-
-    const { data: gastos } = await this.supabaseService.getSupabase()
-      .from('gasto')
-      .select('monto, tipo_pago_id')
-      .gte('fecha', inicioDelDia.toISOString())
-      .lte('fecha', finDelDia.toISOString());
-
-    const { data: otrosEgresos } = await this.supabaseService.getSupabase()
-      .from('egreso')
-      .select('total, tipo_pago_id, tipo_egreso')
-      .in('tipo_egreso', ['ajuste_negativo', 'retiro_caja'])
-      .gte('fecha', inicioDelDia.toISOString())
-      .lte('fecha', finDelDia.toISOString());
-
-    let efectivoEgreso = 0;
-    let transferenciaEgreso = 0;
-    let tarjetaEgreso = 0;
-    let totalEgreso = 0;
-
-    gastos?.forEach(g => {
-      const monto = Number(g.monto) || 0;
-
-      if (g.tipo_pago_id === 2) efectivoEgreso += monto;
-      else if (g.tipo_pago_id === 3) transferenciaEgreso += monto;
-      else if (g.tipo_pago_id === 4) tarjetaEgreso += monto;
-
-      totalEgreso += monto;
-    });
-
-    otrosEgresos?.forEach(e => {
-      const monto = Number(e.total) || 0;
-
-      if (e.tipo_pago_id === 2) efectivoEgreso += monto;
-      else if (e.tipo_pago_id === 3) transferenciaEgreso += monto;
-      else if (e.tipo_pago_id === 4) tarjetaEgreso += monto;
-
-      totalEgreso += monto;
-    });
-
-    this.egresosEfectivo = efectivoEgreso;
-    this.egresosTransferencia = transferenciaEgreso;
-    this.egresosTarjeta = tarjetaEgreso;
-    this.totalEgresos = totalEgreso;
+    this.egresosEfectivo = resumen.egresosEfectivo;
+    this.egresosTransferencia = resumen.egresosTransferencia;
+    this.egresosTarjeta = resumen.egresosTarjeta;
+    this.totalEgresos = resumen.egresosTotal;
 
     this.balance = this.saldoInicial + this.totalIngresos - this.totalEgresos;
 
@@ -197,14 +141,17 @@ export class CierreCajaPage implements OnInit {
     if (this.cierreYaRegistrado) return;
 
     const efectivo = Number(this.efectivoFinal) || 0;
-    if (efectivo <= 0) return;
+
+    if (efectivo < 0) {
+      return;
+    }
 
     const diferencia = efectivo - this.obtenerEfectivoEsperado();
 
     if (diferencia !== 0) {
       await this.mostrarModalAdvertencia(diferencia);
     } else {
-      await this.procesarRetiroYResumen(0);
+      await this.mostrarModalRetiro(diferencia);
     }
   }
 
@@ -232,7 +179,7 @@ export class CierreCajaPage implements OnInit {
         { text: 'Cancelar', role: 'cancel' },
         {
           text: 'Aceptar',
-          handler: () => this.procesarRetiroYResumen(diferencia)
+          handler: () => this.mostrarModalRetiro(diferencia)
         }
       ]
     });
@@ -240,26 +187,131 @@ export class CierreCajaPage implements OnInit {
     await alerta.present();
   }
 
-  async procesarRetiroYResumen(diferencia: number) {
-    const retiro = 0;
+  async mostrarModalRetiro(diferencia: number) {
+    const efectivo = Number(this.efectivoFinal) || 0;
+
+    const alerta = await this.alertCtrl.create({
+      header: 'Retiro de efectivo',
+      message: 'Ingresa el monto que deseas retirar de caja.',
+      inputs: [
+        {
+          name: 'retiro',
+          type: 'number',
+          min: 0,
+          placeholder: '0'
+        }
+      ],
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Continuar',
+          handler: (data) => {
+            const retiro = Number(data.retiro) || 0;
+
+            if (retiro < 0 || retiro > efectivo) {
+              this.mostrarMensaje('El retiro no puede ser mayor al efectivo de caja.');
+              return false;
+            }
+
+            this.procesarRetiroYResumen(diferencia, retiro);
+            return true;
+          }
+        }
+      ]
+    });
+
+    await alerta.present();
+  }
+
+  async procesarRetiroYResumen(diferencia: number, retiro: number) {
+    if (diferencia > 0) {
+      const ajuste = await this.supabaseService.registrarAjustePositivo({
+        total: diferencia,
+        tipo_pago_id: 2,
+        usuario_id: this.usuarioId,
+        descripcion: 'Sobrante de cierre de caja'
+      });
+
+      if (!ajuste) return;
+    }
+
+    if (diferencia < 0) {
+      const ajuste = await this.supabaseService.registrarAjusteNegativo({
+        total: Math.abs(diferencia),
+        tipo_pago_id: 2,
+        usuario_id: this.usuarioId,
+        descripcion: 'Faltante de cierre de caja'
+      });
+
+      if (!ajuste) return;
+    }
+
+    if (retiro > 0) {
+      const retiroRegistrado = await this.supabaseService.registrarRetiroCaja({
+        total: retiro,
+        tipo_pago_id: 2,
+        usuario_id: this.usuarioId,
+        descripcion: 'Retiro de efectivo al cierre de caja'
+      });
+
+      if (!retiroRegistrado) return;
+    }
+
+    await this.cargarDatosDelDia();
+
     const efectivo = Number(this.efectivoFinal) || 0;
     const saldoFinal = efectivo - retiro;
 
     const cierre = {
       saldo_inicial: this.saldoInicial,
       ingresos_total: this.totalIngresos,
+      ingresos_efectivo: this.ingresosEfectivo,
+      ingresos_transferencia: this.ingresosTransferencia,
+      ingresos_tarjeta: this.ingresosTarjeta,
       egresos_total: this.totalEgresos,
+      egresos_efectivo: this.egresosEfectivo,
+      egresos_transferencia: this.egresosTransferencia,
+      egresos_tarjeta: this.egresosTarjeta,
       saldo_final: saldoFinal,
       efectivo_caja: efectivo,
       diferencia: diferencia,
-      usuario_id: this.usuarioId
+      usuario_id: this.usuarioId,
+      total_ingresos: this.totalIngresos,
+      total_egresos: this.totalEgresos
     };
 
     const ok = await this.supabaseService.registrarCierre(cierre);
 
     if (ok) {
+      await this.mostrarResumenFinal(retiro, saldoFinal);
       this.mensajeService.enviarMensaje('actualizar cierre');
       this.navCtrl.navigateBack('/tab-inicial/balance');
     }
+  }
+
+  async mostrarResumenFinal(retiro: number, saldoFinal: number) {
+    const alerta = await this.alertCtrl.create({
+      header: 'Cierre registrado',
+      message: `
+        Saldo inicial: Bs. ${this.saldoInicial.toFixed(2)}<br>
+        Ingresos del día: Bs. ${this.totalIngresos.toFixed(2)}<br>
+        Egresos del día: Bs. ${this.totalEgresos.toFixed(2)}<br>
+        Retiro: Bs. ${retiro.toFixed(2)}<br>
+        Nuevo saldo inicial: Bs. ${saldoFinal.toFixed(2)}
+      `,
+      buttons: ['ACEPTAR']
+    });
+
+    await alerta.present();
+  }
+
+  async mostrarMensaje(mensaje: string) {
+    const alerta = await this.alertCtrl.create({
+      header: 'Aviso',
+      message: mensaje,
+      buttons: ['ACEPTAR']
+    });
+
+    await alerta.present();
   }
 }

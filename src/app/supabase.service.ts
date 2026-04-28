@@ -1182,6 +1182,231 @@ export class SupabaseService {
     return data;
   }
 
+  async calcularResumenCajaPorFecha(fechaInicio: string, fechaFin: string) {
+  const { data: ingresos } = await this.supabase
+    .from('ingreso')
+    .select('total, tipo_pago_id, tipo_ingreso, estado')
+    .in('tipo_ingreso', ['venta', 'venta_libre', 'ingresos_varios', 'pago_deuda', 'ajuste_positivo'])
+    .eq('estado', true)
+    .gte('fecha', fechaInicio)
+    .lte('fecha', fechaFin);
+
+  const { data: gastos } = await this.supabase
+    .from('gasto')
+    .select('monto, tipo_pago_id')
+    .gte('fecha', fechaInicio)
+    .lte('fecha', fechaFin);
+
+  const { data: otrosEgresos } = await this.supabase
+    .from('egreso')
+    .select('total, tipo_pago_id, tipo_egreso')
+    .in('tipo_egreso', ['ajuste_negativo', 'retiro_caja'])
+    .gte('fecha', fechaInicio)
+    .lte('fecha', fechaFin);
+
+  let ingresosEfectivo = 0;
+  let ingresosTransferencia = 0;
+  let ingresosTarjeta = 0;
+  let ingresosTotal = 0;
+
+  ingresos?.forEach(i => {
+    const total = Number(i.total) || 0;
+
+    if (i.tipo_pago_id === 2) ingresosEfectivo += total;
+    else if (i.tipo_pago_id === 3) ingresosTransferencia += total;
+    else if (i.tipo_pago_id === 4) ingresosTarjeta += total;
+
+    ingresosTotal += total;
+  });
+
+  let egresosEfectivo = 0;
+  let egresosTransferencia = 0;
+  let egresosTarjeta = 0;
+  let egresosTotal = 0;
+
+  gastos?.forEach(g => {
+    const monto = Number(g.monto) || 0;
+
+    if (g.tipo_pago_id === 2) egresosEfectivo += monto;
+    else if (g.tipo_pago_id === 3) egresosTransferencia += monto;
+    else if (g.tipo_pago_id === 4) egresosTarjeta += monto;
+
+    egresosTotal += monto;
+  });
+
+  otrosEgresos?.forEach(e => {
+    const monto = Number(e.total) || 0;
+
+    if (e.tipo_pago_id === 2) egresosEfectivo += monto;
+    else if (e.tipo_pago_id === 3) egresosTransferencia += monto;
+    else if (e.tipo_pago_id === 4) egresosTarjeta += monto;
+
+    egresosTotal += monto;
+  });
+
+  return {
+    ingresosTotal,
+    ingresosEfectivo,
+    ingresosTransferencia,
+    ingresosTarjeta,
+    egresosTotal,
+    egresosEfectivo,
+    egresosTransferencia,
+    egresosTarjeta
+  };
+}
+
+async registrarRetiroCaja(payload: {
+  total: number;
+  tipo_pago_id: number;
+  usuario_id: number;
+  descripcion?: string;
+}) {
+  const dataInsert = {
+    tipo_pago_id: payload.tipo_pago_id,
+    usuario_id: payload.usuario_id,
+    total: payload.total,
+    fecha: new Date().toISOString(),
+    tipo_egreso: 'retiro_caja',
+    descripcion: payload.descripcion ?? 'Retiro de efectivo de caja'
+  };
+
+  const { data, error } = await this.supabase
+    .from('egreso')
+    .insert([dataInsert])
+    .select('*')
+    .single();
+
+  if (error) {
+    console.error('Error al registrar retiro de caja:', error);
+    return null;
+  }
+
+  return data;
+}
+
+async obtenerPrimeraFechaMovimientoCaja() {
+  const fechas: string[] = [];
+
+  const { data: ingreso } = await this.supabase
+    .from('ingreso')
+    .select('fecha')
+    .order('fecha', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const { data: gasto } = await this.supabase
+    .from('gasto')
+    .select('fecha')
+    .order('fecha', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const { data: egreso } = await this.supabase
+    .from('egreso')
+    .select('fecha')
+    .order('fecha', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (ingreso?.fecha) fechas.push(ingreso.fecha);
+  if (gasto?.fecha) fechas.push(gasto.fecha);
+  if (egreso?.fecha) fechas.push(egreso.fecha);
+
+  if (fechas.length === 0) return null;
+
+  fechas.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  return fechas[0];
+}
+
+async verificarYCerrarDiasPendientes() {
+  const usuarioId = this.obtenerUsuarioLogueadoId();
+
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
+  let fechaInicio: Date;
+  let saldoInicial = 0;
+
+  const ultimoCierre = await this.obtenerUltimoCierreAntesDe(hoy.toISOString());
+
+  if (ultimoCierre) {
+    fechaInicio = new Date(ultimoCierre.fecha);
+    fechaInicio.setDate(fechaInicio.getDate() + 1);
+    fechaInicio.setHours(0, 0, 0, 0);
+    saldoInicial = Number(ultimoCierre.saldo_final) || 0;
+  } else {
+    const primeraFecha = await this.obtenerPrimeraFechaMovimientoCaja();
+
+    if (!primeraFecha) {
+      return true;
+    }
+
+    fechaInicio = new Date(primeraFecha);
+    fechaInicio.setHours(0, 0, 0, 0);
+  }
+
+  const fechaLimite = new Date(hoy);
+  fechaLimite.setDate(fechaLimite.getDate() - 1);
+  fechaLimite.setHours(0, 0, 0, 0);
+
+  while (fechaInicio <= fechaLimite) {
+    const inicioDia = new Date(fechaInicio);
+    inicioDia.setHours(0, 0, 0, 0);
+
+    const finDia = new Date(fechaInicio);
+    finDia.setHours(23, 59, 59, 999);
+
+    const cierreExistente = await this.obtenerCierreDelDia(
+      inicioDia.toISOString(),
+      finDia.toISOString()
+    );
+
+    if (cierreExistente) {
+      saldoInicial = Number(cierreExistente.saldo_final) || 0;
+      fechaInicio.setDate(fechaInicio.getDate() + 1);
+      continue;
+    }
+
+    const resumen = await this.calcularResumenCajaPorFecha(
+      inicioDia.toISOString(),
+      finDia.toISOString()
+    );
+
+    const saldoFinal = saldoInicial + resumen.ingresosEfectivo - resumen.egresosEfectivo;
+
+    const cierre = {
+      fecha: finDia.toISOString(),
+      saldo_inicial: saldoInicial,
+      ingresos_total: resumen.ingresosTotal,
+      ingresos_efectivo: resumen.ingresosEfectivo,
+      ingresos_transferencia: resumen.ingresosTransferencia,
+      ingresos_tarjeta: resumen.ingresosTarjeta,
+      egresos_total: resumen.egresosTotal,
+      egresos_efectivo: resumen.egresosEfectivo,
+      egresos_transferencia: resumen.egresosTransferencia,
+      egresos_tarjeta: resumen.egresosTarjeta,
+      saldo_final: saldoFinal,
+      efectivo_caja: saldoFinal,
+      usuario_id: usuarioId,
+      total_ingresos: resumen.ingresosTotal,
+      total_egresos: resumen.egresosTotal,
+      diferencia: 0
+    };
+
+    const cierreGuardado = await this.registrarCierre(cierre);
+
+    if (!cierreGuardado) {
+      return false;
+    }
+
+    saldoInicial = saldoFinal;
+    fechaInicio.setDate(fechaInicio.getDate() + 1);
+  }
+
+  return true;
+}
+
   async obtenerIngresosLibres(fechaInicio: string, fechaFin: string) {
     const { data, error } = await this.supabase
       .from('ingreso')
@@ -1399,35 +1624,6 @@ export class SupabaseService {
 
     if (error) {
       console.error('Error al registrar ajuste negativo:', error);
-      return null;
-    }
-
-    return data;
-  }
-
-  async registrarRetiroCaja(payload: {
-    total: number;
-    tipo_pago_id: number;
-    usuario_id: number;
-    descripcion?: string;
-  }) {
-    const dataInsert = {
-      tipo_pago_id: payload.tipo_pago_id,
-      usuario_id: payload.usuario_id,
-      total: payload.total,
-      fecha: new Date().toISOString(),
-      tipo_egreso: 'retiro_caja',
-      descripcion: payload.descripcion ?? 'Retiro de efectivo de caja'
-    };
-
-    const { data, error } = await this.supabase
-      .from('egreso')
-      .insert([dataInsert])
-      .select('*')
-      .single();
-
-    if (error) {
-      console.error('Error al registrar retiro de caja:', error);
       return null;
     }
 

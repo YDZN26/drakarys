@@ -74,6 +74,7 @@ export class BalancePage implements OnInit, AfterViewInit {
     const mes = fecha.toLocaleString('es-BO', { month: 'long' });
     this.selectedDay = `${day} de ${mes}`;
 
+    await this.supabaseService.verificarYCerrarDiasPendientes();
     await this.onDaySelected(this.selectedDay);
 
     this.mensajeSub = this.mensajeService.mensaje$.subscribe((mensaje: string) => {
@@ -92,6 +93,7 @@ export class BalancePage implements OnInit, AfterViewInit {
 
   async ionViewWillEnter() {
     await this.popoverCtrl.dismiss().catch(() => {});
+    await this.supabaseService.verificarYCerrarDiasPendientes();
     await this.onDaySelected(this.selectedDay);
   }
 
