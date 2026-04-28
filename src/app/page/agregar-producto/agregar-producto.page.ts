@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { SupabaseService } from '../../supabase.service';
 import { ActivatedRoute } from '@angular/router';
 import { MensajeService } from 'src/app/mensaje.service';
+import { LoadingService } from 'src/app/services/loading.service';
 
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
@@ -61,7 +62,8 @@ export class AgregarProductoPage implements OnInit {
     private supabaseService: SupabaseService,
     private route: ActivatedRoute,
     private mensajeService: MensajeService,
-    private zone: NgZone
+    private zone: NgZone,
+    private loadingService: LoadingService
   ) {}
 
   ngOnInit() {
@@ -253,15 +255,21 @@ export class AgregarProductoPage implements OnInit {
         {
           text: 'Eliminar',
           handler: async () => {
-            const eliminado = await this.supabaseService.eliminarProductoLogico(this.productoId!);
+            await this.loadingService.mostrarLoading('Eliminando producto...');
 
-            if (!eliminado) {
-              console.error('No se pudo eliminar el producto');
-              return;
+            try {
+              const eliminado = await this.supabaseService.eliminarProductoLogico(this.productoId!);
+
+              if (!eliminado) {
+                console.error('No se pudo eliminar el producto');
+                return;
+              }
+
+              this.mensajeService.enviarMensaje('eliminado');
+              this.navCtrl.back();
+            } finally {
+              await this.loadingService.cerrarLoading();
             }
-
-            this.mensajeService.enviarMensaje('eliminado');
-            this.navCtrl.back();
           }
         }
       ]
@@ -294,23 +302,29 @@ export class AgregarProductoPage implements OnInit {
       return;
     }
 
-    const movido = await this.supabaseService.moverStockEntreUbicaciones(
-      this.productoId,
-      origen,
-      destino,
-      Number(this.cantidadTraslado)
-    );
+    await this.loadingService.mostrarLoading('Moviendo stock...');
 
-    if (!movido) {
-      console.error('No se pudo mover el stock');
-      return;
+    try {
+      const movido = await this.supabaseService.moverStockEntreUbicaciones(
+        this.productoId,
+        origen,
+        destino,
+        Number(this.cantidadTraslado)
+      );
+
+      if (!movido) {
+        console.error('No se pudo mover el stock');
+        return;
+      }
+
+      this.trasladoSeleccionado = '';
+      this.cantidadTraslado = 0;
+
+      await this.cargarProducto();
+      this.mensajeService.enviarMensaje('actualizado');
+    } finally {
+      await this.loadingService.cerrarLoading();
     }
-
-    this.trasladoSeleccionado = '';
-    this.cantidadTraslado = 0;
-
-    await this.cargarProducto();
-    this.mensajeService.enviarMensaje('actualizado');
   }
 
   async registrarDanado() {
@@ -331,22 +345,28 @@ export class AgregarProductoPage implements OnInit {
 
     const origen = this.origenDanado as 'exhibicion' | 'almacen_tienda' | 'almacen_casa';
 
-    const registrado = await this.supabaseService.moverStockADanado(
-      this.productoId,
-      origen,
-      Number(this.cantidadDanado)
-    );
+    await this.loadingService.mostrarLoading('Registrando producto dañado...');
 
-    if (!registrado) {
-      console.error('No se pudo registrar el producto dañado');
-      return;
+    try {
+      const registrado = await this.supabaseService.moverStockADanado(
+        this.productoId,
+        origen,
+        Number(this.cantidadDanado)
+      );
+
+      if (!registrado) {
+        console.error('No se pudo registrar el producto dañado');
+        return;
+      }
+
+      this.origenDanado = '';
+      this.cantidadDanado = 0;
+
+      await this.cargarProducto();
+      this.mensajeService.enviarMensaje('actualizado');
+    } finally {
+      await this.loadingService.cerrarLoading();
     }
-
-    this.origenDanado = '';
-    this.cantidadDanado = 0;
-
-    await this.cargarProducto();
-    this.mensajeService.enviarMensaje('actualizado');
   }
 
   async enviarAProveedor() {
@@ -360,20 +380,26 @@ export class AgregarProductoPage implements OnInit {
       return;
     }
 
-    const enviado = await this.supabaseService.enviarDanadoAProveedor(
-      this.productoId,
-      Number(this.cantidadSalidaProveedor)
-    );
+    await this.loadingService.mostrarLoading('Enviando a proveedor...');
 
-    if (!enviado) {
-      console.error('No se pudo enviar el producto al proveedor');
-      return;
+    try {
+      const enviado = await this.supabaseService.enviarDanadoAProveedor(
+        this.productoId,
+        Number(this.cantidadSalidaProveedor)
+      );
+
+      if (!enviado) {
+        console.error('No se pudo enviar el producto al proveedor');
+        return;
+      }
+
+      this.cantidadSalidaProveedor = 0;
+
+      await this.cargarProducto();
+      this.mensajeService.enviarMensaje('actualizado');
+    } finally {
+      await this.loadingService.cerrarLoading();
     }
-
-    this.cantidadSalidaProveedor = 0;
-
-    await this.cargarProducto();
-    this.mensajeService.enviarMensaje('actualizado');
   }
 
   async recibirCambioProveedor() {
@@ -394,22 +420,28 @@ export class AgregarProductoPage implements OnInit {
 
     const destino = this.destinoCambioProveedor as 'exhibicion' | 'almacen_tienda' | 'almacen_casa';
 
-    const recibido = await this.supabaseService.recibirCambioProveedor(
-      this.productoId,
-      destino,
-      Number(this.cantidadCambioProveedor)
-    );
+    await this.loadingService.mostrarLoading('Recibiendo cambio del proveedor...');
 
-    if (!recibido) {
-      console.error('No se pudo registrar el cambio del proveedor');
-      return;
+    try {
+      const recibido = await this.supabaseService.recibirCambioProveedor(
+        this.productoId,
+        destino,
+        Number(this.cantidadCambioProveedor)
+      );
+
+      if (!recibido) {
+        console.error('No se pudo registrar el cambio del proveedor');
+        return;
+      }
+
+      this.destinoCambioProveedor = '';
+      this.cantidadCambioProveedor = 0;
+
+      await this.cargarProducto();
+      this.mensajeService.enviarMensaje('actualizado');
+    } finally {
+      await this.loadingService.cerrarLoading();
     }
-
-    this.destinoCambioProveedor = '';
-    this.cantidadCambioProveedor = 0;
-
-    await this.cargarProducto();
-    this.mensajeService.enviarMensaje('actualizado');
   }
 
   getOrigenTraslado(): 'almacen_casa' | 'almacen_tienda' | null {
@@ -436,11 +468,19 @@ export class AgregarProductoPage implements OnInit {
     return null;
   }
 
-  guardarProducto() {
-    if (this.isEditMode) {
-      this.actualizarProducto();
-    } else {
-      this.agregarProducto();
+  async guardarProducto() {
+    await this.loadingService.mostrarLoading(
+      this.isEditMode ? 'Actualizando producto...' : 'Guardando producto...'
+    );
+
+    try {
+      if (this.isEditMode) {
+        await this.actualizarProducto();
+      } else {
+        await this.agregarProducto();
+      }
+    } finally {
+      await this.loadingService.cerrarLoading();
     }
   }
 

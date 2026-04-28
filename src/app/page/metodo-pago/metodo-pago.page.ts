@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { AlertController, NavController } from '@ionic/angular';
 import { SupabaseService } from 'src/app/supabase.service';
 import { MensajeService } from 'src/app/mensaje.service';
+import { LoadingService } from 'src/app/services/loading.service';
 
 @Component({
   selector: 'app-metodo-pago',
@@ -30,7 +31,8 @@ export class MetodoPagoPage implements OnInit {
     private navCtrl: NavController,
     private alertCtrl: AlertController,
     private supabase: SupabaseService,
-    private mensajeService: MensajeService
+    private mensajeService: MensajeService,
+    private loadingService: LoadingService
   ) {}
 
   ngOnInit() {
@@ -142,6 +144,10 @@ export class MetodoPagoPage implements OnInit {
       return;
     }
 
+    await this.loadingService.mostrarLoading(
+      this.modoEditar ? 'Actualizando venta...' : 'Registrando venta...'
+    );
+
     try {
       let res: any = null;
 
@@ -179,6 +185,7 @@ export class MetodoPagoPage implements OnInit {
       this.mensajeService.enviarMensaje('actualizar ingresos');
 
       this.navCtrl.navigateForward(['/recibo', res.venta.venta_id]);
+
     } catch (error) {
       console.error('Error al confirmar venta:', error);
 
@@ -190,6 +197,9 @@ export class MetodoPagoPage implements OnInit {
         buttons: ['OK']
       });
       await alerta.present();
+
+    } finally {
+      await this.loadingService.cerrarLoading();
     }
   }
 }
