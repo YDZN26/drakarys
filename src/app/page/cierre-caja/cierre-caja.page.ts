@@ -30,6 +30,14 @@ export class CierreCajaPage implements OnInit {
   usuarioId: number = 0;
   cierreYaRegistrado: boolean = false;
 
+  mostrarModalResumen: boolean = false;
+  resumenRetiro: number = 0;
+  resumenSaldoFinal: number = 0;
+
+  mostrarModalCierreRegistrado: boolean = false;
+  volverBalanceDesdeResumen: boolean = false;
+  volverBalanceDesdeCierreRegistrado: boolean = false;
+
   constructor(
     private supabaseService: SupabaseService,
     private navCtrl: NavController,
@@ -71,20 +79,7 @@ export class CierreCajaPage implements OnInit {
     this.cierreYaRegistrado = !!cierreDelDia;
 
     if (this.cierreYaRegistrado) {
-      const alerta = await this.alertCtrl.create({
-        header: 'Cierre ya registrado',
-        message: 'Ya existe un cierre de caja para el día de hoy. No se puede registrar otro cierre.',
-        buttons: [
-          {
-            text: 'ACEPTAR',
-            handler: () => {
-              this.navCtrl.navigateBack('/tab-inicial/balance');
-            }
-          }
-        ]
-      });
-
-      await alerta.present();
+      this.mostrarModalCierreRegistrado = true;
     }
   }
 
@@ -283,26 +278,39 @@ export class CierreCajaPage implements OnInit {
     const ok = await this.supabaseService.registrarCierre(cierre);
 
     if (ok) {
-      await this.mostrarResumenFinal(retiro, saldoFinal);
       this.mensajeService.enviarMensaje('actualizar cierre');
+      this.mostrarResumenFinal(retiro, saldoFinal);
+    }
+  }
+
+  mostrarResumenFinal(retiro: number, saldoFinal: number) {
+    this.resumenRetiro = retiro;
+    this.resumenSaldoFinal = saldoFinal;
+    this.mostrarModalResumen = true;
+  }
+
+  cerrarModalResumen() {
+    this.volverBalanceDesdeResumen = true;
+    this.mostrarModalResumen = false;
+  }
+
+  alCerrarModalResumen() {
+    if (this.volverBalanceDesdeResumen) {
+      this.volverBalanceDesdeResumen = false;
       this.navCtrl.navigateBack('/tab-inicial/balance');
     }
   }
 
-  async mostrarResumenFinal(retiro: number, saldoFinal: number) {
-    const alerta = await this.alertCtrl.create({
-      header: 'Cierre registrado',
-      message: `
-        Saldo inicial: Bs. ${this.saldoInicial.toFixed(2)}<br>
-        Ingresos del día: Bs. ${this.totalIngresos.toFixed(2)}<br>
-        Egresos del día: Bs. ${this.totalEgresos.toFixed(2)}<br>
-        Retiro: Bs. ${retiro.toFixed(2)}<br>
-        Nuevo saldo inicial: Bs. ${saldoFinal.toFixed(2)}
-      `,
-      buttons: ['ACEPTAR']
-    });
+  cerrarModalCierreRegistrado() {
+    this.volverBalanceDesdeCierreRegistrado = true;
+    this.mostrarModalCierreRegistrado = false;
+  }
 
-    await alerta.present();
+  alCerrarModalCierreRegistrado() {
+    if (this.volverBalanceDesdeCierreRegistrado) {
+      this.volverBalanceDesdeCierreRegistrado = false;
+      this.navCtrl.navigateBack('/tab-inicial/balance');
+    }
   }
 
   async mostrarMensaje(mensaje: string) {

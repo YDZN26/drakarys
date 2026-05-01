@@ -17,10 +17,16 @@ export class InventarioPage implements OnInit, OnDestroy {
 
   productos: any[] = [];
   productosFiltrados: any[] = [];
+  productosStockBajo: any[] = [];
+
   categorias: any[] = [];
   categoriaSeleccionada: number | null = null;
   textoBusqueda: string = '';
   mensaje: string = '';
+  stockMinimo: number = 5;
+
+  modalStockBajoAbierto: boolean = false;
+
   private mensajeSub!: Subscription;
 
   scannerAbierto: boolean = false;
@@ -102,6 +108,7 @@ export class InventarioPage implements OnInit, OnDestroy {
         : todos;
 
       this.productosFiltrados = this.productos;
+      this.verificarStockBajo();
 
       if (this.textoBusqueda && this.textoBusqueda.trim().length > 0) {
         this.buscarProductos({ target: { value: this.textoBusqueda } });
@@ -109,6 +116,57 @@ export class InventarioPage implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error al cargar productos:', error);
     }
+  }
+
+  verificarStockBajo() {
+    this.productosStockBajo = this.productos.filter((producto: any) => {
+      const stockExhibicion = Number(producto.stock_exhibicion || 0);
+      const stockAlmacenTienda = Number(producto.stock_almacen_tienda || 0);
+      const stockAlmacenCasa = Number(producto.stock_almacen_casa || 0);
+
+      const productoSinStock =
+        stockExhibicion === 0 &&
+        stockAlmacenTienda === 0 &&
+        stockAlmacenCasa === 0;
+
+      if (productoSinStock) {
+        return false;
+      }
+
+      return stockExhibicion <= this.stockMinimo
+        || stockAlmacenTienda <= this.stockMinimo
+        || stockAlmacenCasa <= this.stockMinimo;
+    });
+  }
+
+  obtenerDetalleStockBajo(producto: any): string {
+    const detalles: string[] = [];
+
+    const stockExhibicion = Number(producto.stock_exhibicion || 0);
+    const stockAlmacenTienda = Number(producto.stock_almacen_tienda || 0);
+    const stockAlmacenCasa = Number(producto.stock_almacen_casa || 0);
+
+    if (stockExhibicion <= this.stockMinimo) {
+      detalles.push(`Exhibición: ${stockExhibicion}`);
+    }
+
+    if (stockAlmacenTienda <= this.stockMinimo) {
+      detalles.push(`Almacén tienda: ${stockAlmacenTienda}`);
+    }
+
+    if (stockAlmacenCasa <= this.stockMinimo) {
+      detalles.push(`Almacén casa: ${stockAlmacenCasa}`);
+    }
+
+    return detalles.join(' | ');
+  }
+
+  mostrarProductosStockBajo() {
+    this.modalStockBajoAbierto = true;
+  }
+
+  cerrarModalStockBajo() {
+    this.modalStockBajoAbierto = false;
   }
 
   filtrarPorCategoria(categoriaId: number | null) {

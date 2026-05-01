@@ -35,6 +35,23 @@
     </div>
   </div>
 
+  <div class="stock-bajo-container" *ngIf="productosStockBajo.length > 0">
+    <div class="stock-bajo-resumen">
+      <div class="stock-bajo-info">
+        <ion-icon name="warning-outline"></ion-icon>
+
+        <div>
+          <h3>{{ productosStockBajo.length }} producto(s) con stock bajo</h3>
+          <p>Se recomienda revisar y aumentar stock.</p>
+        </div>
+      </div>
+
+      <ion-button fill="clear" size="small" (click)="mostrarProductosStockBajo()">
+        Ver detalles
+      </ion-button>
+    </div>
+  </div>
+
   <div class="busqueda-container">
     <ion-item lines="none" class="search-row">
       <ion-searchbar
@@ -114,6 +131,70 @@
   </div>
 
   <ion-modal
+    [isOpen]="modalStockBajoAbierto"
+    (didDismiss)="cerrarModalStockBajo()"
+    [breakpoints]="[0, 1]"
+    [initialBreakpoint]="1"
+    handle="false"
+    handle="true"
+    class="stock-bajo-modal">
+
+    <ng-template>
+      <div class="stock-bajo-modal-wrapper">
+        <div class="stock-bajo-modal-header">
+          <div class="stock-bajo-modal-icono">
+            <ion-icon name="warning-outline"></ion-icon>
+          </div>
+
+          <div>
+            <h2>Productos con stock bajo</h2>
+            <p>Estos productos necesitan revisión o reposición.</p>
+          </div>
+        </div>
+
+        <div class="stock-bajo-modal-lista">
+          <div class="stock-bajo-modal-item" *ngFor="let producto of productosStockBajo">
+            <h3>{{ producto.nombre }}</h3>
+
+            <div class="stock-bajo-detalles">
+              <div
+                class="stock-bajo-detalle"
+                *ngIf="(producto.stock_exhibicion || 0) <= stockMinimo">
+                <span>Exhibición</span>
+                <strong>{{ producto.stock_exhibicion || 0 }} unidad(es)</strong>
+              </div>
+
+              <div
+                class="stock-bajo-detalle"
+                *ngIf="(producto.stock_almacen_tienda || 0) <= stockMinimo">
+                <span>Almacén tienda</span>
+                <strong>{{ producto.stock_almacen_tienda || 0 }} unidad(es)</strong>
+              </div>
+
+              <div
+                class="stock-bajo-detalle"
+                *ngIf="(producto.stock_almacen_casa || 0) <= stockMinimo">
+                <span>Almacén casa</span>
+                <strong>{{ producto.stock_almacen_casa || 0 }} unidad(es)</strong>
+              </div>
+            </div>
+
+            <p class="stock-bajo-recomendacion">
+              Se recomienda aumentar stock de este producto.
+            </p>
+          </div>
+        </div>
+
+        <div class="stock-bajo-modal-footer">
+          <ion-button expand="block" class="cerrar-stock-bajo-button" (click)="cerrarModalStockBajo()">
+            Entendido
+          </ion-button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal
     [isOpen]="scannerAbierto"
     (didPresent)="iniciarLectura()"
     (didDismiss)="cerrarScanner()">
@@ -121,9 +202,10 @@
       <ion-header>
         <ion-toolbar color="mycolor">
           <ion-title>Escanear código</ion-title>
+
           <ion-buttons slot="end">
             <ion-button (click)="cerrarScanner()">
-              Cerrar
+              <ion-icon name="close-outline"></ion-icon>
             </ion-button>
           </ion-buttons>
         </ion-toolbar>
@@ -131,8 +213,8 @@
 
       <ion-content class="scanner-content">
         <div class="scanner-box">
-          <video #videoScanner class="scanner-video" autoplay playsinline></video>
-          <p class="scanner-text">Apunta al código de barras</p>
+          <video #videoScanner class="scanner-video"></video>
+          <p class="scanner-text">Apunta la cámara al código de barras</p>
         </div>
       </ion-content>
     </ng-template>

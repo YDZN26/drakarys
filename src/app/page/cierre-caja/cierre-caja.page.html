@@ -98,3 +98,101 @@
     </ion-button>
   </div>
 </ion-content>
+
+<ion-modal
+  class="modal-cierre-exitoso"
+  [isOpen]="mostrarModalResumen"
+  [backdropDismiss]="false"
+  (didDismiss)="alCerrarModalResumen()">
+  <ng-template>
+    <div class="modal-cierre-wrapper">
+      <div class="modal-cierre-card">
+
+        <div class="modal-icono-exito">
+          <ion-icon name="checkmark-outline"></ion-icon>
+        </div>
+
+        <h2>Cierre de caja registrado</h2>
+
+        <p class="modal-subtitulo">
+          El cierre del día se realizó correctamente.
+        </p>
+
+        <div class="modal-resumen">
+
+          <div class="modal-row">
+            <span>Saldo inicial</span>
+            <strong>Bs. {{ saldoInicial | number: '1.2-2' }}</strong>
+          </div>
+
+          <div class="modal-row">
+            <span>Ingresos del día</span>
+            <strong class="texto-ingreso">Bs. {{ totalIngresos | number: '1.2-2' }}</strong>
+          </div>
+
+          <div class="modal-row">
+            <span>Egresos del día</span>
+            <strong class="texto-egreso">Bs. {{ totalEgresos | number: '1.2-2' }}</strong>
+          </div>
+
+          <div class="modal-row">
+            <span>Retiro</span>
+            <strong>Bs. {{ resumenRetiro | number: '1.2-2' }}</strong>
+          </div>
+
+          <div class="modal-row total-final">
+            <span>Nuevo saldo inicial</span>
+            <strong>Bs. {{ resumenSaldoFinal | number: '1.2-2' }}</strong>
+          </div>
+
+        </div>
+
+        <ion-button
+          expand="block"
+          class="btn-entendido"
+          (click)="cerrarModalResumen()">
+          Entendido
+        </ion-button>
+
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
+
+<ion-modal
+  class="modal-cierre-exitoso"
+  [isOpen]="mostrarModalCierreRegistrado"
+  [backdropDismiss]="false"
+  (didDismiss)="alCerrarModalCierreRegistrado()">
+  <ng-template>
+    <div class="modal-cierre-wrapper">
+      <div class="modal-cierre-card">
+
+        <div class="modal-icono-aviso">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+        </div>
+
+        <h2>Cierre ya registrado</h2>
+
+        <p class="modal-subtitulo">
+          Ya existe un cierre de caja para el día de hoy.
+        </p>
+
+        <div class="modal-resumen">
+          <div class="modal-row total-final">
+            <span>Estado</span>
+            <strong>Caja cerrada</strong>
+          </div>
+        </div>
+
+        <ion-button
+          expand="block"
+          class="btn-entendido"
+          (click)="cerrarModalCierreRegistrado()">
+          Entendido
+        </ion-button>
+
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>

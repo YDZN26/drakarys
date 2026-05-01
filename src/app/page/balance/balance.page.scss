@@ -366,15 +366,6 @@ ion-fab-button {
   display: none;
 }
 
-ion-modal.calendar-modal {
-  --background: #fff;
-  --border-radius: 30px;
-  --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .cierre-caja-container {
   text-align: center;
   margin-top: 10px;
@@ -388,9 +379,370 @@ ion-modal.calendar-modal {
   padding: 8px 16px;
 }
 
-/* Configuramos botones por defecto (Móvil) */
 .btn-solo-pc {
   display: none !important;
+}
+
+/* MODAL NUEVA VENTA */
+
+.modal-nueva-venta {
+  --width: 100%;
+  --height: auto;
+  --border-radius: 28px 28px 0 0;
+  --box-shadow: none;
+  align-items: flex-end;
+}
+
+.modal-nueva-venta::part(content) {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  border-radius: 28px 28px 0 0;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.modal-nueva-venta-wrapper {
+  width: 100%;
+  background: #ffffff;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-nueva-venta-card {
+  width: 100%;
+  background: #ffffff;
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  padding: 12px 18px 22px 18px;
+  box-shadow: none;
+
+  h2 {
+    margin: 14px 0 6px 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #2d3d55;
+  }
+
+  .modal-subtitulo {
+    margin: 0 0 18px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #607389;
+  }
+}
+
+.modal-linea {
+  width: 54px;
+  height: 5px;
+  border-radius: 10px;
+  background: #cfd8e3;
+  margin: 0 auto;
+}
+
+.opcion-venta {
+  width: 100%;
+  border: none;
+  background: #edf2fa;
+  border-radius: 18px;
+  padding: 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.opcion-icono {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: rgba(22, 163, 74, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ion-icon {
+    font-size: 25px;
+    color: #16a34a;
+  }
+}
+
+.opcion-icono.libre {
+  background: rgba(0, 30, 135, 0.12);
+
+  ion-icon {
+    color: #001E87;
+  }
+}
+
+.opcion-texto {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  strong {
+    font-size: 15px;
+    font-weight: 800;
+    color: #2d3d55;
+  }
+
+  span {
+    font-size: 13px;
+    font-weight: 600;
+    color: #607389;
+  }
+}
+
+.opcion-flecha {
+  font-size: 22px;
+  color: #607389;
+}
+
+.btn-cancelar-modal {
+  height: 46px;
+  --background: #d70000;
+  --color: #ffffff;
+  --border-radius: 16px;
+  font-weight: bold;
+  text-transform: none;
+  margin: 8px 0 0 0;
+}
+
+/* MODAL PERIODO BALANCE */
+
+.modal-periodo-balance {
+  --width: 100%;
+  --height: auto;
+  --border-radius: 28px 28px 0 0;
+  --box-shadow: none;
+  align-items: flex-end;
+}
+
+.modal-periodo-balance::part(content) {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  max-height: 92%;
+  border-radius: 28px 28px 0 0;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.modal-periodo-wrapper {
+  width: 100%;
+  background: #ffffff;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-periodo-card {
+  width: 100%;
+  background: #ffffff;
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  padding: 12px 18px 22px 18px;
+  box-shadow: none;
+  max-height: 92vh;
+  overflow-y: auto;
+
+  h2 {
+    margin: 14px 0 6px 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #2d3d55;
+  }
+
+  .modal-subtitulo {
+    margin: 0 0 18px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #607389;
+  }
+}
+
+.opcion-periodo {
+  width: 100%;
+  border: none;
+  background: #edf2fa;
+  border-radius: 18px;
+  padding: 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.opcion-periodo-activa {
+  border: 2px solid #001E87;
+  background: #eef3ff;
+}
+
+.opcion-icono-periodo {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: rgba(0, 30, 135, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ion-icon {
+    font-size: 25px;
+    color: #001E87;
+  }
+}
+
+.opcion-icono-periodo.personalizado {
+  background: rgba(22, 163, 74, 0.12);
+
+  ion-icon {
+    color: #16a34a;
+  }
+}
+
+.rango-personalizado {
+  background: #edf2fa;
+  border-radius: 18px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.rango-titulo {
+  font-size: 15px;
+  font-weight: 800;
+  color: #2d3d55;
+  margin-bottom: 10px;
+}
+
+.input-fecha-rango {
+  --background: #ffffff;
+  --border-radius: 14px;
+  border: 1px solid #d9e1ea;
+  border-radius: 14px;
+  margin-bottom: 12px;
+
+  ion-label {
+    font-weight: bold;
+    color: #607389;
+  }
+
+  ion-datetime {
+    width: 100%;
+  }
+}
+
+.btn-aplicar-rango {
+  height: 46px;
+  --background: #16a34a;
+  --color: #ffffff;
+  --border-radius: 16px;
+  font-weight: bold;
+  text-transform: none;
+  margin: 0;
+}
+
+/* MODAL CERRAR SESIÓN */
+
+.modal-cerrar-sesion {
+  --width: 100%;
+  --height: 100%;
+  --background: transparent;
+  --box-shadow: none;
+  --border-radius: 0;
+}
+
+.modal-cerrar-sesion::part(content) {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  box-shadow: none;
+}
+
+.modal-sesion-wrapper {
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  box-sizing: border-box;
+}
+
+.modal-sesion-card {
+  width: 100%;
+  max-width: 390px;
+  background: #ffffff;
+  border-radius: 26px;
+  padding: 24px 18px 18px 18px;
+  text-align: center;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
+
+  h2 {
+    margin: 12px 0 6px 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #2d3d55;
+  }
+
+  .modal-subtitulo {
+    margin: 0 0 18px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #607389;
+  }
+}
+
+.modal-icono-sesion {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: rgba(215, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ion-icon {
+    font-size: 42px;
+    color: #d70000;
+  }
+}
+
+.modal-sesion-botones {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-cancelar-sesion {
+  height: 46px;
+  --background: #edf2fa;
+  --color: #2d3d55;
+  --border-radius: 16px;
+  font-weight: bold;
+  text-transform: none;
+  margin: 0;
+}
+
+.btn-confirmar-sesion {
+  height: 46px;
+  --background: #d70000;
+  --color: #ffffff;
+  --border-radius: 16px;
+  font-weight: bold;
+  text-transform: none;
+  margin: 0;
 }
 
 @media (max-width: 480px) {
@@ -417,13 +769,17 @@ ion-modal.calendar-modal {
   .btn-accion {
     font-size: 15px;
   }
+
+  .modal-sesion-botones {
+    flex-direction: column;
+    width: 100%;
+  }
 }
 
 .content-grid {
   padding-bottom: 120px;
 }
 
-/* Configuramos responsividad para PC / Tablets grandes */
 @media (min-width: 768px) {
   .content-grid {
     padding: 24px 18px 120px 18px;
@@ -444,16 +800,55 @@ ion-modal.calendar-modal {
   }
 
   .acciones-inferiores {
-    max-width: 850px; /* Un poco más amplio para que quepan 3 botones perfectamente */
+    max-width: 850px;
     margin: 0 auto;
   }
 
-  /* Lógica de intercambio de botones */
   .btn-solo-movil {
-    display: none !important; /* Oculta el botón que abre el popover */
+    display: none !important;
   }
 
   .btn-solo-pc {
-    display: block !important; /* Muestra los botones desglosados en pantalla grande */
+    display: block !important;
+  }
+
+  .modal-nueva-venta::part(content) {
+    max-width: 460px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 28px;
+    bottom: 22px;
+  }
+
+  .modal-nueva-venta-card {
+    max-width: 460px;
+    border-radius: 28px;
+  }
+
+  .modal-periodo-balance::part(content) {
+    max-width: 460px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 28px;
+    bottom: 22px;
+  }
+
+  .modal-periodo-card {
+    max-width: 460px;
+    border-radius: 28px;
+  }
+
+  .modal-sesion-card {
+    max-width: 390px;
+  }
+
+  .modal-sesion-botones {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .btn-cancelar-sesion,
+  .btn-confirmar-sesion {
+    width: 140px;
   }
 }

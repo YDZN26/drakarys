@@ -1,5 +1,5 @@
-import { Component, ViewChild, AfterViewInit, OnInit } from '@angular/core';
-import { IonModal, NavController, PopoverController } from '@ionic/angular';
+import { Component, OnInit } from '@angular/core';
+import { NavController } from '@ionic/angular';
 import { SupabaseService } from '../../supabase.service';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -10,15 +10,20 @@ import { MensajeService } from 'src/app/mensaje.service';
   templateUrl: './balance.page.html',
   styleUrls: ['./balance.page.scss'],
 })
-export class BalancePage implements OnInit, AfterViewInit {
-
-  @ViewChild('modalCalendario', { static: false }) modalCalendario!: IonModal;
-  presentingElement: HTMLElement | null = null;
+export class BalancePage implements OnInit {
 
   nombreUsuario: string = 'Usuario';
   days: string[] = [];
   selectedDay: string = '';
   fechaActualISO = new Date().toISOString();
+
+  tipoPeriodo: string = 'diario';
+  periodoOpciones: any[] = [];
+  mostrarModalPeriodo: boolean = false;
+
+  fechaMaximaISO: string = new Date().toISOString();
+  fechaInicioPersonalizada: string = new Date().toISOString();
+  fechaFinPersonalizada: string = new Date().toISOString();
 
   ingresos: any[] = [];
   egresos: any[] = [];
@@ -34,6 +39,12 @@ export class BalancePage implements OnInit, AfterViewInit {
 
   vistaActual: 'ingresos' | 'egresos' = 'ingresos';
 
+  mostrarModalNuevaVenta: boolean = false;
+  rutaVentaSeleccionada: string = '';
+
+  mostrarModalCerrarSesion: boolean = false;
+  cerrarSesionConfirmado: boolean = false;
+
   tiposPago: { [key: number]: string } = {
     1: 'Cuota',
     2: 'Efectivo',
@@ -45,15 +56,8 @@ export class BalancePage implements OnInit, AfterViewInit {
     private navCtrl: NavController,
     private supabaseService: SupabaseService,
     private router: Router,
-    private mensajeService: MensajeService,
-    private popoverCtrl: PopoverController
+    private mensajeService: MensajeService
   ) {}
-
-  ngAfterViewInit() {
-    setTimeout(() => {
-      this.presentingElement = document.querySelector('ion-content');
-    }, 100);
-  }
 
   async ngOnInit() {
     const usuarioGuardado = localStorage.getItem('usuario');
@@ -68,11 +72,7 @@ export class BalancePage implements OnInit, AfterViewInit {
     }
 
     this.generarDiasHistoricos(365);
-
-    const fecha = new Date();
-    const day = fecha.getDate();
-    const mes = fecha.toLocaleString('es-BO', { month: 'long' });
-    this.selectedDay = `${day} de ${mes}`;
+    this.seleccionarUltimaOpcionDisponible();
 
     await this.supabaseService.verificarYCerrarDiasPendientes();
     await this.onDaySelected(this.selectedDay);
@@ -92,58 +92,321 @@ export class BalancePage implements OnInit, AfterViewInit {
   }
 
   async ionViewWillEnter() {
-    await this.popoverCtrl.dismiss().catch(() => {});
     await this.supabaseService.verificarYCerrarDiasPendientes();
     await this.onDaySelected(this.selectedDay);
-  }
-
-  async ionViewWillLeave() {
-    await this.popoverCtrl.dismiss().catch(() => {});
+    this.centrarPeriodoSeleccionado();
   }
 
   capitalize(nombre: string): string {
     return nombre.charAt(0).toUpperCase() + nombre.slice(1);
   }
 
-  async cerrarSesion() {
-    await this.popoverCtrl.dismiss().catch(() => {});
-    localStorage.clear();
-    this.router.navigate(['/login']);
+  abrirModalCerrarSesion() {
+    this.mostrarModalCerrarSesion = true;
   }
 
-  generarDiasHistoricos(cantidadDias: number = 360) {
-    const dias: string[] = [];
-    for (let i = cantidadDias - 1; i >= 0; i--) {
-      const f = new Date();
-      f.setDate(f.getDate() - i);
-      const d = f.getDate();
-      const m = f.toLocaleString('es-BO', { month: 'long' });
-      dias.push(`${d} de ${m}`);
+  cerrarModalCerrarSesion() {
+    this.mostrarModalCerrarSesion = false;
+  }
+
+  confirmarCerrarSesion() {
+    this.cerrarSesionConfirmado = true;
+    this.mostrarModalCerrarSesion = false;
+  }
+
+  alCerrarModalCerrarSesion() {
+    if (this.cerrarSesionConfirmado) {
+      this.cerrarSesionConfirmado = false;
+      localStorage.clear();
+      this.router.navigate(['/login']);
     }
-    this.days = dias;
+  }
+
+  abrirModalNuevaVenta() {
+    this.rutaVentaSeleccionada = '';
+    this.mostrarModalNuevaVenta = true;
+  }
+
+  cerrarModalNuevaVenta() {
+    this.rutaVentaSeleccionada = '';
+    this.mostrarModalNuevaVenta = false;
+  }
+
+  alCerrarModalNuevaVenta() {
+    this.mostrarModalNuevaVenta = false;
+
+    if (this.rutaVentaSeleccionada) {
+      const ruta = this.rutaVentaSeleccionada;
+      this.rutaVentaSeleccionada = '';
+      this.router.navigate([ruta]);
+    }
+  }
+
+  abrirModalPeriodo() {
+    this.mostrarModalPeriodo = true;
+  }
+
+  cerrarModalPeriodo() {
+    this.mostrarModalPeriodo = false;
+  }
+
+  seleccionarUltimaOpcionDisponible() {
+    if (this.days.length > 0) {
+      this.selectedDay = this.days[this.days.length - 1];
+      this.centrarPeriodoSeleccionado();
+    }
+  }
+
+  centrarPeriodoSeleccionado() {
+    setTimeout(() => {
+      const seleccionado = document.querySelector('.fecha-toolbar ion-segment-button.selected-date') as HTMLElement;
+
+      if (seleccionado) {
+        seleccionado.scrollIntoView({
+          behavior: 'smooth',
+          inline: 'center',
+          block: 'nearest'
+        });
+      }
+    }, 100);
+  }
+
+  formatearFechaCorta(fecha: Date): string {
+    const dia = fecha.getDate();
+    const mes = fecha.toLocaleString('es-BO', { month: 'long' });
+    return `${dia} de ${mes}`;
+  }
+
+  formatearMes(fecha: Date): string {
+    const mes = fecha.toLocaleString('es-BO', { month: 'long' });
+    const anio = fecha.getFullYear();
+    return `${mes} ${anio}`;
+  }
+
+  generarDiasHistoricos(cantidadDias: number = 365) {
+    const opciones: any[] = [];
+    const hoy = new Date();
+    hoy.setHours(23, 59, 59, 999);
+
+    for (let i = cantidadDias - 1; i >= 0; i--) {
+      const fecha = new Date();
+      fecha.setDate(fecha.getDate() - i);
+
+      const inicio = new Date(fecha);
+      inicio.setHours(0, 0, 0, 0);
+
+      const fin = new Date(fecha);
+      fin.setHours(23, 59, 59, 999);
+
+      if (inicio.getTime() <= hoy.getTime()) {
+        opciones.push({
+          label: this.formatearFechaCorta(fecha),
+          inicio: inicio.toISOString(),
+          fin: fin.toISOString()
+        });
+      }
+    }
+
+    this.periodoOpciones = opciones;
+    this.days = opciones.map((opcion: any) => opcion.label);
+  }
+
+  generarSemanasHistoricas(cantidadSemanas: number = 52) {
+    const opciones: any[] = [];
+    const hoy = new Date();
+    hoy.setHours(23, 59, 59, 999);
+
+    const inicioSemanaActual = new Date();
+    const diaSemana = inicioSemanaActual.getDay();
+    const resta = diaSemana === 0 ? 6 : diaSemana - 1;
+    inicioSemanaActual.setDate(inicioSemanaActual.getDate() - resta);
+    inicioSemanaActual.setHours(0, 0, 0, 0);
+
+    for (let i = cantidadSemanas - 1; i >= 0; i--) {
+      const inicio = new Date(inicioSemanaActual);
+      inicio.setDate(inicio.getDate() - (i * 7));
+      inicio.setHours(0, 0, 0, 0);
+
+      let fin = new Date(inicio);
+      fin.setDate(fin.getDate() + 6);
+      fin.setHours(23, 59, 59, 999);
+
+      if (fin.getTime() > hoy.getTime()) {
+        fin = new Date(hoy);
+      }
+
+      opciones.push({
+        label: `${this.formatearFechaCorta(inicio)} - ${this.formatearFechaCorta(fin)}`,
+        inicio: inicio.toISOString(),
+        fin: fin.toISOString()
+      });
+    }
+
+    this.periodoOpciones = opciones;
+    this.days = opciones.map((opcion: any) => opcion.label);
+  }
+
+  generarMesesHistoricos(cantidadMeses: number = 24) {
+    const opciones: any[] = [];
+    const hoy = new Date();
+    hoy.setHours(23, 59, 59, 999);
+
+    for (let i = cantidadMeses - 1; i >= 0; i--) {
+      const fechaBase = new Date();
+      fechaBase.setMonth(fechaBase.getMonth() - i);
+
+      const inicio = new Date(fechaBase.getFullYear(), fechaBase.getMonth(), 1);
+      inicio.setHours(0, 0, 0, 0);
+
+      let fin = new Date(fechaBase.getFullYear(), fechaBase.getMonth() + 1, 0);
+      fin.setHours(23, 59, 59, 999);
+
+      if (fin.getTime() > hoy.getTime()) {
+        fin = new Date(hoy);
+      }
+
+      opciones.push({
+        label: this.formatearMes(inicio),
+        inicio: inicio.toISOString(),
+        fin: fin.toISOString()
+      });
+    }
+
+    this.periodoOpciones = opciones;
+    this.days = opciones.map((opcion: any) => opcion.label);
+  }
+
+  generarAniosHistoricos(cantidadAnios: number = 5) {
+    const opciones: any[] = [];
+    const hoy = new Date();
+    hoy.setHours(23, 59, 59, 999);
+
+    const anioActual = hoy.getFullYear();
+
+    for (let i = cantidadAnios - 1; i >= 0; i--) {
+      const anio = anioActual - i;
+
+      const inicio = new Date(anio, 0, 1);
+      inicio.setHours(0, 0, 0, 0);
+
+      let fin = new Date(anio, 11, 31);
+      fin.setHours(23, 59, 59, 999);
+
+      if (fin.getTime() > hoy.getTime()) {
+        fin = new Date(hoy);
+      }
+
+      opciones.push({
+        label: `${anio}`,
+        inicio: inicio.toISOString(),
+        fin: fin.toISOString()
+      });
+    }
+
+    this.periodoOpciones = opciones;
+    this.days = opciones.map((opcion: any) => opcion.label);
+  }
+
+  async seleccionarTipoPeriodo(tipo: string) {
+    this.tipoPeriodo = tipo;
+
+    if (tipo === 'diario') {
+      this.generarDiasHistoricos(365);
+      this.seleccionarUltimaOpcionDisponible();
+      this.mostrarModalPeriodo = false;
+      await this.onDaySelected(this.selectedDay);
+      this.centrarPeriodoSeleccionado();
+    }
+
+    if (tipo === 'semanal') {
+      this.generarSemanasHistoricas(52);
+      this.seleccionarUltimaOpcionDisponible();
+      this.mostrarModalPeriodo = false;
+      await this.onDaySelected(this.selectedDay);
+      this.centrarPeriodoSeleccionado();
+    }
+
+    if (tipo === 'mensual') {
+      this.generarMesesHistoricos(24);
+      this.seleccionarUltimaOpcionDisponible();
+      this.mostrarModalPeriodo = false;
+      await this.onDaySelected(this.selectedDay);
+      this.centrarPeriodoSeleccionado();
+    }
+
+    if (tipo === 'anual') {
+      this.generarAniosHistoricos(5);
+      this.seleccionarUltimaOpcionDisponible();
+      this.mostrarModalPeriodo = false;
+      await this.onDaySelected(this.selectedDay);
+      this.centrarPeriodoSeleccionado();
+    }
+  }
+
+  activarRangoPersonalizado() {
+    this.tipoPeriodo = 'personalizado';
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    this.fechaInicioPersonalizada = hoy.toISOString();
+    this.fechaFinPersonalizada = hoy.toISOString();
+  }
+
+  cambiarFechaInicioPersonalizada(event: any) {
+    this.fechaInicioPersonalizada = event.detail.value;
+  }
+
+  cambiarFechaFinPersonalizada(event: any) {
+    this.fechaFinPersonalizada = event.detail.value;
+  }
+
+  async aplicarRangoPersonalizado() {
+    const inicio = new Date(this.fechaInicioPersonalizada);
+    const fin = new Date(this.fechaFinPersonalizada);
+    const hoy = new Date();
+
+    inicio.setHours(0, 0, 0, 0);
+    fin.setHours(23, 59, 59, 999);
+    hoy.setHours(23, 59, 59, 999);
+
+    if (fin.getTime() > hoy.getTime()) {
+      fin.setTime(hoy.getTime());
+    }
+
+    if (inicio.getTime() > fin.getTime()) {
+      return;
+    }
+
+    const label = `${this.formatearFechaCorta(inicio)} - ${this.formatearFechaCorta(fin)}`;
+
+    this.periodoOpciones = [
+      {
+        label: label,
+        inicio: inicio.toISOString(),
+        fin: fin.toISOString()
+      }
+    ];
+
+    this.days = [label];
+    this.selectedDay = label;
+    this.mostrarModalPeriodo = false;
+
+    await this.cargarBalance(inicio.toISOString(), fin.toISOString());
+    this.centrarPeriodoSeleccionado();
   }
 
   async onDaySelected(dayString: string | null) {
     if (!dayString) return;
+
     this.selectedDay = dayString;
 
-    const partes = dayString.split(' ');
-    if (partes.length < 3) return;
+    const opcion = this.periodoOpciones.find((item: any) => item.label === dayString);
 
-    const dia = parseInt(partes[0], 10);
-    const meses: { [key: string]: number } = {
-      enero: 0, febrero: 1, marzo: 2, abril: 3, mayo: 4, junio: 5,
-      julio: 6, agosto: 7, septiembre: 8, octubre: 9, noviembre: 10, diciembre: 11,
-    };
-    const mes = meses[partes[2].toLowerCase()];
-    const year = new Date().getFullYear();
-    if (isNaN(dia) || mes === undefined) return;
+    if (!opcion) return;
 
-    const fechaSeleccionada = new Date(year, mes, dia);
-    const inicioDelDia = new Date(fechaSeleccionada.setHours(0, 0, 0, 0)).toISOString();
-    const finDelDia = new Date(fechaSeleccionada.setHours(23, 59, 59, 999)).toISOString();
-
-    await this.cargarBalance(inicioDelDia, finDelDia);
+    await this.cargarBalance(opcion.inicio, opcion.fin);
+    this.centrarPeriodoSeleccionado();
   }
 
   async cargarSaldoInicial(fechaInicioDelDiaISO: string) {
@@ -394,24 +657,21 @@ export class BalancePage implements OnInit, AfterViewInit {
     }
   }
 
-  async seleccionarFechaDesdeCalendario(event: any) {
-    const fechaSeleccionada = new Date(event.detail.value);
-    const dia = fechaSeleccionada.getDate();
-    const mes = fechaSeleccionada.toLocaleString('es-BO', { month: 'long' });
-    this.selectedDay = `${dia} de ${mes}`;
-
-    const inicioDelDia = new Date(fechaSeleccionada.setHours(0, 0, 0, 0)).toISOString();
-    const finDelDia = new Date(fechaSeleccionada.setHours(23, 59, 59, 999)).toISOString();
-    await this.cargarBalance(inicioDelDia, finDelDia);
+  irAVentaProductos() {
+    if (this.mostrarModalNuevaVenta) {
+      this.rutaVentaSeleccionada = '/nueva-venta';
+      this.mostrarModalNuevaVenta = false;
+    } else {
+      this.router.navigate(['/nueva-venta']);
+    }
   }
 
-  async irAVentaProductos() {
-    await this.popoverCtrl.dismiss().catch(() => {});
-    this.router.navigate(['/nueva-venta']);
-  }
-
-  async irAVentaLibre() {
-    await this.popoverCtrl.dismiss().catch(() => {});
-    this.router.navigate(['/venta-libre']);
+  irAVentaLibre() {
+    if (this.mostrarModalNuevaVenta) {
+      this.rutaVentaSeleccionada = '/venta-libre';
+      this.mostrarModalNuevaVenta = false;
+    } else {
+      this.router.navigate(['/venta-libre']);
+    }
   }
 }

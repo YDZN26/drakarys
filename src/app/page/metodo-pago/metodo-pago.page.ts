@@ -26,6 +26,8 @@ export class MetodoPagoPage implements OnInit {
   modoEditar: boolean = false;
   ventaIdEditar: number = 0;
 
+  stockMinimo: number = 5;
+
   constructor(
     private route: ActivatedRoute,
     private navCtrl: NavController,
@@ -100,6 +102,40 @@ export class MetodoPagoPage implements OnInit {
     return pagos;
   }
 
+  private async obtenerProductosVendidosConStockBajo() {
+    const productosActualizados = await this.supabase.obtenerProductos();
+
+    const idsVendidos = this.venta.productos.map((producto: any) => {
+      return Number(producto.producto_id);
+    });
+
+    return productosActualizados.filter((producto: any) => {
+      const productoVendido = idsVendidos.includes(Number(producto.producto_id));
+      const stockExhibicion = Number(producto.stock_exhibicion || 0);
+
+      return productoVendido && stockExhibicion <= this.stockMinimo;
+    });
+  }
+
+  private async mostrarAlertaStockBajo(productosStockBajo: any[]) {
+    if (productosStockBajo.length === 0) {
+      return;
+    }
+
+    const mensaje = productosStockBajo.map((producto: any) => {
+      const stockExhibicion = Number(producto.stock_exhibicion || 0);
+      return `• ${producto.nombre}: queda ${stockExhibicion} unidad(es) en exhibición.`;
+    }).join('<br>');
+
+    const alerta = await this.alertCtrl.create({
+      header: 'Stock bajo',
+      message: `${mensaje}<br><br>Se recomienda aumentar el stock de exhibición.`,
+      buttons: ['OK']
+    });
+
+    await alerta.present();
+  }
+
   async confirmarVenta() {
     if (!this.venta.cliente || !this.venta.cliente.cliente_id) {
       const alerta = await this.alertCtrl.create({
@@ -144,6 +180,8 @@ export class MetodoPagoPage implements OnInit {
       return;
     }
 
+    let loadingCerrado = false;
+
     await this.loadingService.mostrarLoading(
       this.modoEditar ? 'Actualizando venta...' : 'Registrando venta...'
     );
@@ -184,6 +222,13 @@ export class MetodoPagoPage implements OnInit {
       this.mensajeService.enviarMensaje('actualizar inventario');
       this.mensajeService.enviarMensaje('actualizar ingresos');
 
+      const productosStockBajo = await this.obtenerProductosVendidosConStockBajo();
+
+      await this.loadingService.cerrarLoading();
+      loadingCerrado = true;
+
+      await this.mostrarAlertaStockBajo(productosStockBajo);
+
       this.navCtrl.navigateForward(['/recibo', res.venta.venta_id]);
 
     } catch (error) {
@@ -199,7 +244,9 @@ export class MetodoPagoPage implements OnInit {
       await alerta.present();
 
     } finally {
-      await this.loadingService.cerrarLoading();
+      if (!loadingCerrado) {
+        await this.loadingService.cerrarLoading();
+      }
     }
   }
 }
