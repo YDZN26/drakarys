@@ -57,9 +57,27 @@
                 <ion-item lines="none" class="input-item">
                   <ion-input
                     placeholder="Ingrese el nombre del producto"
-                    [(ngModel)]="nombre">
+                    [(ngModel)]="nombre"
+                    (ionInput)="buscarSugerenciasProducto()"
+                    (ionFocus)="buscarSugerenciasProducto()"
+                    (ionBlur)="ocultarSugerenciasProducto()">
                   </ion-input>
                 </ion-item>
+
+                <div
+                  class="sugerencias-productos"
+                  *ngIf="!isEditMode && mostrarSugerenciasProductos && sugerenciasProductos.length > 0">
+                  <div
+                    class="sugerencia-producto-item"
+                    *ngFor="let producto of sugerenciasProductos"
+                    (mousedown)="seleccionarSugerenciaProducto(producto)">
+                    <div>
+                      <h4>{{ producto.nombre }}</h4>
+                      <p>Bs. {{ producto.precio }} | Costo Bs. {{ producto.costo }}</p>
+                    </div>
+                    <ion-icon name="copy-outline"></ion-icon>
+                  </div>
+                </div>
               </div>
             </div>
 

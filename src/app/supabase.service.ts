@@ -763,6 +763,21 @@ export class SupabaseService {
     return productos;
   }
 
+  async obtenerProductosParaSugerencias() {
+    const { data, error } = await this.supabase
+      .from('producto')
+      .select('producto_id, nombre, precio, costo, categoria_id')
+      .eq('estado', true)
+      .order('nombre', { ascending: true });
+
+    if (error) {
+      console.error('Error al obtener productos para sugerencias:', error);
+      return [];
+    }
+
+    return data || [];
+  }
+
   async obtenerLogin(username: string, password: string) {
     const { data, error } = await this.supabase
       .from('usuario')

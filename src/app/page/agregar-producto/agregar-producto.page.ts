@@ -26,6 +26,10 @@ export class AgregarProductoPage implements OnInit {
   imagenUrl: string = '';
   categorias: any[] = [];
 
+  productosBase: any[] = [];
+  sugerenciasProductos: any[] = [];
+  mostrarSugerenciasProductos: boolean = false;
+
   stockExhibicion: number = 0;
   stockAlmacenTienda: number = 0;
   stockAlmacenCasa: number = 0;
@@ -68,6 +72,7 @@ export class AgregarProductoPage implements OnInit {
 
   ngOnInit() {
     this.cargarCategorias();
+    this.cargarProductosBase();
 
     this.route.paramMap.subscribe(params => {
       const idParam = params.get('id');
@@ -86,6 +91,54 @@ export class AgregarProductoPage implements OnInit {
     } catch (error) {
       console.error('Error al obtener categorias', error);
     }
+  }
+
+  async cargarProductosBase() {
+    try {
+      this.productosBase = await this.supabaseService.obtenerProductosParaSugerencias();
+    } catch (error) {
+      console.error('Error al obtener productos para sugerencias', error);
+    }
+  }
+
+  buscarSugerenciasProducto() {
+    if (this.isEditMode) {
+      this.mostrarSugerenciasProductos = false;
+      this.sugerenciasProductos = [];
+      return;
+    }
+
+    const texto = (this.nombre || '').trim().toLowerCase();
+
+    if (texto.length < 2) {
+      this.mostrarSugerenciasProductos = false;
+      this.sugerenciasProductos = [];
+      return;
+    }
+
+    this.sugerenciasProductos = this.productosBase
+      .filter(producto =>
+        (producto.nombre || '').toLowerCase().includes(texto) &&
+        (producto.nombre || '').toLowerCase() !== texto
+      )
+      .slice(0, 5);
+
+    this.mostrarSugerenciasProductos = this.sugerenciasProductos.length > 0;
+  }
+
+  seleccionarSugerenciaProducto(producto: any) {
+    this.precioUnitario = Number(producto.precio || 0);
+    this.costoUnitario = Number(producto.costo || 0);
+    this.selectedOption = producto.categoria_id ? producto.categoria_id.toString() : '';
+
+    this.mostrarSugerenciasProductos = false;
+    this.sugerenciasProductos = [];
+  }
+
+  ocultarSugerenciasProducto() {
+    setTimeout(() => {
+      this.mostrarSugerenciasProductos = false;
+    }, 200);
   }
 
   async cargarProducto() {
