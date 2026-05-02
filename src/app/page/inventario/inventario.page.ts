@@ -23,7 +23,7 @@ export class InventarioPage implements OnInit, OnDestroy {
   categoriaSeleccionada: number | null = null;
   textoBusqueda: string = '';
   mensaje: string = '';
-  stockMinimo: number = 5;
+  stockMinimo: number = 2;
 
   modalStockBajoAbierto: boolean = false;
 
@@ -218,7 +218,7 @@ export class InventarioPage implements OnInit, OnDestroy {
   }
 
   calcularValorTotal(): number {
-    return this.productos.reduce((total, p) => {
+    return this.productosFiltrados.reduce((total, p) => {
       const precio = Number(p?.precio || 0);
       const stockTotal = Number(p?.stock_total || 0);
       return total + precio * stockTotal;
