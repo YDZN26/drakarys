@@ -17,7 +17,6 @@
     </div>
 
     <ion-accordion-group value="detalles" expand="inset" class="producto-accordion-group">
-
       <ion-accordion value="detalles" class="producto-accordion">
         <ion-item slot="header" lines="none" class="accordion-header-item">
           <ion-label>Detalles del producto</ion-label>
@@ -55,6 +54,7 @@
               <div class="campo-title-container">
                 <ion-label>Nombre del Producto</ion-label>
               </div>
+
               <div class="campo-text-container">
                 <ion-item lines="none" class="input-item">
                   <ion-input
@@ -87,6 +87,7 @@
               <div class="campo-title-container">
                 <ion-label>Precio Unitario</ion-label>
               </div>
+
               <div class="campo-text-container">
                 <ion-item lines="none" class="input-item">
                   <ion-input
@@ -102,6 +103,7 @@
               <div class="campo-title-container">
                 <ion-label>Costo Unitario</ion-label>
               </div>
+
               <div class="campo-text-container">
                 <ion-item lines="none" class="input-item">
                   <ion-input
@@ -128,6 +130,7 @@
               <div class="campo-title-container">
                 <ion-label>Descripción</ion-label>
               </div>
+
               <div class="campo-text-container">
                 <ion-item lines="none" class="textarea-item">
                   <ion-textarea
@@ -152,6 +155,7 @@
               <div class="campo-title-container">
                 <ion-label>Stock en Exhibición</ion-label>
               </div>
+
               <div class="campo-text-container">
                 <ion-item lines="none" class="input-item">
                   <ion-input
@@ -168,6 +172,7 @@
               <div class="campo-title-container">
                 <ion-label>Stock en Almacén Tienda</ion-label>
               </div>
+
               <div class="campo-text-container">
                 <ion-item lines="none" class="input-item">
                   <ion-input
@@ -184,6 +189,7 @@
               <div class="campo-title-container">
                 <ion-label>Stock en Almacén Casa</ion-label>
               </div>
+
               <div class="campo-text-container">
                 <ion-item lines="none" class="input-item">
                   <ion-input
@@ -200,6 +206,7 @@
               <div class="campo-title-container">
                 <ion-label>Stock Dañado</ion-label>
               </div>
+
               <div class="campo-text-container">
                 <ion-item lines="none" class="input-item">
                   <ion-input
@@ -337,7 +344,6 @@
           </div>
         </div>
       </ion-accordion>
-
     </ion-accordion-group>
   </div>
 
@@ -345,8 +351,9 @@
     class="modal-scanner"
     [isOpen]="scannerAbierto"
     [backdropDismiss]="false"
-    [canDismiss]="false"
-    (didPresent)="iniciarLecturaCodigo()">
+    [canDismiss]="true"
+    (didPresent)="iniciarLecturaCodigo()"
+    (didDismiss)="scannerCerradoDesdeModal()">
     <ng-template>
       <ion-header>
         <ion-toolbar color="mycolor">
@@ -361,7 +368,7 @@
 
       <ion-content class="scanner-content">
         <div class="scanner-box">
-          <video #videoScanner class="scanner-video" autoplay playsinline></video>
+          <video #videoScanner class="scanner-video" autoplay muted playsinline></video>
           <p class="scanner-text">Apunta al código de barras</p>
         </div>
       </ion-content>
@@ -375,7 +382,6 @@
     <ng-template>
       <div class="modal-salir-wrapper">
         <div class="modal-salir-card">
-
           <div class="modal-linea"></div>
 
           <h2>Salir sin guardar</h2>
@@ -385,42 +391,26 @@
           </p>
 
           <div class="modal-salir-botones">
-            <ion-button
-              expand="block"
-              class="btn-cancelar-salir"
-              (click)="cancelarSalida()">
+            <ion-button expand="block" class="btn-cancelar-salir" (click)="cancelarSalida()">
               Cancelar
             </ion-button>
 
-            <ion-button
-              expand="block"
-              class="btn-confirmar-salir"
-              (click)="salirSinGuardar()">
+            <ion-button expand="block" class="btn-confirmar-salir" (click)="salirSinGuardar()">
               Salir sin guardar
             </ion-button>
           </div>
-
         </div>
       </div>
     </ng-template>
   </ion-modal>
 
-  <ion-modal
-    class="modal-selector-producto"
-    [isOpen]="mostrarModalCategorias"
-    [backdropDismiss]="true"
-    (didDismiss)="cerrarModalCategorias()">
+  <ion-modal class="modal-selector-producto" [isOpen]="mostrarModalCategorias" [backdropDismiss]="true" (didDismiss)="cerrarModalCategorias()">
     <ng-template>
       <div class="modal-selector-wrapper">
         <div class="modal-selector-card">
-
           <div class="modal-linea"></div>
-
           <h2>Seleccionar categoría</h2>
-
-          <p class="modal-subtitulo">
-            Elige la categoría del producto.
-          </p>
+          <p class="modal-subtitulo">Elige la categoría del producto.</p>
 
           <button
             class="opcion-selector"
@@ -439,92 +429,59 @@
             <ion-icon class="opcion-flecha" name="chevron-forward-outline"></ion-icon>
           </button>
 
-          <ion-button
-            expand="block"
-            class="btn-cancelar-modal"
-            (click)="cerrarModalCategorias()">
+          <ion-button expand="block" class="btn-cancelar-modal" (click)="cerrarModalCategorias()">
             Cancelar
           </ion-button>
-
         </div>
       </div>
     </ng-template>
   </ion-modal>
 
-  <ion-modal
-    class="modal-selector-producto"
-    [isOpen]="mostrarModalTraslado"
-    [backdropDismiss]="true"
-    (didDismiss)="cerrarModalTraslado()">
+  <ion-modal class="modal-selector-producto" [isOpen]="mostrarModalTraslado" [backdropDismiss]="true" (didDismiss)="cerrarModalTraslado()">
     <ng-template>
       <div class="modal-selector-wrapper">
         <div class="modal-selector-card">
-
           <div class="modal-linea"></div>
-
           <h2>Seleccionar traslado</h2>
+          <p class="modal-subtitulo">Elige de dónde a dónde se moverá el stock.</p>
 
-          <p class="modal-subtitulo">
-            Elige de dónde a dónde se moverá el stock.
-          </p>
-
-          <button
-            class="opcion-selector"
-            [class.opcion-selector-activa]="trasladoSeleccionado === 'casa_a_tienda'"
-            (click)="seleccionarTraslado('casa_a_tienda')">
+          <button class="opcion-selector" [class.opcion-selector-activa]="trasladoSeleccionado === 'casa_a_tienda'" (click)="seleccionarTraslado('casa_a_tienda')">
             <div class="opcion-icono-selector">
               <ion-icon name="swap-horizontal-outline"></ion-icon>
             </div>
-
             <div class="opcion-texto">
               <strong>Almacén casa → Almacén tienda</strong>
               <span>Mover stock hacia tienda</span>
             </div>
-
             <ion-icon class="opcion-flecha" name="chevron-forward-outline"></ion-icon>
           </button>
 
-          <button
-            class="opcion-selector"
-            [class.opcion-selector-activa]="trasladoSeleccionado === 'tienda_a_exhibicion'"
-            (click)="seleccionarTraslado('tienda_a_exhibicion')">
+          <button class="opcion-selector" [class.opcion-selector-activa]="trasladoSeleccionado === 'tienda_a_exhibicion'" (click)="seleccionarTraslado('tienda_a_exhibicion')">
             <div class="opcion-icono-selector">
               <ion-icon name="swap-horizontal-outline"></ion-icon>
             </div>
-
             <div class="opcion-texto">
               <strong>Almacén tienda → Exhibición</strong>
               <span>Mover stock hacia exhibición</span>
             </div>
-
             <ion-icon class="opcion-flecha" name="chevron-forward-outline"></ion-icon>
           </button>
 
           <ion-button expand="block" class="btn-cancelar-modal" (click)="cerrarModalTraslado()">
             Cancelar
           </ion-button>
-
         </div>
       </div>
     </ng-template>
   </ion-modal>
 
-  <ion-modal
-    class="modal-selector-producto"
-    [isOpen]="mostrarModalOrigenDanado"
-    [backdropDismiss]="true"
-    (didDismiss)="cerrarModalOrigenDanado()">
+  <ion-modal class="modal-selector-producto" [isOpen]="mostrarModalOrigenDanado" [backdropDismiss]="true" (didDismiss)="cerrarModalOrigenDanado()">
     <ng-template>
       <div class="modal-selector-wrapper">
         <div class="modal-selector-card">
-
           <div class="modal-linea"></div>
-
           <h2>Origen del producto dañado</h2>
-
-          <p class="modal-subtitulo">
-            Elige de dónde saldrá el producto dañado.
-          </p>
+          <p class="modal-subtitulo">Elige de dónde saldrá el producto dañado.</p>
 
           <button class="opcion-selector" [class.opcion-selector-activa]="origenDanado === 'exhibicion'" (click)="seleccionarOrigenDanado('exhibicion')">
             <div class="opcion-icono-selector">
@@ -562,28 +519,18 @@
           <ion-button expand="block" class="btn-cancelar-modal" (click)="cerrarModalOrigenDanado()">
             Cancelar
           </ion-button>
-
         </div>
       </div>
     </ng-template>
   </ion-modal>
 
-  <ion-modal
-    class="modal-selector-producto"
-    [isOpen]="mostrarModalDestinoCambio"
-    [backdropDismiss]="true"
-    (didDismiss)="cerrarModalDestinoCambio()">
+  <ion-modal class="modal-selector-producto" [isOpen]="mostrarModalDestinoCambio" [backdropDismiss]="true" (didDismiss)="cerrarModalDestinoCambio()">
     <ng-template>
       <div class="modal-selector-wrapper">
         <div class="modal-selector-card">
-
           <div class="modal-linea"></div>
-
           <h2>Destino del cambio</h2>
-
-          <p class="modal-subtitulo">
-            Elige dónde ingresará el producto recibido.
-          </p>
+          <p class="modal-subtitulo">Elige dónde ingresará el producto recibido.</p>
 
           <button class="opcion-selector" [class.opcion-selector-activa]="destinoCambioProveedor === 'exhibicion'" (click)="seleccionarDestinoCambio('exhibicion')">
             <div class="opcion-icono-selector">
@@ -621,7 +568,6 @@
           <ion-button expand="block" class="btn-cancelar-modal" (click)="cerrarModalDestinoCambio()">
             Cancelar
           </ion-button>
-
         </div>
       </div>
     </ng-template>

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, NgZone, ViewChild, ElementRef, OnInit, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Output, NgZone, ViewChild, ElementRef, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { NavController, ActionSheetController, AlertController, Platform } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
 import { SupabaseService } from '../../supabase.service';
@@ -67,6 +67,8 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
   private imagenNuevaSeleccionada: boolean = false;
   private snapshotFormulario: string = '';
   private backButtonSub: any;
+  private cerrandoScanner: boolean = false;
+  private historialProtegidoCreado: boolean = false;
 
   @ViewChild('videoScanner', { static: false }) videoScanner!: ElementRef<HTMLVideoElement>;
 
@@ -99,18 +101,27 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
       }
     });
 
-    this.backButtonSub = this.platform.backButton.subscribeWithPriority(9999, () => {
+    if (!this.historialProtegidoCreado) {
+      history.pushState(null, '', window.location.href);
+      this.historialProtegidoCreado = true;
+    }
+
+    this.backButtonSub = this.platform.backButton.subscribeWithPriority(99999, () => {
       if (this.scannerAbierto) {
         this.cerrarScannerCodigo();
         return;
       }
 
-      this.intentarSalir();
+      if (this.mostrarModalSalir) {
+        return;
+      }
+
+      this.intentarSalirDesdeSistema();
     });
   }
 
   ngOnDestroy() {
-    this.cerrarScannerCodigo();
+    this.detenerCamaraScanner();
 
     if (this.backButtonSub) {
       this.backButtonSub.unsubscribe();
@@ -118,7 +129,27 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
   }
 
   ionViewWillLeave() {
-    this.cerrarScannerCodigo();
+    this.detenerCamaraScanner();
+  }
+
+  @HostListener('window:popstate', ['$event'])
+  controlarBackDelSistema(event: any) {
+    if (this.salidaConfirmada || this.formularioGuardado) {
+      return;
+    }
+
+    history.pushState(null, '', window.location.href);
+
+    if (this.scannerAbierto) {
+      this.cerrarScannerCodigo();
+      return;
+    }
+
+    if (this.mostrarModalSalir) {
+      return;
+    }
+
+    this.intentarSalirDesdeSistema();
   }
 
   async cargarCategorias() {
@@ -241,11 +272,37 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
     }
 
     if (this.formularioGuardado || this.salidaConfirmada || !this.formularioTieneCambios()) {
-      this.navCtrl.back();
+      this.volverPaginaAnterior();
       return;
     }
 
     this.mostrarModalSalir = true;
+  }
+
+  intentarSalirDesdeSistema() {
+    if (this.scannerAbierto) {
+      this.cerrarScannerCodigo();
+      return;
+    }
+
+    if (this.formularioGuardado || this.salidaConfirmada || !this.formularioTieneCambios()) {
+      this.volverPaginaAnterior();
+      return;
+    }
+
+    this.mostrarModalSalir = true;
+  }
+
+  volverPaginaAnterior() {
+    this.salidaConfirmada = true;
+
+    if (this.historialProtegidoCreado && window.history.length > 1) {
+      this.historialProtegidoCreado = false;
+      window.history.go(-2);
+      return;
+    }
+
+    this.navCtrl.back();
   }
 
   cancelarSalida() {
@@ -253,9 +310,11 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
   }
 
   salirSinGuardar() {
-    this.salidaConfirmada = true;
     this.mostrarModalSalir = false;
-    this.navCtrl.back();
+
+    setTimeout(() => {
+      this.volverPaginaAnterior();
+    }, 100);
   }
 
   abrirModalCategorias() {
@@ -409,7 +468,7 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
       this.formularioGuardado = true;
       this.guardarSnapshotFormulario();
       this.mensajeService.enviarMensaje('agregado');
-      this.navCtrl.back();
+      this.volverPaginaAnterior();
     } catch (error) {
       console.error('Error al agregar producto:', error);
     }
@@ -472,7 +531,7 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
       this.formularioGuardado = true;
       this.guardarSnapshotFormulario();
       this.mensajeService.enviarMensaje('actualizado');
-      this.navCtrl.back();
+      this.volverPaginaAnterior();
     } catch (error) {
       console.error('Error al actualizar producto:', error);
     }
@@ -507,7 +566,7 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
 
               this.formularioGuardado = true;
               this.mensajeService.enviarMensaje('eliminado');
-              this.navCtrl.back();
+              this.volverPaginaAnterior();
             } finally {
               await this.loadingService.cerrarLoading();
             }
@@ -787,46 +846,61 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
         }
       ]
     });
+
     await actionSheet.present();
   }
 
   async abrirScannerCodigo() {
-    await this.cerrarScannerCodigo();
+    await this.detenerCamaraScanner();
+
+    this.cerrandoScanner = false;
     this.scannerAbierto = true;
   }
 
   async cerrarScannerCodigo() {
+    if (this.cerrandoScanner) {
+      return;
+    }
+
+    this.cerrandoScanner = true;
+
+    await this.detenerCamaraScanner();
+
     this.scannerAbierto = false;
 
-    if (this.videoScanner && this.videoScanner.nativeElement) {
-      this.videoScanner.nativeElement.pause();
-      this.videoScanner.nativeElement.srcObject = null;
-    }
-
-    if (this.streamActual) {
-      this.streamActual.getTracks().forEach(track => {
-        track.stop();
-      });
-      this.streamActual = null;
-    }
-
-    this.codeReader = null;
+    setTimeout(() => {
+      this.cerrandoScanner = false;
+    }, 300);
   }
 
-  async cerrarSoloCamaraSinCerrarModal() {
-    if (this.videoScanner && this.videoScanner.nativeElement) {
-      this.videoScanner.nativeElement.pause();
-      this.videoScanner.nativeElement.srcObject = null;
-    }
+  async scannerCerradoDesdeModal() {
+    await this.detenerCamaraScanner();
 
-    if (this.streamActual) {
-      this.streamActual.getTracks().forEach(track => {
-        track.stop();
-      });
-      this.streamActual = null;
-    }
+    this.scannerAbierto = false;
+    this.cerrandoScanner = false;
+  }
 
-    this.codeReader = null;
+  async detenerCamaraScanner() {
+    try {
+      this.codeReader = null;
+
+      if (this.videoScanner && this.videoScanner.nativeElement) {
+        const videoEl = this.videoScanner.nativeElement;
+        videoEl.pause();
+        videoEl.srcObject = null;
+        videoEl.load();
+      }
+
+      if (this.streamActual) {
+        this.streamActual.getTracks().forEach(track => {
+          track.stop();
+        });
+
+        this.streamActual = null;
+      }
+    } catch (error) {
+      console.error('Error al detener cámara:', error);
+    }
   }
 
   async iniciarLecturaCodigo() {
@@ -834,27 +908,33 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
       if (!this.scannerAbierto) return;
       if (!this.videoScanner || !this.videoScanner.nativeElement) return;
 
-      await this.cerrarSoloCamaraSinCerrarModal();
+      await this.detenerCamaraScanner();
+
+      if (!this.scannerAbierto) return;
 
       this.codeReader = new BrowserMultiFormatReader();
 
       this.streamActual = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: false
       });
 
       const videoEl = this.videoScanner.nativeElement;
       videoEl.srcObject = this.streamActual;
+      videoEl.setAttribute('playsinline', 'true');
+      videoEl.muted = true;
 
-      try {
-        await videoEl.play();
-      } catch (e) {}
+      await videoEl.play();
 
       this.codeReader.decodeFromStream(
         this.streamActual,
         videoEl,
         (result: Result | undefined, err: unknown) => {
-          if (!this.scannerAbierto) return;
+          if (!this.scannerAbierto || this.cerrandoScanner) return;
 
           if (result) {
             const codigoEscaneado = (result.getText() || '').trim();
@@ -862,16 +942,15 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
             if (codigoEscaneado) {
               this.zone.run(() => {
                 this.codigo = codigoEscaneado;
+                this.cerrarScannerCodigo();
               });
-
-              this.cerrarScannerCodigo();
             }
           }
         }
       );
     } catch (error) {
       console.error('Error al abrir cámara o escanear:', error);
-      this.cerrarScannerCodigo();
+      await this.cerrarScannerCodigo();
     }
   }
 }
