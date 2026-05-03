@@ -1,7 +1,9 @@
 <ion-header>
   <ion-toolbar color="mycolor" class="top-toolbar">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/inventario"></ion-back-button>
+      <ion-button fill="clear" (click)="intentarSalir()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -115,18 +117,11 @@
               <div class="campo-title-container">
                 <ion-label>Categoría</ion-label>
               </div>
-              <div class="dropdown-container select-item">
-                <ion-select
-                  interface="action-sheet"
-                  [(ngModel)]="selectedOption"
-                  (ionChange)="onOptionChange($event)">
-                  <ion-select-option
-                    *ngFor="let categoria of categorias"
-                    [value]="categoria.categoria_id.toString()">
-                    {{ categoria.nombre }}
-                  </ion-select-option>
-                </ion-select>
-              </div>
+
+              <button class="selector-modal-btn" type="button" (click)="abrirModalCategorias()">
+                <span>{{ obtenerNombreCategoriaSeleccionada() || 'Seleccionar categoría' }}</span>
+                <ion-icon name="chevron-down-outline"></ion-icon>
+              </button>
             </div>
 
             <div class="campo-grupo span-2">
@@ -233,20 +228,10 @@
               </div>
 
               <div class="campo-text-container">
-                <ion-item lines="none" class="input-item">
-                  <ion-select
-                    [(ngModel)]="trasladoSeleccionado"
-                    interface="action-sheet"
-                    label="Tipo de traslado"
-                    labelPlacement="stacked">
-                    <ion-select-option value="casa_a_tienda">
-                      Almacén casa → Almacén tienda
-                    </ion-select-option>
-                    <ion-select-option value="tienda_a_exhibicion">
-                      Almacén tienda → Exhibición
-                    </ion-select-option>
-                  </ion-select>
-                </ion-item>
+                <button class="selector-modal-btn" type="button" (click)="abrirModalTraslado()">
+                  <span>{{ obtenerNombreTrasladoSeleccionado() || 'Seleccionar traslado' }}</span>
+                  <ion-icon name="chevron-down-outline"></ion-icon>
+                </button>
               </div>
 
               <div class="campo-text-container">
@@ -273,23 +258,10 @@
               </div>
 
               <div class="campo-text-container">
-                <ion-item lines="none" class="input-item">
-                  <ion-select
-                    [(ngModel)]="origenDanado"
-                    interface="action-sheet"
-                    label="Origen"
-                    labelPlacement="stacked">
-                    <ion-select-option value="exhibicion">
-                      Exhibición
-                    </ion-select-option>
-                    <ion-select-option value="almacen_tienda">
-                      Almacén tienda
-                    </ion-select-option>
-                    <ion-select-option value="almacen_casa">
-                      Almacén casa
-                    </ion-select-option>
-                  </ion-select>
-                </ion-item>
+                <button class="selector-modal-btn" type="button" (click)="abrirModalOrigenDanado()">
+                  <span>{{ obtenerNombreUbicacion(origenDanado) || 'Seleccionar origen' }}</span>
+                  <ion-icon name="chevron-down-outline"></ion-icon>
+                </button>
               </div>
 
               <div class="campo-text-container">
@@ -339,23 +311,10 @@
               </div>
 
               <div class="campo-text-container">
-                <ion-item lines="none" class="input-item">
-                  <ion-select
-                    [(ngModel)]="destinoCambioProveedor"
-                    interface="action-sheet"
-                    label="Destino"
-                    labelPlacement="stacked">
-                    <ion-select-option value="exhibicion">
-                      Exhibición
-                    </ion-select-option>
-                    <ion-select-option value="almacen_tienda">
-                      Almacén tienda
-                    </ion-select-option>
-                    <ion-select-option value="almacen_casa">
-                      Almacén casa
-                    </ion-select-option>
-                  </ion-select>
-                </ion-item>
+                <button class="selector-modal-btn" type="button" (click)="abrirModalDestinoCambio()">
+                  <span>{{ obtenerNombreUbicacion(destinoCambioProveedor) || 'Seleccionar destino' }}</span>
+                  <ion-icon name="chevron-down-outline"></ion-icon>
+                </button>
               </div>
 
               <div class="campo-text-container">
@@ -383,9 +342,11 @@
   </div>
 
   <ion-modal
+    class="modal-scanner"
     [isOpen]="scannerAbierto"
-    (didPresent)="iniciarLecturaCodigo()"
-    (didDismiss)="cerrarScannerCodigo()">
+    [backdropDismiss]="false"
+    [canDismiss]="false"
+    (didPresent)="iniciarLecturaCodigo()">
     <ng-template>
       <ion-header>
         <ion-toolbar color="mycolor">
@@ -404,6 +365,265 @@
           <p class="scanner-text">Apunta al código de barras</p>
         </div>
       </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal
+    class="modal-salir-formulario"
+    [isOpen]="mostrarModalSalir"
+    [backdropDismiss]="false">
+    <ng-template>
+      <div class="modal-salir-wrapper">
+        <div class="modal-salir-card">
+
+          <div class="modal-linea"></div>
+
+          <h2>Salir sin guardar</h2>
+
+          <p class="modal-subtitulo">
+            Tienes datos ingresados que no se guardaron. ¿Deseas salir sin guardar?
+          </p>
+
+          <div class="modal-salir-botones">
+            <ion-button
+              expand="block"
+              class="btn-cancelar-salir"
+              (click)="cancelarSalida()">
+              Cancelar
+            </ion-button>
+
+            <ion-button
+              expand="block"
+              class="btn-confirmar-salir"
+              (click)="salirSinGuardar()">
+              Salir sin guardar
+            </ion-button>
+          </div>
+
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal
+    class="modal-selector-producto"
+    [isOpen]="mostrarModalCategorias"
+    [backdropDismiss]="true"
+    (didDismiss)="cerrarModalCategorias()">
+    <ng-template>
+      <div class="modal-selector-wrapper">
+        <div class="modal-selector-card">
+
+          <div class="modal-linea"></div>
+
+          <h2>Seleccionar categoría</h2>
+
+          <p class="modal-subtitulo">
+            Elige la categoría del producto.
+          </p>
+
+          <button
+            class="opcion-selector"
+            *ngFor="let categoria of categorias"
+            [class.opcion-selector-activa]="selectedOption === categoria.categoria_id.toString()"
+            (click)="seleccionarCategoria(categoria)">
+            <div class="opcion-icono-selector">
+              <ion-icon name="pricetag-outline"></ion-icon>
+            </div>
+
+            <div class="opcion-texto">
+              <strong>{{ categoria.nombre }}</strong>
+              <span>Categoría del producto</span>
+            </div>
+
+            <ion-icon class="opcion-flecha" name="chevron-forward-outline"></ion-icon>
+          </button>
+
+          <ion-button
+            expand="block"
+            class="btn-cancelar-modal"
+            (click)="cerrarModalCategorias()">
+            Cancelar
+          </ion-button>
+
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal
+    class="modal-selector-producto"
+    [isOpen]="mostrarModalTraslado"
+    [backdropDismiss]="true"
+    (didDismiss)="cerrarModalTraslado()">
+    <ng-template>
+      <div class="modal-selector-wrapper">
+        <div class="modal-selector-card">
+
+          <div class="modal-linea"></div>
+
+          <h2>Seleccionar traslado</h2>
+
+          <p class="modal-subtitulo">
+            Elige de dónde a dónde se moverá el stock.
+          </p>
+
+          <button
+            class="opcion-selector"
+            [class.opcion-selector-activa]="trasladoSeleccionado === 'casa_a_tienda'"
+            (click)="seleccionarTraslado('casa_a_tienda')">
+            <div class="opcion-icono-selector">
+              <ion-icon name="swap-horizontal-outline"></ion-icon>
+            </div>
+
+            <div class="opcion-texto">
+              <strong>Almacén casa → Almacén tienda</strong>
+              <span>Mover stock hacia tienda</span>
+            </div>
+
+            <ion-icon class="opcion-flecha" name="chevron-forward-outline"></ion-icon>
+          </button>
+
+          <button
+            class="opcion-selector"
+            [class.opcion-selector-activa]="trasladoSeleccionado === 'tienda_a_exhibicion'"
+            (click)="seleccionarTraslado('tienda_a_exhibicion')">
+            <div class="opcion-icono-selector">
+              <ion-icon name="swap-horizontal-outline"></ion-icon>
+            </div>
+
+            <div class="opcion-texto">
+              <strong>Almacén tienda → Exhibición</strong>
+              <span>Mover stock hacia exhibición</span>
+            </div>
+
+            <ion-icon class="opcion-flecha" name="chevron-forward-outline"></ion-icon>
+          </button>
+
+          <ion-button expand="block" class="btn-cancelar-modal" (click)="cerrarModalTraslado()">
+            Cancelar
+          </ion-button>
+
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal
+    class="modal-selector-producto"
+    [isOpen]="mostrarModalOrigenDanado"
+    [backdropDismiss]="true"
+    (didDismiss)="cerrarModalOrigenDanado()">
+    <ng-template>
+      <div class="modal-selector-wrapper">
+        <div class="modal-selector-card">
+
+          <div class="modal-linea"></div>
+
+          <h2>Origen del producto dañado</h2>
+
+          <p class="modal-subtitulo">
+            Elige de dónde saldrá el producto dañado.
+          </p>
+
+          <button class="opcion-selector" [class.opcion-selector-activa]="origenDanado === 'exhibicion'" (click)="seleccionarOrigenDanado('exhibicion')">
+            <div class="opcion-icono-selector">
+              <ion-icon name="storefront-outline"></ion-icon>
+            </div>
+            <div class="opcion-texto">
+              <strong>Exhibición</strong>
+              <span>Producto ubicado en exhibición</span>
+            </div>
+            <ion-icon class="opcion-flecha" name="chevron-forward-outline"></ion-icon>
+          </button>
+
+          <button class="opcion-selector" [class.opcion-selector-activa]="origenDanado === 'almacen_tienda'" (click)="seleccionarOrigenDanado('almacen_tienda')">
+            <div class="opcion-icono-selector">
+              <ion-icon name="cube-outline"></ion-icon>
+            </div>
+            <div class="opcion-texto">
+              <strong>Almacén tienda</strong>
+              <span>Producto ubicado en tienda</span>
+            </div>
+            <ion-icon class="opcion-flecha" name="chevron-forward-outline"></ion-icon>
+          </button>
+
+          <button class="opcion-selector" [class.opcion-selector-activa]="origenDanado === 'almacen_casa'" (click)="seleccionarOrigenDanado('almacen_casa')">
+            <div class="opcion-icono-selector">
+              <ion-icon name="home-outline"></ion-icon>
+            </div>
+            <div class="opcion-texto">
+              <strong>Almacén casa</strong>
+              <span>Producto ubicado en casa</span>
+            </div>
+            <ion-icon class="opcion-flecha" name="chevron-forward-outline"></ion-icon>
+          </button>
+
+          <ion-button expand="block" class="btn-cancelar-modal" (click)="cerrarModalOrigenDanado()">
+            Cancelar
+          </ion-button>
+
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal
+    class="modal-selector-producto"
+    [isOpen]="mostrarModalDestinoCambio"
+    [backdropDismiss]="true"
+    (didDismiss)="cerrarModalDestinoCambio()">
+    <ng-template>
+      <div class="modal-selector-wrapper">
+        <div class="modal-selector-card">
+
+          <div class="modal-linea"></div>
+
+          <h2>Destino del cambio</h2>
+
+          <p class="modal-subtitulo">
+            Elige dónde ingresará el producto recibido.
+          </p>
+
+          <button class="opcion-selector" [class.opcion-selector-activa]="destinoCambioProveedor === 'exhibicion'" (click)="seleccionarDestinoCambio('exhibicion')">
+            <div class="opcion-icono-selector">
+              <ion-icon name="storefront-outline"></ion-icon>
+            </div>
+            <div class="opcion-texto">
+              <strong>Exhibición</strong>
+              <span>Ingresar a exhibición</span>
+            </div>
+            <ion-icon class="opcion-flecha" name="chevron-forward-outline"></ion-icon>
+          </button>
+
+          <button class="opcion-selector" [class.opcion-selector-activa]="destinoCambioProveedor === 'almacen_tienda'" (click)="seleccionarDestinoCambio('almacen_tienda')">
+            <div class="opcion-icono-selector">
+              <ion-icon name="cube-outline"></ion-icon>
+            </div>
+            <div class="opcion-texto">
+              <strong>Almacén tienda</strong>
+              <span>Ingresar al almacén de tienda</span>
+            </div>
+            <ion-icon class="opcion-flecha" name="chevron-forward-outline"></ion-icon>
+          </button>
+
+          <button class="opcion-selector" [class.opcion-selector-activa]="destinoCambioProveedor === 'almacen_casa'" (click)="seleccionarDestinoCambio('almacen_casa')">
+            <div class="opcion-icono-selector">
+              <ion-icon name="home-outline"></ion-icon>
+            </div>
+            <div class="opcion-texto">
+              <strong>Almacén casa</strong>
+              <span>Ingresar al almacén de casa</span>
+            </div>
+            <ion-icon class="opcion-flecha" name="chevron-forward-outline"></ion-icon>
+          </button>
+
+          <ion-button expand="block" class="btn-cancelar-modal" (click)="cerrarModalDestinoCambio()">
+            Cancelar
+          </ion-button>
+
+        </div>
+      </div>
     </ng-template>
   </ion-modal>
 </ion-content>

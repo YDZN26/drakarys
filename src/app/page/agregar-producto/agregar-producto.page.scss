@@ -178,7 +178,6 @@ ion-toolbar {
   color: #2d3d55;
 }
 
-/* Configuramos los datos como un Grid */
 .datos {
   display: grid;
   grid-template-columns: 1fr;
@@ -189,13 +188,14 @@ ion-toolbar {
   width: 100%;
   background: #edf2fa;
   border-radius: 14px;
-  padding: 8px; /* Pequeño ajuste para que respiren más los elementos agrupados */
+  padding: 8px;
 }
 
 .campo-text-container {
   width: 100%;
-  margin-bottom: 8px; /* Da un ligero espacio si hay varios inputs en el mismo grupo */
+  margin-bottom: 8px;
 }
+
 .campo-text-container:last-child {
   margin-bottom: 0;
 }
@@ -213,6 +213,27 @@ ion-toolbar {
     width: 100%;
     color: #1f2d3d;
     font-size: 0.98rem;
+  }
+}
+
+.selector-modal-btn {
+  width: 100%;
+  min-height: 56px;
+  background: #ffffff;
+  border: 1px solid #d9e1ea;
+  border-radius: 12px;
+  padding: 0 12px;
+  color: #1f2d3d;
+  font-size: 0.98rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+
+  ion-icon {
+    font-size: 22px;
+    color: #607389;
   }
 }
 
@@ -308,7 +329,6 @@ ion-footer ion-toolbar.footer-toolbar {
   padding: 10px 16px calc(10px + env(safe-area-inset-bottom)) 16px;
 }
 
-/* Control para agrupar y ordenar los botones inferiores */
 .footer-botones-grid {
   display: flex;
   flex-direction: column;
@@ -345,12 +365,239 @@ ion-footer ion-toolbar.footer-toolbar {
   margin-top: 10px;
 }
 
+.btn-eliminar {
+  --border-radius: 16px;
+  border-radius: 16px;
+  height: 46px;
+  font-weight: bold;
+  font-size: 1rem;
+  text-transform: none;
+  margin: 0;
+}
+
 ion-input[type='number'] {
   --padding-top: 14px;
   --padding-bottom: 14px;
 }
 
+/* MODAL SALIR SIN GUARDAR */
+
+.modal-salir-formulario {
+  --width: 100%;
+  --height: auto;
+  --border-radius: 28px 28px 0 0;
+  --box-shadow: none;
+  align-items: flex-end;
+}
+
+.modal-salir-formulario::part(content) {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  border-radius: 28px 28px 0 0;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.modal-salir-wrapper {
+  width: 100%;
+  background: #ffffff;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-salir-card {
+  width: 100%;
+  background: #ffffff;
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  padding: 12px 18px 22px 18px;
+  box-shadow: none;
+
+  h2 {
+    margin: 14px 0 6px 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #2d3d55;
+  }
+
+  .modal-subtitulo {
+    margin: 0 0 18px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #607389;
+  }
+}
+
+.modal-linea {
+  width: 54px;
+  height: 5px;
+  border-radius: 10px;
+  background: #cfd8e3;
+  margin: 0 auto;
+}
+
+.modal-salir-botones {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-cancelar-salir {
+  height: 46px;
+  --background: #edf2fa;
+  --color: #2d3d55;
+  --border-radius: 16px;
+  font-weight: bold;
+  text-transform: none;
+  margin: 0;
+}
+
+.btn-confirmar-salir {
+  height: 46px;
+  --background: #d70000;
+  --color: #ffffff;
+  --border-radius: 16px;
+  font-weight: bold;
+  text-transform: none;
+  margin: 0;
+}
+
+/* MODAL SELECTORES */
+
+.modal-selector-producto {
+  --width: 100%;
+  --height: auto;
+  --border-radius: 28px 28px 0 0;
+  --box-shadow: none;
+  align-items: flex-end;
+}
+
+.modal-selector-producto::part(content) {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  max-height: 92%;
+  border-radius: 28px 28px 0 0;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.modal-selector-wrapper {
+  width: 100%;
+  background: #ffffff;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-selector-card {
+  width: 100%;
+  background: #ffffff;
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  padding: 12px 18px 22px 18px;
+  box-shadow: none;
+  max-height: 92vh;
+  overflow-y: auto;
+
+  h2 {
+    margin: 14px 0 6px 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #2d3d55;
+  }
+
+  .modal-subtitulo {
+    margin: 0 0 18px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #607389;
+  }
+}
+
+.opcion-selector {
+  width: 100%;
+  border: none;
+  background: #edf2fa;
+  border-radius: 18px;
+  padding: 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.opcion-selector-activa {
+  border: 2px solid #001E87;
+  background: #eef3ff;
+}
+
+.opcion-icono-selector {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: rgba(0, 30, 135, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ion-icon {
+    font-size: 25px;
+    color: #001E87;
+  }
+}
+
+.opcion-texto {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  strong {
+    font-size: 15px;
+    font-weight: 800;
+    color: #2d3d55;
+  }
+
+  span {
+    font-size: 13px;
+    font-weight: 600;
+    color: #607389;
+  }
+}
+
+.opcion-flecha {
+  font-size: 22px;
+  color: #607389;
+}
+
+.btn-cancelar-modal {
+  height: 46px;
+  --background: #d70000;
+  --color: #ffffff;
+  --border-radius: 16px;
+  font-weight: bold;
+  text-transform: none;
+  margin: 8px 0 0 0;
+}
+
+/* MODAL SCANNER */
+
+.modal-scanner {
+  --width: 100%;
+  --height: 100%;
+  --border-radius: 0;
+}
+
 /* ======== MÓVIL ======== */
+
 @media (max-width: 480px) {
   .producto-header {
     .producto-titulo {
@@ -371,53 +618,61 @@ ion-input[type='number'] {
     height: 180px;
   }
 
-  .btn-eliminar {
-    --border-radius: 16px;
-    border-radius: 16px;
-    height: 46px;
-    font-weight: bold;
-    font-size: 1rem;
-    text-transform: none;
-    margin: 0;
+  .modal-salir-botones {
+    flex-direction: column;
   }
 }
 
 /* ======== PC / TABLET ======== */
+
 @media (min-width: 768px) {
   .agregar-producto-container {
     max-width: 850px;
     margin: 0 auto;
   }
 
-  /* Transformamos la lista de inputs en 2 columnas perfectas */
   .datos {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
   }
 
-  /* Esta clase permite que campos como "Descripción" ocupen todo el ancho */
   .span-2 {
     grid-column: span 2;
   }
 
-  /* Ponemos los botones de Guardar y Eliminar uno al lado del otro */
   .footer-botones-grid {
     flex-direction: row;
     max-width: 850px;
     margin: 0 auto;
   }
 
-  .btn-guardar, .btn-eliminar {
-    flex: 1; /* Ambos botones medirán exactamente lo mismo */
+  .btn-guardar,
+  .btn-eliminar {
+    flex: 1;
     margin: 0;
   }
 
-  .btn-eliminar {
-    --border-radius: 16px;
-    border-radius: 16px;
-    height: 46px;
-    font-weight: bold;
-    font-size: 1rem;
-    text-transform: none;
+  .modal-salir-formulario::part(content),
+  .modal-selector-producto::part(content) {
+    max-width: 460px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 28px;
+    bottom: 22px;
+  }
+
+  .modal-salir-card,
+  .modal-selector-card {
+    max-width: 460px;
+    border-radius: 28px;
+  }
+
+  .modal-salir-botones {
+    flex-direction: row;
+  }
+
+  .btn-cancelar-salir,
+  .btn-confirmar-salir {
+    flex: 1;
   }
 }

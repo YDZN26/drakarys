@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Output, NgZone, ViewChild, ElementRef, OnInit } from '@angular/core';
-import { NavController, ActionSheetController, AlertController } from '@ionic/angular';
+import { Component, EventEmitter, Output, NgZone, ViewChild, ElementRef, OnInit, OnDestroy } from '@angular/core';
+import { NavController, ActionSheetController, AlertController, Platform } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
 import { SupabaseService } from '../../supabase.service';
 import { ActivatedRoute } from '@angular/router';
@@ -16,7 +16,7 @@ import type { Result } from '@zxing/library';
   templateUrl: './agregar-producto.page.html',
   styleUrls: ['./agregar-producto.page.scss'],
 })
-export class AgregarProductoPage implements OnInit {
+export class AgregarProductoPage implements OnInit, OnDestroy {
   selectedOption: string = '';
   codigo: string = '';
   nombre: string = '';
@@ -51,10 +51,22 @@ export class AgregarProductoPage implements OnInit {
   @Output() emisorMensajes = new EventEmitter<string>();
 
   scannerAbierto: boolean = false;
+
+  mostrarModalSalir: boolean = false;
+  salidaConfirmada: boolean = false;
+  formularioGuardado: boolean = false;
+
+  mostrarModalCategorias: boolean = false;
+  mostrarModalTraslado: boolean = false;
+  mostrarModalOrigenDanado: boolean = false;
+  mostrarModalDestinoCambio: boolean = false;
+
   private codeReader: BrowserMultiFormatReader | null = null;
   private streamActual: MediaStream | null = null;
 
   private imagenNuevaSeleccionada: boolean = false;
+  private snapshotFormulario: string = '';
+  private backButtonSub: any;
 
   @ViewChild('videoScanner', { static: false }) videoScanner!: ElementRef<HTMLVideoElement>;
 
@@ -67,7 +79,8 @@ export class AgregarProductoPage implements OnInit {
     private route: ActivatedRoute,
     private mensajeService: MensajeService,
     private zone: NgZone,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private platform: Platform
   ) {}
 
   ngOnInit() {
@@ -76,12 +89,36 @@ export class AgregarProductoPage implements OnInit {
 
     this.route.paramMap.subscribe(params => {
       const idParam = params.get('id');
+
       if (idParam) {
         this.productoId = Number(idParam);
         this.isEditMode = true;
         this.cargarProducto();
+      } else {
+        this.guardarSnapshotFormulario();
       }
     });
+
+    this.backButtonSub = this.platform.backButton.subscribeWithPriority(9999, () => {
+      if (this.scannerAbierto) {
+        this.cerrarScannerCodigo();
+        return;
+      }
+
+      this.intentarSalir();
+    });
+  }
+
+  ngOnDestroy() {
+    this.cerrarScannerCodigo();
+
+    if (this.backButtonSub) {
+      this.backButtonSub.unsubscribe();
+    }
+  }
+
+  ionViewWillLeave() {
+    this.cerrarScannerCodigo();
   }
 
   async cargarCategorias() {
@@ -159,8 +196,154 @@ export class AgregarProductoPage implements OnInit {
         this.stockAlmacenTienda = Number(producto.stock_almacen_tienda || 0);
         this.stockAlmacenCasa = Number(producto.stock_almacen_casa || 0);
         this.stockDanado = Number(producto.stock_danado || 0);
+
+        this.guardarSnapshotFormulario();
       }
     }
+  }
+
+  guardarSnapshotFormulario() {
+    this.snapshotFormulario = JSON.stringify(this.obtenerDatosFormulario());
+  }
+
+  obtenerDatosFormulario() {
+    return {
+      selectedOption: this.selectedOption || '',
+      codigo: this.codigo || '',
+      nombre: this.nombre || '',
+      precioUnitario: Number(this.precioUnitario || 0),
+      costoUnitario: Number(this.costoUnitario || 0),
+      descripcion: this.descripcion || '',
+      imagenUrl: this.imagenUrl || '',
+      stockExhibicion: Number(this.stockExhibicion || 0),
+      stockAlmacenTienda: Number(this.stockAlmacenTienda || 0),
+      stockAlmacenCasa: Number(this.stockAlmacenCasa || 0),
+      stockDanado: Number(this.stockDanado || 0),
+      trasladoSeleccionado: this.trasladoSeleccionado || '',
+      cantidadTraslado: Number(this.cantidadTraslado || 0),
+      origenDanado: this.origenDanado || '',
+      cantidadDanado: Number(this.cantidadDanado || 0),
+      cantidadSalidaProveedor: Number(this.cantidadSalidaProveedor || 0),
+      destinoCambioProveedor: this.destinoCambioProveedor || '',
+      cantidadCambioProveedor: Number(this.cantidadCambioProveedor || 0)
+    };
+  }
+
+  formularioTieneCambios(): boolean {
+    const datosActuales = JSON.stringify(this.obtenerDatosFormulario());
+    return datosActuales !== this.snapshotFormulario;
+  }
+
+  intentarSalir() {
+    if (this.scannerAbierto) {
+      this.cerrarScannerCodigo();
+      return;
+    }
+
+    if (this.formularioGuardado || this.salidaConfirmada || !this.formularioTieneCambios()) {
+      this.navCtrl.back();
+      return;
+    }
+
+    this.mostrarModalSalir = true;
+  }
+
+  cancelarSalida() {
+    this.mostrarModalSalir = false;
+  }
+
+  salirSinGuardar() {
+    this.salidaConfirmada = true;
+    this.mostrarModalSalir = false;
+    this.navCtrl.back();
+  }
+
+  abrirModalCategorias() {
+    this.mostrarModalCategorias = true;
+  }
+
+  cerrarModalCategorias() {
+    this.mostrarModalCategorias = false;
+  }
+
+  seleccionarCategoria(categoria: any) {
+    this.selectedOption = categoria.categoria_id.toString();
+    this.mostrarModalCategorias = false;
+  }
+
+  obtenerNombreCategoriaSeleccionada(): string {
+    const categoria = this.categorias.find(
+      item => item.categoria_id.toString() === this.selectedOption
+    );
+
+    return categoria ? categoria.nombre : '';
+  }
+
+  abrirModalTraslado() {
+    this.mostrarModalTraslado = true;
+  }
+
+  cerrarModalTraslado() {
+    this.mostrarModalTraslado = false;
+  }
+
+  seleccionarTraslado(traslado: string) {
+    this.trasladoSeleccionado = traslado;
+    this.mostrarModalTraslado = false;
+  }
+
+  obtenerNombreTrasladoSeleccionado(): string {
+    if (this.trasladoSeleccionado === 'casa_a_tienda') {
+      return 'Almacén casa → Almacén tienda';
+    }
+
+    if (this.trasladoSeleccionado === 'tienda_a_exhibicion') {
+      return 'Almacén tienda → Exhibición';
+    }
+
+    return '';
+  }
+
+  abrirModalOrigenDanado() {
+    this.mostrarModalOrigenDanado = true;
+  }
+
+  cerrarModalOrigenDanado() {
+    this.mostrarModalOrigenDanado = false;
+  }
+
+  seleccionarOrigenDanado(origen: string) {
+    this.origenDanado = origen;
+    this.mostrarModalOrigenDanado = false;
+  }
+
+  abrirModalDestinoCambio() {
+    this.mostrarModalDestinoCambio = true;
+  }
+
+  cerrarModalDestinoCambio() {
+    this.mostrarModalDestinoCambio = false;
+  }
+
+  seleccionarDestinoCambio(destino: string) {
+    this.destinoCambioProveedor = destino;
+    this.mostrarModalDestinoCambio = false;
+  }
+
+  obtenerNombreUbicacion(ubicacion: string): string {
+    if (ubicacion === 'exhibicion') {
+      return 'Exhibición';
+    }
+
+    if (ubicacion === 'almacen_tienda') {
+      return 'Almacén tienda';
+    }
+
+    if (ubicacion === 'almacen_casa') {
+      return 'Almacén casa';
+    }
+
+    return '';
   }
 
   async agregarProducto() {
@@ -223,6 +406,8 @@ export class AgregarProductoPage implements OnInit {
         return;
       }
 
+      this.formularioGuardado = true;
+      this.guardarSnapshotFormulario();
       this.mensajeService.enviarMensaje('agregado');
       this.navCtrl.back();
     } catch (error) {
@@ -284,6 +469,8 @@ export class AgregarProductoPage implements OnInit {
         return;
       }
 
+      this.formularioGuardado = true;
+      this.guardarSnapshotFormulario();
       this.mensajeService.enviarMensaje('actualizado');
       this.navCtrl.back();
     } catch (error) {
@@ -318,6 +505,7 @@ export class AgregarProductoPage implements OnInit {
                 return;
               }
 
+              this.formularioGuardado = true;
               this.mensajeService.enviarMensaje('eliminado');
               this.navCtrl.back();
             } finally {
@@ -538,7 +726,7 @@ export class AgregarProductoPage implements OnInit {
   }
 
   retroceder() {
-    this.navCtrl.back();
+    this.intentarSalir();
   }
 
   onOptionChange(event: any) {
@@ -603,23 +791,50 @@ export class AgregarProductoPage implements OnInit {
   }
 
   async abrirScannerCodigo() {
+    await this.cerrarScannerCodigo();
     this.scannerAbierto = true;
   }
 
   async cerrarScannerCodigo() {
     this.scannerAbierto = false;
 
-    this.codeReader = null;
+    if (this.videoScanner && this.videoScanner.nativeElement) {
+      this.videoScanner.nativeElement.pause();
+      this.videoScanner.nativeElement.srcObject = null;
+    }
 
     if (this.streamActual) {
-      this.streamActual.getTracks().forEach(t => t.stop());
+      this.streamActual.getTracks().forEach(track => {
+        track.stop();
+      });
       this.streamActual = null;
     }
+
+    this.codeReader = null;
+  }
+
+  async cerrarSoloCamaraSinCerrarModal() {
+    if (this.videoScanner && this.videoScanner.nativeElement) {
+      this.videoScanner.nativeElement.pause();
+      this.videoScanner.nativeElement.srcObject = null;
+    }
+
+    if (this.streamActual) {
+      this.streamActual.getTracks().forEach(track => {
+        track.stop();
+      });
+      this.streamActual = null;
+    }
+
+    this.codeReader = null;
   }
 
   async iniciarLecturaCodigo() {
     try {
+      if (!this.scannerAbierto) return;
       if (!this.videoScanner || !this.videoScanner.nativeElement) return;
+
+      await this.cerrarSoloCamaraSinCerrarModal();
 
       this.codeReader = new BrowserMultiFormatReader();
 
@@ -639,8 +854,11 @@ export class AgregarProductoPage implements OnInit {
         this.streamActual,
         videoEl,
         (result: Result | undefined, err: unknown) => {
+          if (!this.scannerAbierto) return;
+
           if (result) {
             const codigoEscaneado = (result.getText() || '').trim();
+
             if (codigoEscaneado) {
               this.zone.run(() => {
                 this.codigo = codigoEscaneado;
