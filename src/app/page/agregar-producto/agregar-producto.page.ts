@@ -61,10 +61,21 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
   mostrarModalOrigenDanado: boolean = false;
   mostrarModalDestinoCambio: boolean = false;
 
+  mostrarModalMensaje: boolean = false;
+  tituloModalMensaje: string = '';
+  textoModalMensaje: string = '';
+  tipoModalMensaje: string = 'info';
+  iconoModalMensaje: string = 'information-circle-outline';
+  textoBotonModalMensaje: string = 'Entendido';
+  modalMensajeEsConfirmacion: boolean = false;
+
+  private resolverModalMensaje: ((valor: boolean) => void) | null = null;
+
   private codeReader: BrowserMultiFormatReader | null = null;
   private streamActual: MediaStream | null = null;
 
   private imagenNuevaSeleccionada: boolean = false;
+  private imagenAnteriorUrl: string = '';
   private snapshotFormulario: string = '';
   private backButtonSub: any;
   private cerrandoScanner: boolean = false;
@@ -112,7 +123,7 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
         return;
       }
 
-      if (this.mostrarModalSalir) {
+      if (this.mostrarModalSalir || this.mostrarModalMensaje) {
         return;
       }
 
@@ -145,7 +156,7 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.mostrarModalSalir) {
+    if (this.mostrarModalSalir || this.mostrarModalMensaje) {
       return;
     }
 
@@ -221,6 +232,7 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
         this.descripcion = producto.descripcion || '';
         this.selectedOption = producto.categoria_id ? producto.categoria_id.toString() : '';
         this.imagenUrl = producto.imagen || '';
+        this.imagenAnteriorUrl = producto.imagen || '';
         this.imagenNuevaSeleccionada = false;
 
         this.stockExhibicion = Number(producto.stock_exhibicion || 0);
@@ -405,23 +417,228 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
     return '';
   }
 
+  async mostrarMensajeInformativo(
+    titulo: string,
+    mensaje: string,
+    tipo: 'info' | 'exito' | 'error' | 'advertencia' = 'info'
+  ): Promise<void> {
+    await this.mostrarModalMensajePersonalizado(
+      titulo,
+      mensaje,
+      tipo,
+      false,
+      'Entendido'
+    );
+  }
+
+  async mostrarMensajeConfirmacion(
+    titulo: string,
+    mensaje: string,
+    tipo: 'info' | 'exito' | 'error' | 'advertencia' = 'advertencia',
+    textoConfirmar: string = 'Confirmar'
+  ): Promise<boolean> {
+    return await this.mostrarModalMensajePersonalizado(
+      titulo,
+      mensaje,
+      tipo,
+      true,
+      textoConfirmar
+    );
+  }
+
+  async mostrarModalMensajePersonalizado(
+    titulo: string,
+    mensaje: string,
+    tipo: 'info' | 'exito' | 'error' | 'advertencia',
+    esConfirmacion: boolean,
+    textoBoton: string
+  ): Promise<boolean> {
+    this.tituloModalMensaje = titulo;
+    this.textoModalMensaje = mensaje;
+    this.tipoModalMensaje = tipo;
+    this.modalMensajeEsConfirmacion = esConfirmacion;
+    this.textoBotonModalMensaje = textoBoton;
+    this.iconoModalMensaje = this.obtenerIconoModalMensaje(tipo);
+
+    this.mostrarModalMensaje = true;
+
+    return new Promise(resolve => {
+      this.resolverModalMensaje = resolve;
+    });
+  }
+
+  cerrarModalMensaje(valor: boolean) {
+    this.mostrarModalMensaje = false;
+
+    if (this.resolverModalMensaje) {
+      this.resolverModalMensaje(valor);
+      this.resolverModalMensaje = null;
+    }
+  }
+
+  obtenerIconoModalMensaje(tipo: string): string {
+    if (tipo === 'exito') {
+      return 'checkmark-circle-outline';
+    }
+
+    if (tipo === 'error') {
+      return 'close-circle-outline';
+    }
+
+    if (tipo === 'advertencia') {
+      return 'warning-outline';
+    }
+
+    return 'information-circle-outline';
+  }
+
+  async validarFormularioProducto(): Promise<boolean> {
+    const codigoLimpio = (this.codigo || '').toString().trim();
+    const nombreLimpio = (this.nombre || '').toString().trim();
+
+    if (!codigoLimpio) {
+      await this.mostrarMensajeInformativo(
+        'Código obligatorio',
+        'Debes ingresar o escanear el código de barras del producto.',
+        'advertencia'
+      );
+      return false;
+    }
+
+    if (isNaN(Number(codigoLimpio)) || Number(codigoLimpio) <= 0) {
+      await this.mostrarMensajeInformativo(
+        'Código inválido',
+        'El código de barras debe ser un número válido.',
+        'advertencia'
+      );
+      return false;
+    }
+
+    if (!nombreLimpio) {
+      await this.mostrarMensajeInformativo(
+        'Nombre obligatorio',
+        'Debes ingresar el nombre del producto.',
+        'advertencia'
+      );
+      return false;
+    }
+
+    if (!this.selectedOption) {
+      await this.mostrarMensajeInformativo(
+        'Categoría obligatoria',
+        'Debes seleccionar una categoría para el producto.',
+        'advertencia'
+      );
+      return false;
+    }
+
+    if (Number(this.precioUnitario || 0) <= 0) {
+      await this.mostrarMensajeInformativo(
+        'Precio inválido',
+        'El precio unitario debe ser mayor a 0.',
+        'advertencia'
+      );
+      return false;
+    }
+
+    if (Number(this.costoUnitario || 0) < 0) {
+      await this.mostrarMensajeInformativo(
+        'Costo inválido',
+        'El costo unitario no puede ser negativo.',
+        'advertencia'
+      );
+      return false;
+    }
+
+    if (
+      Number(this.stockExhibicion || 0) < 0 ||
+      Number(this.stockAlmacenTienda || 0) < 0 ||
+      Number(this.stockAlmacenCasa || 0) < 0 ||
+      Number(this.stockDanado || 0) < 0
+    ) {
+      await this.mostrarMensajeInformativo(
+        'Stock inválido',
+        'Los valores de stock no pueden ser negativos.',
+        'advertencia'
+      );
+      return false;
+    }
+
+    this.codigo = codigoLimpio;
+    this.nombre = nombreLimpio;
+
+    return true;
+  }
+
+  async validarCodigoBarrasDisponible(): Promise<boolean> {
+    const codigoNumero = Number(this.codigo);
+
+    const productoEncontrado = await this.supabaseService.obtenerProductoPorCodigoBarras(codigoNumero);
+
+    if (!productoEncontrado) {
+      return true;
+    }
+
+    if (
+      this.isEditMode &&
+      this.productoId &&
+      Number(productoEncontrado.producto_id) === Number(this.productoId)
+    ) {
+      return true;
+    }
+
+    await this.mostrarMensajeInformativo(
+      'Código duplicado',
+      `El código de barras ya está registrado en el producto: ${productoEncontrado.nombre}.`,
+      'advertencia'
+    );
+
+    return false;
+  }
+
+  async confirmarCostoMayorPrecio(): Promise<boolean> {
+    const precio = Number(this.precioUnitario || 0);
+    const costo = Number(this.costoUnitario || 0);
+
+    if (costo <= precio) {
+      return true;
+    }
+
+    return await this.mostrarMensajeConfirmacion(
+      'Revisar precio',
+      'El costo unitario es mayor al precio de venta. Esto puede generar pérdida. ¿Deseas guardar de todas formas?',
+      'advertencia',
+      'Guardar'
+    );
+  }
+
   async agregarProducto() {
     if (!this.codigo || !this.nombre || !this.selectedOption) {
-      console.error('Faltan datos obligatorios');
+      await this.mostrarMensajeInformativo(
+        'Datos incompletos',
+        'Revisa que el código, nombre y categoría estén completos.',
+        'advertencia'
+      );
       return;
     }
 
     let imagenFinal = this.imagenUrl || null;
+    let imagenSubidaNueva: string | null = null;
 
     if (this.imagenUrl && this.imagenUrl.startsWith('data:image')) {
       const urlSubida = await this.supabaseService.subirImagenProducto(this.imagenUrl, this.nombre);
 
       if (!urlSubida) {
-        console.error('No se pudo subir la imagen del producto');
+        await this.mostrarMensajeInformativo(
+          'Imagen no guardada',
+          'No se pudo optimizar y subir la imagen del producto.',
+          'error'
+        );
         return;
       }
 
       imagenFinal = urlSubida;
+      imagenSubidaNueva = urlSubida;
     }
 
     const stockTotal =
@@ -440,15 +657,25 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
       imagen: imagenFinal
     };
 
+    let productoGuardado: any = null;
+
     try {
       const data = await this.supabaseService.agregarProducto(producto);
 
       if (!data || !data[0]) {
-        console.error('Supabase no insertó el producto');
+        if (imagenSubidaNueva) {
+          await this.supabaseService.eliminarImagenProductoPorUrl(imagenSubidaNueva);
+        }
+
+        await this.mostrarMensajeInformativo(
+          'Producto no guardado',
+          'No se pudo guardar el producto.',
+          'error'
+        );
         return;
       }
 
-      const productoGuardado = data[0];
+      productoGuardado = data[0];
 
       const stockGuardado = await this.supabaseService.guardarStockInicialProducto(
         productoGuardado.producto_id,
@@ -461,7 +688,19 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
       );
 
       if (!stockGuardado) {
-        console.error('No se pudo guardar el stock por ubicación');
+        if (productoGuardado?.producto_id) {
+          await this.supabaseService.eliminarProductoLogico(productoGuardado.producto_id);
+        }
+
+        if (imagenSubidaNueva) {
+          await this.supabaseService.eliminarImagenProductoPorUrl(imagenSubidaNueva);
+        }
+
+        await this.mostrarMensajeInformativo(
+          'Stock no guardado',
+          'No se pudo guardar el stock por ubicación. El producto no fue completado.',
+          'error'
+        );
         return;
       }
 
@@ -471,21 +710,42 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
       this.volverPaginaAnterior();
     } catch (error) {
       console.error('Error al agregar producto:', error);
+
+      if (productoGuardado?.producto_id) {
+        await this.supabaseService.eliminarProductoLogico(productoGuardado.producto_id);
+      }
+
+      if (imagenSubidaNueva) {
+        await this.supabaseService.eliminarImagenProductoPorUrl(imagenSubidaNueva);
+      }
+
+      await this.mostrarMensajeInformativo(
+        'Error al guardar',
+        'Ocurrió un error al agregar el producto.',
+        'error'
+      );
     }
   }
 
   async actualizarProducto() {
+    const imagenAnterior = this.imagenAnteriorUrl || '';
     let imagenFinal = this.imagenUrl || '';
+    let imagenSubidaNueva: string | null = null;
 
     if (this.imagenNuevaSeleccionada && this.imagenUrl && this.imagenUrl.startsWith('data:image')) {
       const urlSubida = await this.supabaseService.subirImagenProducto(this.imagenUrl, this.nombre);
 
       if (!urlSubida) {
-        console.error('No se pudo subir la nueva imagen del producto');
+        await this.mostrarMensajeInformativo(
+          'Imagen no guardada',
+          'No se pudo optimizar y subir la nueva imagen del producto.',
+          'error'
+        );
         return;
       }
 
       imagenFinal = urlSubida;
+      imagenSubidaNueva = urlSubida;
     }
 
     const stockTotal =
@@ -509,7 +769,15 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
       const data = await this.supabaseService.actualizarProducto(producto);
 
       if (!data) {
-        console.error('No se pudo actualizar el producto');
+        if (imagenSubidaNueva) {
+          await this.supabaseService.eliminarImagenProductoPorUrl(imagenSubidaNueva);
+        }
+
+        await this.mostrarMensajeInformativo(
+          'Producto no actualizado',
+          'No se pudo actualizar el producto.',
+          'error'
+        );
         return;
       }
 
@@ -524,73 +792,122 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
       );
 
       if (!stockActualizado) {
-        console.error('No se pudo actualizar el stock por ubicación');
+        if (imagenSubidaNueva) {
+          await this.supabaseService.actualizarProducto({
+            ...producto,
+            imagen: imagenAnterior
+          });
+
+          await this.supabaseService.eliminarImagenProductoPorUrl(imagenSubidaNueva);
+        }
+
+        await this.mostrarMensajeInformativo(
+          'Stock no actualizado',
+          'No se pudo actualizar el stock por ubicación.',
+          'error'
+        );
         return;
       }
 
+      if (
+        imagenSubidaNueva &&
+        imagenAnterior &&
+        imagenAnterior !== imagenSubidaNueva &&
+        !imagenAnterior.startsWith('data:image')
+      ) {
+        await this.supabaseService.eliminarImagenProductoPorUrl(imagenAnterior);
+      }
+
+      this.imagenUrl = imagenFinal;
+      this.imagenAnteriorUrl = imagenFinal;
+      this.imagenNuevaSeleccionada = false;
       this.formularioGuardado = true;
       this.guardarSnapshotFormulario();
       this.mensajeService.enviarMensaje('actualizado');
       this.volverPaginaAnterior();
     } catch (error) {
       console.error('Error al actualizar producto:', error);
+
+      if (imagenSubidaNueva) {
+        await this.supabaseService.eliminarImagenProductoPorUrl(imagenSubidaNueva);
+      }
+
+      await this.mostrarMensajeInformativo(
+        'Error al actualizar',
+        'Ocurrió un error al actualizar el producto.',
+        'error'
+      );
     }
   }
 
   async eliminarProducto() {
     if (!this.isEditMode || !this.productoId) {
-      console.error('No se puede eliminar un producto que aún no fue guardado');
+      await this.mostrarMensajeInformativo(
+        'Producto no guardado',
+        'No se puede eliminar un producto que aún no fue guardado.',
+        'advertencia'
+      );
       return;
     }
 
-    const alert = await this.alertController.create({
-      header: 'Eliminar producto',
-      message: '¿Deseas eliminar este producto?',
-      buttons: [
-        {
-          text: 'Cancelar',
-          role: 'cancel'
-        },
-        {
-          text: 'Eliminar',
-          handler: async () => {
-            await this.loadingService.mostrarLoading('Eliminando producto...');
+    const confirmar = await this.mostrarMensajeConfirmacion(
+      'Eliminar producto',
+      '¿Deseas eliminar este producto?',
+      'error',
+      'Eliminar'
+    );
 
-            try {
-              const eliminado = await this.supabaseService.eliminarProductoLogico(this.productoId!);
+    if (!confirmar) {
+      return;
+    }
 
-              if (!eliminado) {
-                console.error('No se pudo eliminar el producto');
-                return;
-              }
+    await this.loadingService.mostrarLoading('Eliminando producto...');
 
-              this.formularioGuardado = true;
-              this.mensajeService.enviarMensaje('eliminado');
-              this.volverPaginaAnterior();
-            } finally {
-              await this.loadingService.cerrarLoading();
-            }
-          }
-        }
-      ]
-    });
+    try {
+      const eliminado = await this.supabaseService.eliminarProductoLogico(this.productoId);
 
-    await alert.present();
+      if (!eliminado) {
+        await this.mostrarMensajeInformativo(
+          'No se pudo eliminar',
+          'No se pudo eliminar el producto.',
+          'error'
+        );
+        return;
+      }
+
+      this.formularioGuardado = true;
+      this.mensajeService.enviarMensaje('eliminado');
+      this.volverPaginaAnterior();
+    } finally {
+      await this.loadingService.cerrarLoading();
+    }
   }
 
   async moverStock() {
     if (!this.isEditMode || !this.productoId) {
-      console.error('El producto debe estar guardado antes de mover stock');
+      await this.mostrarMensajeInformativo(
+        'Producto no guardado',
+        'El producto debe estar guardado antes de mover stock.',
+        'advertencia'
+      );
       return;
     }
 
     if (!this.trasladoSeleccionado) {
-      console.error('Debes seleccionar un tipo de traslado');
+      await this.mostrarMensajeInformativo(
+        'Traslado obligatorio',
+        'Debes seleccionar de dónde a dónde se moverá el stock.',
+        'advertencia'
+      );
       return;
     }
 
     if (Number(this.cantidadTraslado) <= 0) {
-      console.error('La cantidad de traslado debe ser mayor a 0');
+      await this.mostrarMensajeInformativo(
+        'Cantidad inválida',
+        'La cantidad de traslado debe ser mayor a 0.',
+        'advertencia'
+      );
       return;
     }
 
@@ -598,9 +915,18 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
     const destino = this.getDestinoTraslado();
 
     if (!origen || !destino) {
-      console.error('No se pudo determinar el origen y destino del traslado');
+      await this.mostrarMensajeInformativo(
+        'Traslado inválido',
+        'No se pudo determinar el origen y destino del traslado.',
+        'error'
+      );
       return;
     }
+
+    const cantidad = Number(this.cantidadTraslado);
+    const nombreOrigen = this.obtenerNombreUbicacion(origen);
+    const nombreDestino = this.obtenerNombreUbicacion(destino);
+    let mensajeExito = '';
 
     await this.loadingService.mostrarLoading('Moviendo stock...');
 
@@ -609,11 +935,15 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
         this.productoId,
         origen,
         destino,
-        Number(this.cantidadTraslado)
+        cantidad
       );
 
       if (!movido) {
-        console.error('No se pudo mover el stock');
+        await this.mostrarMensajeInformativo(
+          'No se pudo mover stock',
+          'Revisa que exista suficiente stock en la ubicación de origen.',
+          'error'
+        );
         return;
       }
 
@@ -622,28 +952,49 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
 
       await this.cargarProducto();
       this.mensajeService.enviarMensaje('actualizado');
+
+      mensajeExito = `Se movieron ${cantidad} unidades de ${nombreOrigen} a ${nombreDestino}.`;
     } finally {
       await this.loadingService.cerrarLoading();
+    }
+
+    if (mensajeExito) {
+      await this.mostrarMensajeInformativo('Movimiento realizado', mensajeExito, 'exito');
     }
   }
 
   async registrarDanado() {
     if (!this.isEditMode || !this.productoId) {
-      console.error('El producto debe estar guardado antes de registrar dañados');
+      await this.mostrarMensajeInformativo(
+        'Producto no guardado',
+        'El producto debe estar guardado antes de registrar dañados.',
+        'advertencia'
+      );
       return;
     }
 
     if (!this.origenDanado) {
-      console.error('Debes seleccionar el origen del dañado');
+      await this.mostrarMensajeInformativo(
+        'Origen obligatorio',
+        'Debes seleccionar de dónde saldrá el producto dañado.',
+        'advertencia'
+      );
       return;
     }
 
     if (Number(this.cantidadDanado) <= 0) {
-      console.error('La cantidad de dañado debe ser mayor a 0');
+      await this.mostrarMensajeInformativo(
+        'Cantidad inválida',
+        'La cantidad de productos dañados debe ser mayor a 0.',
+        'advertencia'
+      );
       return;
     }
 
     const origen = this.origenDanado as 'exhibicion' | 'almacen_tienda' | 'almacen_casa';
+    const cantidad = Number(this.cantidadDanado);
+    const nombreOrigen = this.obtenerNombreUbicacion(origen);
+    let mensajeExito = '';
 
     await this.loadingService.mostrarLoading('Registrando producto dañado...');
 
@@ -651,11 +1002,15 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
       const registrado = await this.supabaseService.moverStockADanado(
         this.productoId,
         origen,
-        Number(this.cantidadDanado)
+        cantidad
       );
 
       if (!registrado) {
-        console.error('No se pudo registrar el producto dañado');
+        await this.mostrarMensajeInformativo(
+          'No se pudo registrar dañado',
+          'Revisa que exista suficiente stock en la ubicación seleccionada.',
+          'error'
+        );
         return;
       }
 
@@ -664,32 +1019,53 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
 
       await this.cargarProducto();
       this.mensajeService.enviarMensaje('actualizado');
+
+      mensajeExito = `Se registraron ${cantidad} unidades como dañadas desde ${nombreOrigen}.`;
     } finally {
       await this.loadingService.cerrarLoading();
+    }
+
+    if (mensajeExito) {
+      await this.mostrarMensajeInformativo('Producto dañado registrado', mensajeExito, 'exito');
     }
   }
 
   async enviarAProveedor() {
     if (!this.isEditMode || !this.productoId) {
-      console.error('El producto debe estar guardado antes de enviar al proveedor');
+      await this.mostrarMensajeInformativo(
+        'Producto no guardado',
+        'El producto debe estar guardado antes de enviar al proveedor.',
+        'advertencia'
+      );
       return;
     }
 
     if (Number(this.cantidadSalidaProveedor) <= 0) {
-      console.error('La cantidad a enviar al proveedor debe ser mayor a 0');
+      await this.mostrarMensajeInformativo(
+        'Cantidad inválida',
+        'La cantidad a enviar al proveedor debe ser mayor a 0.',
+        'advertencia'
+      );
       return;
     }
+
+    const cantidad = Number(this.cantidadSalidaProveedor);
+    let mensajeExito = '';
 
     await this.loadingService.mostrarLoading('Enviando a proveedor...');
 
     try {
       const enviado = await this.supabaseService.enviarDanadoAProveedor(
         this.productoId,
-        Number(this.cantidadSalidaProveedor)
+        cantidad
       );
 
       if (!enviado) {
-        console.error('No se pudo enviar el producto al proveedor');
+        await this.mostrarMensajeInformativo(
+          'No se pudo enviar al proveedor',
+          'Revisa que exista suficiente stock dañado para enviar.',
+          'error'
+        );
         return;
       }
 
@@ -697,28 +1073,49 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
 
       await this.cargarProducto();
       this.mensajeService.enviarMensaje('actualizado');
+
+      mensajeExito = `Se enviaron ${cantidad} unidades dañadas al proveedor.`;
     } finally {
       await this.loadingService.cerrarLoading();
+    }
+
+    if (mensajeExito) {
+      await this.mostrarMensajeInformativo('Enviado al proveedor', mensajeExito, 'exito');
     }
   }
 
   async recibirCambioProveedor() {
     if (!this.isEditMode || !this.productoId) {
-      console.error('El producto debe estar guardado antes de recibir cambio del proveedor');
+      await this.mostrarMensajeInformativo(
+        'Producto no guardado',
+        'El producto debe estar guardado antes de recibir cambio del proveedor.',
+        'advertencia'
+      );
       return;
     }
 
     if (!this.destinoCambioProveedor) {
-      console.error('Debes seleccionar el destino del cambio del proveedor');
+      await this.mostrarMensajeInformativo(
+        'Destino obligatorio',
+        'Debes seleccionar dónde ingresará el producto recibido.',
+        'advertencia'
+      );
       return;
     }
 
     if (Number(this.cantidadCambioProveedor) <= 0) {
-      console.error('La cantidad recibida del proveedor debe ser mayor a 0');
+      await this.mostrarMensajeInformativo(
+        'Cantidad inválida',
+        'La cantidad recibida del proveedor debe ser mayor a 0.',
+        'advertencia'
+      );
       return;
     }
 
     const destino = this.destinoCambioProveedor as 'exhibicion' | 'almacen_tienda' | 'almacen_casa';
+    const cantidad = Number(this.cantidadCambioProveedor);
+    const nombreDestino = this.obtenerNombreUbicacion(destino);
+    let mensajeExito = '';
 
     await this.loadingService.mostrarLoading('Recibiendo cambio del proveedor...');
 
@@ -726,11 +1123,15 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
       const recibido = await this.supabaseService.recibirCambioProveedor(
         this.productoId,
         destino,
-        Number(this.cantidadCambioProveedor)
+        cantidad
       );
 
       if (!recibido) {
-        console.error('No se pudo registrar el cambio del proveedor');
+        await this.mostrarMensajeInformativo(
+          'No se pudo recibir cambio',
+          'No se pudo registrar el cambio recibido del proveedor.',
+          'error'
+        );
         return;
       }
 
@@ -739,8 +1140,14 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
 
       await this.cargarProducto();
       this.mensajeService.enviarMensaje('actualizado');
+
+      mensajeExito = `Se recibieron ${cantidad} unidades en ${nombreDestino}.`;
     } finally {
       await this.loadingService.cerrarLoading();
+    }
+
+    if (mensajeExito) {
+      await this.mostrarMensajeInformativo('Cambio recibido', mensajeExito, 'exito');
     }
   }
 
@@ -769,6 +1176,24 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
   }
 
   async guardarProducto() {
+    const formularioValido = await this.validarFormularioProducto();
+
+    if (!formularioValido) {
+      return;
+    }
+
+    const codigoDisponible = await this.validarCodigoBarrasDisponible();
+
+    if (!codigoDisponible) {
+      return;
+    }
+
+    const confirmarCosto = await this.confirmarCostoMayorPrecio();
+
+    if (!confirmarCosto) {
+      return;
+    }
+
     await this.loadingService.mostrarLoading(
       this.isEditMode ? 'Actualizando producto...' : 'Guardando producto...'
     );

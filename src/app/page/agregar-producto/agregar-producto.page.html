@@ -404,6 +404,58 @@
     </ng-template>
   </ion-modal>
 
+  <ion-modal
+    class="modal-mensaje-formulario"
+    [isOpen]="mostrarModalMensaje"
+    [backdropDismiss]="false">
+    <ng-template>
+      <div class="modal-mensaje-wrapper">
+        <div class="modal-mensaje-card">
+          <div
+            class="modal-icono-mensaje"
+            [ngClass]="{
+              'mensaje-info': tipoModalMensaje === 'info',
+              'mensaje-exito': tipoModalMensaje === 'exito',
+              'mensaje-error': tipoModalMensaje === 'error',
+              'mensaje-advertencia': tipoModalMensaje === 'advertencia'
+            }">
+            <ion-icon [name]="iconoModalMensaje"></ion-icon>
+          </div>
+
+          <h2>{{ tituloModalMensaje }}</h2>
+
+          <p class="modal-subtitulo">
+            {{ textoModalMensaje }}
+          </p>
+
+          <div
+            class="modal-mensaje-botones"
+            [class.modal-mensaje-botones-doble]="modalMensajeEsConfirmacion">
+            <ion-button
+              *ngIf="modalMensajeEsConfirmacion"
+              expand="block"
+              class="btn-cancelar-mensaje"
+              (click)="cerrarModalMensaje(false)">
+              Cancelar
+            </ion-button>
+
+            <ion-button
+              expand="block"
+              class="btn-confirmar-mensaje"
+              [ngClass]="{
+                'btn-confirmar-error': tipoModalMensaje === 'error',
+                'btn-confirmar-exito': tipoModalMensaje === 'exito',
+                'btn-confirmar-advertencia': tipoModalMensaje === 'advertencia'
+              }"
+              (click)="cerrarModalMensaje(true)">
+              {{ textoBotonModalMensaje }}
+            </ion-button>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
   <ion-modal class="modal-selector-producto" [isOpen]="mostrarModalCategorias" [backdropDismiss]="true" (didDismiss)="cerrarModalCategorias()">
     <ng-template>
       <div class="modal-selector-wrapper">

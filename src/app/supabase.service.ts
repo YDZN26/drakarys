@@ -109,6 +109,22 @@ export class SupabaseService {
     };
   }
 
+  async obtenerProductoPorCodigoBarras(codigoBarras: number) {
+    const { data, error } = await this.supabase
+      .from('producto')
+      .select('producto_id, nombre, codigo_barras, estado')
+      .eq('codigo_barras', codigoBarras)
+      .eq('estado', true)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error al buscar producto por código de barras:', error);
+      return null;
+    }
+
+    return data;
+  }
+
   async actualizarProducto(producto: any) {
     const { data, error } = await this.supabase
       .from('producto')
@@ -1666,51 +1682,153 @@ async verificarYCerrarDiasPendientes() {
   }
 
   private dataUrlABlob(dataUrl: string): Blob {
-    const partes = dataUrl.split(',');
-    const mime = partes[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
-    const bytes = atob(partes[1]);
-    const array = new Uint8Array(bytes.length);
+  const partes = dataUrl.split(',');
+  const mime = partes[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+  const bytes = atob(partes[1]);
+  const array = new Uint8Array(bytes.length);
 
-    for (let i = 0; i < bytes.length; i++) {
-      array[i] = bytes.charCodeAt(i);
-    }
-
-    return new Blob([array], { type: mime });
+  for (let i = 0; i < bytes.length; i++) {
+    array[i] = bytes.charCodeAt(i);
   }
 
-  async subirImagenProducto(dataUrl: string, nombreProducto: string): Promise<string | null> {
-    try {
-      const blob = this.dataUrlABlob(dataUrl);
-      const extension = blob.type.split('/')[1] || 'jpg';
-      const nombreLimpio = (nombreProducto || 'producto')
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '-');
+  return new Blob([array], { type: mime });
+}
 
-      const nombreArchivo = `${Date.now()}-${nombreLimpio}.${extension}`;
-      const rutaArchivo = `productos/${nombreArchivo}`;
+private limpiarNombreArchivo(nombre: string): string {
+  return (nombre || 'producto')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
 
-      const { error } = await this.supabase.storage
-        .from('productos')
-        .upload(rutaArchivo, blob, {
-          contentType: blob.type,
-          upsert: true
-        });
+private optimizarImagenProducto(dataUrl: string): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const imagen = new Image();
 
-      if (error) {
-        console.error('Error al subir imagen a storage:', error);
-        return null;
+    imagen.onload = () => {
+      const maximo = 1000;
+      let ancho = imagen.width;
+      let alto = imagen.height;
+
+      if (ancho > alto && ancho > maximo) {
+        alto = Math.round((alto * maximo) / ancho);
+        ancho = maximo;
+      } else if (alto > maximo) {
+        ancho = Math.round((ancho * maximo) / alto);
+        alto = maximo;
       }
 
-      const { data } = this.supabase.storage
-        .from('productos')
-        .getPublicUrl(rutaArchivo);
+      const canvas = document.createElement('canvas');
+      canvas.width = ancho;
+      canvas.height = alto;
 
-      return data.publicUrl;
-    } catch (error) {
-      console.error('Error al procesar la imagen:', error);
+      const contexto = canvas.getContext('2d');
+
+      if (!contexto) {
+        reject('No se pudo procesar la imagen');
+        return;
+      }
+
+      contexto.drawImage(imagen, 0, 0, ancho, alto);
+
+      canvas.toBlob(
+        blob => {
+          if (!blob) {
+            reject('No se pudo comprimir la imagen');
+            return;
+          }
+
+          resolve(blob);
+        },
+        'image/webp',
+        0.78
+      );
+    };
+
+    imagen.onerror = () => {
+      reject('No se pudo cargar la imagen');
+    };
+
+    imagen.src = dataUrl;
+  });
+}
+
+private obtenerRutaArchivoDesdeUrl(urlImagen: string): string | null {
+  if (!urlImagen) {
+    return null;
+  }
+
+  const marcador = '/storage/v1/object/public/productos/';
+
+  if (!urlImagen.includes(marcador)) {
+    return null;
+  }
+
+  const partes = urlImagen.split(marcador);
+
+  if (!partes[1]) {
+    return null;
+  }
+
+  return partes[1].split('?')[0];
+}
+
+async eliminarImagenProductoPorUrl(urlImagen: string): Promise<boolean> {
+  try {
+    const rutaArchivo = this.obtenerRutaArchivoDesdeUrl(urlImagen);
+
+    if (!rutaArchivo) {
+      return false;
+    }
+
+    const { error } = await this.supabase.storage
+      .from('productos')
+      .remove([rutaArchivo]);
+
+    if (error) {
+      console.error('Error al eliminar imagen anterior:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error al eliminar imagen del producto:', error);
+    return false;
+  }
+}
+
+async subirImagenProducto(dataUrl: string, nombreProducto: string): Promise<string | null> {
+  try {
+    const blob = await this.optimizarImagenProducto(dataUrl);
+    const nombreLimpio = this.limpiarNombreArchivo(nombreProducto);
+    const nombreArchivo = `${Date.now()}-${nombreLimpio}.webp`;
+    const rutaArchivo = `productos/${nombreArchivo}`;
+
+    const { error } = await this.supabase.storage
+      .from('productos')
+      .upload(rutaArchivo, blob, {
+        contentType: 'image/webp',
+        upsert: false
+      });
+
+    if (error) {
+      console.error('Error al subir imagen a storage:', error);
       return null;
     }
+
+    const { data } = this.supabase.storage
+      .from('productos')
+      .getPublicUrl(rutaArchivo);
+
+    return data.publicUrl;
+  } catch (error) {
+    console.error('Error al procesar la imagen:', error);
+    return null;
   }
+}
 
   async devolverStockAExhibicion(productoId: number, cantidad: number) {
     if (!productoId || cantidad <= 0) {

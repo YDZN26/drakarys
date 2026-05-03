@@ -473,6 +473,148 @@ ion-input[type='number'] {
   margin: 0;
 }
 
+/* MODAL MENSAJES FORMULARIO */
+
+.modal-mensaje-formulario {
+  --width: 100%;
+  --height: 100%;
+  --background: transparent;
+  --box-shadow: none;
+  --border-radius: 0;
+}
+
+.modal-mensaje-formulario::part(content) {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  box-shadow: none;
+}
+
+.modal-mensaje-wrapper {
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  box-sizing: border-box;
+}
+
+.modal-mensaje-card {
+  width: 100%;
+  max-width: 390px;
+  background: #ffffff;
+  border-radius: 26px;
+  padding: 24px 18px 18px 18px;
+  text-align: center;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
+
+  h2 {
+    margin: 12px 0 6px 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #2d3d55;
+  }
+
+  .modal-subtitulo {
+    margin: 0 0 18px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #607389;
+    line-height: 1.45;
+  }
+}
+
+.modal-icono-mensaje {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ion-icon {
+    font-size: 42px;
+  }
+}
+
+.modal-icono-mensaje.mensaje-info {
+  background: rgba(0, 30, 135, 0.12);
+
+  ion-icon {
+    color: #001E87;
+  }
+}
+
+.modal-icono-mensaje.mensaje-exito {
+  background: rgba(22, 163, 74, 0.12);
+
+  ion-icon {
+    color: #16a34a;
+  }
+}
+
+.modal-icono-mensaje.mensaje-error {
+  background: rgba(215, 0, 0, 0.12);
+
+  ion-icon {
+    color: #d70000;
+  }
+}
+
+.modal-icono-mensaje.mensaje-advertencia {
+  background: rgba(245, 158, 11, 0.14);
+
+  ion-icon {
+    color: #f59e0b;
+  }
+}
+
+.modal-mensaje-botones {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-mensaje-botones-doble {
+  display: flex;
+}
+
+.btn-cancelar-mensaje {
+  height: 46px;
+  --background: #edf2fa;
+  --color: #2d3d55;
+  --border-radius: 16px;
+  font-weight: bold;
+  text-transform: none;
+  margin: 0;
+}
+
+.btn-confirmar-mensaje {
+  height: 46px;
+  --background: #001E87;
+  --color: #ffffff;
+  --border-radius: 16px;
+  font-weight: bold;
+  text-transform: none;
+  margin: 0;
+}
+
+.btn-confirmar-exito {
+  --background: #16a34a;
+}
+
+.btn-confirmar-error {
+  --background: #d70000;
+}
+
+.btn-confirmar-advertencia {
+  --background: #f59e0b;
+}
+
 /* MODAL SELECTORES */
 
 .modal-selector-producto {
@@ -631,8 +773,16 @@ ion-input[type='number'] {
     height: 180px;
   }
 
-  .modal-salir-botones {
+  .modal-salir-botones,
+  .modal-mensaje-botones,
+  .modal-mensaje-botones-doble {
     flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-cancelar-mensaje,
+  .btn-confirmar-mensaje {
+    width: 100%;
   }
 }
 
@@ -687,5 +837,19 @@ ion-input[type='number'] {
   .btn-cancelar-salir,
   .btn-confirmar-salir {
     flex: 1;
+  }
+
+  .modal-mensaje-card {
+    max-width: 390px;
+  }
+
+  .modal-mensaje-botones {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .btn-cancelar-mensaje,
+  .btn-confirmar-mensaje {
+    width: 140px;
   }
 }

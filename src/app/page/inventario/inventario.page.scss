@@ -138,7 +138,8 @@ ion-header {
   filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.15));
 }
 
-.category-buttons {
+.category-buttons,
+.alert-filter-buttons {
   display: flex;
   flex-wrap: nowrap;
   overflow-x: auto;
@@ -150,7 +151,9 @@ ion-header {
   &::-webkit-scrollbar {
     display: none;
   }
+}
 
+.category-buttons {
   .categoria-button {
     flex: 0 0 auto;
     margin: 0;
@@ -173,13 +176,61 @@ ion-header {
   }
 }
 
+.alert-filter-buttons {
+  padding-top: 2px;
+  padding-bottom: 12px;
+}
+
+.alert-filter-modal {
+  padding: 0 0 14px 0;
+  flex-shrink: 0;
+}
+
+.alerta-filtro-button {
+  flex: 0 0 auto;
+  margin: 0;
+  --border-radius: 14px;
+  border-radius: 14px;
+  --background: #ffffff;
+  --color: #4f6178;
+  --border-color: #d9e1ea;
+  --box-shadow: none;
+  text-transform: none;
+  font-weight: bold;
+  border: 1px solid #d9e1ea;
+}
+
+.alerta-filtro-button.alerta-filtro-activa {
+  --background: #001E87;
+  --color: #ffffff;
+  --border-color: #001E87;
+  border: 1px solid #001E87;
+}
+
+.alerta-filtro-sin-stock.alerta-filtro-activa {
+  --background: #dc2626;
+  --border-color: #dc2626;
+  border: 1px solid #dc2626;
+}
+
+.alerta-filtro-critico.alerta-filtro-activa {
+  --background: #f97316;
+  --border-color: #f97316;
+  border: 1px solid #f97316;
+}
+
+.alerta-filtro-reposicion.alerta-filtro-activa {
+  --background: #001E87;
+  --border-color: #001E87;
+  border: 1px solid #001E87;
+}
+
 .productos-container {
   padding: 0 16px 120px 16px;
 }
 
 ion-list {
   margin-top: 4px;
-  /* FORZAMOS FONDO TRANSPARENTE PARA MATAR EL FONDO BLANCO DE IONIC */
   background: transparent !important;
   --background: transparent !important;
 }
@@ -217,16 +268,73 @@ ion-list {
   }
 }
 
+.producto-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px 0;
+}
+
+.producto-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.badge-sin-stock {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
+
+.badge-critico {
+  background: rgba(249, 115, 22, 0.14);
+  color: #f97316;
+}
+
+.badge-reposicion {
+  background: rgba(0, 30, 135, 0.12);
+  color: #001E87;
+}
+
 .producto-thumbnail {
   width: 65px;
   height: 65px;
   --border-radius: 12px;
   overflow: hidden;
+  background: #edf2fa;
 
   img {
     object-fit: cover;
     width: 100%;
     height: 100%;
+  }
+}
+
+.producto-sin-imagen {
+  width: 100%;
+  height: 100%;
+  background: #edf2fa;
+  border: 1px solid #d9e1ea;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+
+  ion-icon {
+    font-size: 24px;
+    color: #607389;
+  }
+
+  span {
+    font-size: 9px;
+    font-weight: 700;
+    color: #607389;
   }
 }
 
@@ -255,15 +363,25 @@ ion-list {
   margin: 0;
 }
 
+/* MODAL STOCK BAJO */
+
 ion-modal.stock-bajo-modal {
   --width: 100%;
   --height: 90%;
   --border-radius: 24px 24px 0 0;
+  --box-shadow: none;
+  align-items: flex-end;
 }
 
 ion-modal.stock-bajo-modal::part(content) {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 90%;
   border-radius: 24px 24px 0 0;
   overflow: hidden;
+  background: #f5f7fb;
+  box-shadow: none;
 }
 
 .stock-bajo-modal-wrapper {
@@ -326,6 +444,37 @@ ion-modal.stock-bajo-modal::part(content) {
   padding-bottom: 8px;
 }
 
+.alerta-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.alerta-seccion-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px 2px 2px;
+  font-size: 15px;
+  font-weight: 800;
+
+  ion-icon {
+    font-size: 20px;
+  }
+}
+
+.alerta-sin-stock {
+  color: #dc2626;
+}
+
+.alerta-critica {
+  color: #f97316;
+}
+
+.alerta-reposicion {
+  color: #001E87;
+}
+
 .stock-bajo-modal-item {
   background: #ffffff;
   border-radius: 16px;
@@ -374,6 +523,14 @@ ion-modal.stock-bajo-modal::part(content) {
   font-weight: 600;
 }
 
+.stock-bajo-recomendacion.alerta-roja {
+  color: #dc2626;
+}
+
+.stock-bajo-recomendacion.alerta-azul {
+  color: #001E87;
+}
+
 .stock-bajo-modal-footer {
   flex-shrink: 0;
   padding-top: 12px;
@@ -390,29 +547,50 @@ ion-modal.stock-bajo-modal::part(content) {
   margin: 0;
 }
 
+/* MODAL SCANNER */
+
+.modal-scanner {
+  --width: 100%;
+  --height: 100%;
+  --border-radius: 0;
+}
+
+.modal-scanner::part(content) {
+  width: 100%;
+  height: 100%;
+  background: #000000;
+}
+
 .scanner-content {
-  --background: #000;
+  --background: #000000;
 }
 
 .scanner-box {
   position: relative;
   width: 100%;
   height: 100%;
+  background: #000000;
+  overflow: hidden;
 }
 
 .scanner-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  background: #000000;
+  display: block;
 }
 
 .scanner-text {
   position: absolute;
+  left: 0;
+  right: 0;
   bottom: 30px;
   width: 100%;
   text-align: center;
-  color: #fff;
+  color: #ffffff;
   font-weight: bold;
+  z-index: 2;
 }
 
 /* ======== MÓVIL ======== */
@@ -477,25 +655,32 @@ ion-modal.stock-bajo-modal::part(content) {
     margin: 0 auto;
   }
 
-  /* REGLAS PARA HACER QUE TODAS LAS TARJETAS MIDAN EXACTAMENTE LO MISMO */
   .grid-columna-producto {
     display: flex;
-    flex-direction: column; /* Transforma la columna en un flexbox vertical */
-    padding: 8px; /* Separación de las tarjetas en PC */
+    flex-direction: column;
+    padding: 8px;
   }
 
   .producto-item {
     margin: 0;
-    flex-grow: 1; /* Obliga a la tarjeta a estirarse para igualar a la más alta de la fila */
+    flex-grow: 1;
     width: 100%;
-    --min-height: 100%; /* Forzamos a la caja interna a crecer */
+    --min-height: 100%;
   }
 
-  /* Ajustamos el Shadow DOM interno de Ionic para alinear contenido arriba */
   .producto-item::part(native) {
     height: 100%;
-    align-items: flex-start; /* Alinea los textos arriba por si hay nombres muy largos */
+    align-items: flex-start;
     padding-top: 10px;
     padding-bottom: 10px;
+  }
+
+  ion-modal.stock-bajo-modal::part(content) {
+    max-width: 520px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 24px;
+    bottom: 22px;
+    height: 86%;
   }
 }
