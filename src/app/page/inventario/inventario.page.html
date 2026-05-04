@@ -29,6 +29,11 @@
       </div>
 
       <div class="card">
+        <p>Stock filtrado</p>
+        <h2>{{ calcularStockFiltradoVendible() }}</h2>
+      </div>
+
+      <div class="card">
         <p>Valor total</p>
         <h2>Bs. {{ calcularValorTotal() }}</h2>
       </div>
@@ -69,6 +74,23 @@
         <ion-icon name="camera-outline"></ion-icon>
       </ion-button>
     </ion-item>
+  </div>
+
+  <div class="stock-filtrado-resumen" *ngIf="textoBusqueda.trim()">
+    <p>
+      Resultado de búsqueda:
+      <strong>{{ productosFiltrados.length }}</strong> producto(s) ·
+      <strong>{{ calcularStockFiltradoVendible() }}</strong> unidad(es) disponibles
+    </p>
+
+    <p>
+      Exhibición:
+      <strong>{{ calcularStockFiltradoExhibicion() }}</strong> ·
+      Almacén tienda:
+      <strong>{{ calcularStockFiltradoAlmacenTienda() }}</strong> ·
+      Almacén casa:
+      <strong>{{ calcularStockFiltradoAlmacenCasa() }}</strong>
+    </p>
   </div>
 
   <div class="category-buttons">
@@ -248,7 +270,7 @@
               </div>
 
               <p class="stock-bajo-recomendacion alerta-roja">
-                Producto agotado. Se recomienda reponer stock.
+                {{ obtenerRecomendacionUbicacionesProducto(producto) }}
               </p>
             </div>
           </div>
@@ -287,7 +309,7 @@
               </div>
 
               <p class="stock-bajo-recomendacion">
-                Stock total bajo. Se recomienda comprar o reponer.
+                {{ obtenerRecomendacionUbicacionesProducto(producto) }}
               </p>
             </div>
           </div>
@@ -326,7 +348,7 @@
               </div>
 
               <p class="stock-bajo-recomendacion alerta-azul">
-                Hay stock disponible. Se recomienda mover unidades a exhibición.
+                {{ obtenerRecomendacionUbicacionesProducto(producto) }}
               </p>
             </div>
           </div>

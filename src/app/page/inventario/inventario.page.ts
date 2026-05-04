@@ -33,6 +33,8 @@ export class InventarioPage implements OnInit, OnDestroy {
 
   stockMinimo: number = 2;
   stockMinimoExhibicion: number = 2;
+  stockMinimoAlmacenTienda: number = 2;
+  stockMinimoAlmacenCasa: number = 2;
 
   modalStockBajoAbierto: boolean = false;
   scannerAbierto: boolean = false;
@@ -109,6 +111,8 @@ export class InventarioPage implements OnInit, OnDestroy {
 
   async ionViewWillEnter() {
     await this.popoverCtrl.dismiss().catch(() => {});
+
+    await this.cargarProductos(this.categoriaSeleccionada);
   }
 
   async ionViewWillLeave() {
@@ -153,9 +157,25 @@ export class InventarioPage implements OnInit, OnDestroy {
     try {
       const todos = await this.supabaseService.obtenerProductos();
 
+      const productosNormalizados = todos.map((producto: any) => {
+        const stockExhibicion = Number(producto.stock_exhibicion || 0);
+        const stockAlmacenTienda = Number(producto.stock_almacen_tienda || 0);
+        const stockAlmacenCasa = Number(producto.stock_almacen_casa || 0);
+        const stockDanado = Number(producto.stock_danado || 0);
+
+        return {
+          ...producto,
+          stock_exhibicion: stockExhibicion,
+          stock_almacen_tienda: stockAlmacenTienda,
+          stock_almacen_casa: stockAlmacenCasa,
+          stock_danado: stockDanado,
+          stock_total: stockExhibicion + stockAlmacenTienda + stockAlmacenCasa
+        };
+      });
+
       this.productos = categoriaId
-        ? todos.filter((p: any) => p.categoria_id === categoriaId)
-        : todos;
+        ? productosNormalizados.filter((p: any) => p.categoria_id === categoriaId)
+        : productosNormalizados;
 
       this.aplicarFiltros();
     } catch (error) {
@@ -181,16 +201,36 @@ export class InventarioPage implements OnInit, OnDestroy {
     this.aplicarFiltros();
   }
 
+  normalizarTexto(valor: any): string {
+    return (valor || '')
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
   aplicarFiltros() {
     let productosBase = [...this.productos];
 
-    const searchTerm = (this.textoBusqueda || '').toString().toLowerCase().trim();
+    const searchTerm = this.normalizarTexto(this.textoBusqueda);
 
     if (searchTerm) {
+      const palabrasBusqueda = searchTerm
+        .split(' ')
+        .map(palabra => palabra.trim())
+        .filter(palabra => palabra.length > 0);
+
       productosBase = productosBase.filter((producto: any) => {
-        const nombre = (producto.nombre || '').toString().toLowerCase();
+        const nombre = this.normalizarTexto(producto.nombre);
+        const descripcion = this.normalizarTexto(producto.descripcion);
         const codigoBarras = producto.codigo_barras ? producto.codigo_barras.toString().toLowerCase() : '';
-        return nombre.includes(searchTerm) || codigoBarras.includes(searchTerm);
+
+        const coincideNombre = palabrasBusqueda.every(palabra => nombre.includes(palabra));
+        const coincideDescripcion = palabrasBusqueda.every(palabra => descripcion.includes(palabra));
+        const coincideCodigo = codigoBarras.includes(searchTerm);
+
+        return coincideNombre || coincideDescripcion || coincideCodigo;
       });
     }
 
@@ -235,16 +275,33 @@ export class InventarioPage implements OnInit, OnDestroy {
     return totalVendible > 0 && totalVendible < this.stockMinimo;
   }
 
-  esProductoReposicionInterna(producto: any): boolean {
+  obtenerAlertasReposicionProducto(producto: any): string[] {
+    const alertas: string[] = [];
+
     const stockExhibicion = Number(producto.stock_exhibicion || 0);
     const stockAlmacenTienda = Number(producto.stock_almacen_tienda || 0);
     const stockAlmacenCasa = Number(producto.stock_almacen_casa || 0);
-    const totalVendible = this.obtenerTotalVendible(producto);
-    const stockEnAlmacenes = stockAlmacenTienda + stockAlmacenCasa;
 
-    return stockExhibicion < this.stockMinimoExhibicion
-      && stockEnAlmacenes > 0
-      && totalVendible >= this.stockMinimo;
+    if (stockExhibicion < this.stockMinimoExhibicion && (stockAlmacenTienda + stockAlmacenCasa) > 0) {
+      alertas.push('Reponer exhibición');
+    }
+
+    if (stockAlmacenTienda < this.stockMinimoAlmacenTienda && stockAlmacenCasa > 0) {
+      alertas.push('Reponer almacén tienda');
+    }
+
+    if (stockAlmacenCasa < this.stockMinimoAlmacenCasa && this.obtenerTotalVendible(producto) > 0) {
+      alertas.push('Comprar para almacén casa');
+    }
+
+    return alertas;
+  }
+
+  esProductoReposicionInterna(producto: any): boolean {
+    const totalVendible = this.obtenerTotalVendible(producto);
+
+    return totalVendible >= this.stockMinimo
+      && this.obtenerAlertasReposicionProducto(producto).length > 0;
   }
 
   obtenerTipoAlertaProducto(producto: any): string {
@@ -275,10 +332,36 @@ export class InventarioPage implements OnInit, OnDestroy {
     }
 
     if (tipo === 'reposicion') {
-      return 'Reponer exhibición';
+      const alertas = this.obtenerAlertasReposicionProducto(producto);
+
+      if (alertas.length > 0) {
+        return alertas.join(' · ');
+      }
+
+      return 'Reponer stock';
     }
 
     return '';
+  }
+
+  obtenerRecomendacionUbicacionesProducto(producto: any): string {
+    const tipo = this.obtenerTipoAlertaProducto(producto);
+
+    if (tipo === 'sin_stock') {
+      return 'Producto agotado. Se recomienda comprar o reponer stock.';
+    }
+
+    if (tipo === 'critico') {
+      return 'Stock total bajo. Se recomienda comprar o reponer este producto.';
+    }
+
+    const alertas = this.obtenerAlertasReposicionProducto(producto);
+
+    if (alertas.length > 0) {
+      return alertas.join(' · ');
+    }
+
+    return 'Stock disponible.';
   }
 
   obtenerPrioridadProducto(producto: any): number {
@@ -395,6 +478,30 @@ export class InventarioPage implements OnInit, OnDestroy {
     }
 
     return this.obtenerTotalVendible(producto) + Number(producto.stock_danado || 0);
+  }
+
+  calcularStockFiltradoVendible(): number {
+    return this.productosFiltrados.reduce((total, producto) => {
+      return total + this.obtenerTotalVendible(producto);
+    }, 0);
+  }
+
+  calcularStockFiltradoExhibicion(): number {
+    return this.productosFiltrados.reduce((total, producto) => {
+      return total + Number(producto.stock_exhibicion || 0);
+    }, 0);
+  }
+
+  calcularStockFiltradoAlmacenTienda(): number {
+    return this.productosFiltrados.reduce((total, producto) => {
+      return total + Number(producto.stock_almacen_tienda || 0);
+    }, 0);
+  }
+
+  calcularStockFiltradoAlmacenCasa(): number {
+    return this.productosFiltrados.reduce((total, producto) => {
+      return total + Number(producto.stock_almacen_casa || 0);
+    }, 0);
   }
 
   calcularValorTotal(): number {

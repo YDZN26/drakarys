@@ -109,11 +109,13 @@ export class SupabaseService {
     };
   }
 
-  async obtenerProductoPorCodigoBarras(codigoBarras: number) {
+  async obtenerProductoPorCodigoBarras(codigoBarras: string) {
+    const codigoLimpio = (codigoBarras || '').toString().trim();
+
     const { data, error } = await this.supabase
       .from('producto')
       .select('producto_id, nombre, codigo_barras, estado')
-      .eq('codigo_barras', codigoBarras)
+      .eq('codigo_barras', codigoLimpio)
       .eq('estado', true)
       .maybeSingle();
 
@@ -727,57 +729,77 @@ export class SupabaseService {
   }
 
   async obtenerProductos() {
-    const { data: productos, error } = await this.supabase
-      .from('producto')
-      .select('*')
-      .eq('estado', true);
+  const { data: productos, error } = await this.supabase
+    .from('producto')
+    .select('*')
+    .eq('estado', true)
+    .order('producto_id', { ascending: true });
 
-    if (error) {
-      console.error('Error al obtener productos:', error);
-      return [];
-    }
+  if (error) {
+    console.error('Error al obtener productos:', error);
+    return [];
+  }
 
-    if (!productos || productos.length === 0) {
-      return [];
-    }
+  if (!productos || productos.length === 0) {
+    return [];
+  }
 
-    const idsProductos = productos.map(producto => producto.producto_id);
+  const idsProductos = productos.map(producto => producto.producto_id);
 
-    const { data: stocks, error: errorStocks } = await this.supabase
+  const stocks: any[] = [];
+  const tamanioBloque = 100;
+
+  for (let i = 0; i < idsProductos.length; i += tamanioBloque) {
+    const bloqueIds = idsProductos.slice(i, i + tamanioBloque);
+
+    const { data: stocksBloque, error: errorStocks } = await this.supabase
       .from('producto_stock')
       .select('*')
-      .in('producto_id', idsProductos);
+      .in('producto_id', bloqueIds)
+      .order('producto_id', { ascending: true });
 
     if (errorStocks) {
       console.error('Error al obtener stock de productos:', errorStocks);
       return [];
     }
 
-    for (const producto of productos) {
-      const stockProducto = (stocks || []).filter(
-        stock => stock.producto_id === producto.producto_id
-      );
-
-      producto.stock_exhibicion =
-        stockProducto.find(s => s.ubicacion === 'exhibicion')?.cantidad || 0;
-
-      producto.stock_almacen_tienda =
-        stockProducto.find(s => s.ubicacion === 'almacen_tienda')?.cantidad || 0;
-
-      producto.stock_almacen_casa =
-        stockProducto.find(s => s.ubicacion === 'almacen_casa')?.cantidad || 0;
-
-      producto.stock_danado =
-        stockProducto.find(s => s.ubicacion === 'danado')?.cantidad || 0;
-
-      producto.stock_total =
-        Number(producto.stock_exhibicion) +
-        Number(producto.stock_almacen_tienda) +
-        Number(producto.stock_almacen_casa);
-    }
-
-    return productos;
+    stocks.push(...(stocksBloque || []));
   }
+
+  for (const producto of productos) {
+    const stockProducto = stocks.filter(
+      stock => Number(stock.producto_id) === Number(producto.producto_id)
+    );
+
+    const stockExhibicion = stockProducto
+      .filter(s => s.ubicacion === 'exhibicion')
+      .reduce((total, item) => total + Number(item.cantidad || 0), 0);
+
+    const stockAlmacenTienda = stockProducto
+      .filter(s => s.ubicacion === 'almacen_tienda')
+      .reduce((total, item) => total + Number(item.cantidad || 0), 0);
+
+    const stockAlmacenCasa = stockProducto
+      .filter(s => s.ubicacion === 'almacen_casa')
+      .reduce((total, item) => total + Number(item.cantidad || 0), 0);
+
+    const stockDanado = stockProducto
+      .filter(s => s.ubicacion === 'danado')
+      .reduce((total, item) => total + Number(item.cantidad || 0), 0);
+
+    producto.stock_exhibicion = stockExhibicion;
+    producto.stock_almacen_tienda = stockAlmacenTienda;
+    producto.stock_almacen_casa = stockAlmacenCasa;
+    producto.stock_danado = stockDanado;
+
+    producto.stock_total =
+      stockExhibicion +
+      stockAlmacenTienda +
+      stockAlmacenCasa;
+  }
+
+  return productos;
+}
 
   async obtenerProductosParaSugerencias() {
     const { data, error } = await this.supabase

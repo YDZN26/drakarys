@@ -505,15 +505,6 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
       return false;
     }
 
-    if (isNaN(Number(codigoLimpio)) || Number(codigoLimpio) <= 0) {
-      await this.mostrarMensajeInformativo(
-        'Código inválido',
-        'El código de barras debe ser un número válido.',
-        'advertencia'
-      );
-      return false;
-    }
-
     if (!nombreLimpio) {
       await this.mostrarMensajeInformativo(
         'Nombre obligatorio',
@@ -571,9 +562,9 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
   }
 
   async validarCodigoBarrasDisponible(): Promise<boolean> {
-    const codigoNumero = Number(this.codigo);
+    const codigoLimpio = (this.codigo || '').toString().trim();
 
-    const productoEncontrado = await this.supabaseService.obtenerProductoPorCodigoBarras(codigoNumero);
+    const productoEncontrado = await this.supabaseService.obtenerProductoPorCodigoBarras(codigoLimpio);
 
     if (!productoEncontrado) {
       return true;
@@ -647,7 +638,7 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
       Number(this.stockAlmacenCasa || 0);
 
     const producto = {
-      codigo_barras: Number(this.codigo),
+      codigo_barras: (this.codigo || '').toString().trim(),
       nombre: this.nombre,
       precio: Number(this.precioUnitario),
       costo: Number(this.costoUnitario),
@@ -755,7 +746,7 @@ export class AgregarProductoPage implements OnInit, OnDestroy {
 
     const producto = {
       producto_id: this.productoId,
-      codigo_barras: parseInt(this.codigo, 10),
+      codigo_barras: (this.codigo || '').toString().trim(),
       nombre: this.nombre,
       precio: Number(this.precioUnitario),
       costo: Number(this.costoUnitario),
