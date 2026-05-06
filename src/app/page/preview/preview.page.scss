@@ -67,7 +67,7 @@ ion-header {
     font-size: 17px;
     font-weight: 700;
     color: #2d3d55;
-    margin: 0 0 8px 0;
+    margin: 0;
   }
 
   p {
@@ -75,6 +75,63 @@ ion-header {
     color: #607389;
     margin: 3px 0;
     font-weight: 500;
+  }
+}
+
+.producto-titulo-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+
+  h2 {
+    flex: 1;
+  }
+}
+
+.btn-eliminar-producto {
+  --background: #d70000;
+  --background-hover: #d70000;
+  --background-activated: #b91c1c;
+  --color: #ffffff;
+  --border-radius: 14px;
+  --box-shadow: none;
+  min-width: 44px;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  flex-shrink: 0;
+
+  ion-icon {
+    font-size: 24px;
+    color: #ffffff;
+  }
+}
+
+.precio-item {
+  --background: #ffffff;
+  --border-radius: 12px;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  margin: 8px 0;
+
+  ion-label {
+    color: #607389;
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  ion-input {
+    border: 1px solid #d9e1ea;
+    border-radius: 12px;
+    margin-top: 6px;
+    --padding-start: 12px;
+    --padding-end: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #1f2d3d;
+    background: #ffffff;
   }
 }
 
@@ -130,13 +187,198 @@ ion-header {
 .confirmar-venta-button {
   width: 100%;
   height: 46px;
-  --border-radius: 10px;
+  --border-radius: 16px;
+  border-radius: 16px;
   --background: #93C572;
   --color: #ffffff;
-  --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  --box-shadow: none !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.15));
   font-weight: bold;
   text-transform: none;
   font-size: 1rem;
+  margin: 0;
+}
+
+/* MODAL CLIENTES */
+
+.modal-clientes {
+  --width: 100%;
+  --height: auto;
+  --border-radius: 28px 28px 0 0;
+  --box-shadow: none;
+  align-items: flex-end;
+}
+
+.modal-clientes::part(content) {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  max-height: 92%;
+  border-radius: 28px 28px 0 0;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.modal-clientes-wrapper {
+  width: 100%;
+  background: #ffffff;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-clientes-card {
+  width: 100%;
+  background: #ffffff;
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  padding: 12px 18px 22px 18px;
+  box-shadow: none;
+  max-height: 92vh;
+  overflow-y: auto;
+
+  h2 {
+    margin: 14px 0 6px 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #2d3d55;
+  }
+
+  .modal-subtitulo {
+    margin: 0 0 14px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #607389;
+  }
+}
+
+.modal-linea {
+  width: 54px;
+  height: 5px;
+  border-radius: 10px;
+  background: #cfd8e3;
+  margin: 0 auto;
+}
+
+.buscador-clientes {
+  --background: #edf2fa;
+  --border-radius: 14px;
+  --box-shadow: none;
+  padding: 0 0 12px 0;
+}
+
+.lista-clientes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 45vh;
+  overflow-y: auto;
+  padding-right: 2px;
+  margin-bottom: 12px;
+}
+
+.cliente-opcion {
+  width: 100%;
+  border: none;
+  background: #edf2fa;
+  border-radius: 18px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.cliente-opcion-activa {
+  border: 2px solid #001E87;
+  background: #eef3ff;
+}
+
+.cliente-icono {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: rgba(0, 30, 135, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  ion-icon {
+    font-size: 25px;
+    color: #001E87;
+  }
+}
+
+.cliente-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  strong {
+    font-size: 15px;
+    font-weight: 800;
+    color: #2d3d55;
+  }
+
+  span {
+    font-size: 13px;
+    font-weight: 600;
+    color: #607389;
+  }
+}
+
+.cliente-check {
+  font-size: 24px;
+  color: #16a34a;
+}
+
+.cliente-flecha {
+  font-size: 22px;
+  color: #607389;
+}
+
+.sin-clientes {
+  background: #edf2fa;
+  border-radius: 18px;
+  padding: 18px;
+  text-align: center;
+
+  ion-icon {
+    font-size: 28px;
+    color: #607389;
+  }
+
+  p {
+    margin: 6px 0 0 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #607389;
+  }
+}
+
+.btn-nuevo-cliente {
+  height: 46px;
+  --background: #001E87;
+  --color: #ffffff;
+  --border-radius: 16px;
+  font-weight: bold;
+  text-transform: none;
+  margin: 8px 0 0 0;
+}
+
+.btn-cancelar-modal {
+  height: 46px;
+  --background: #d70000;
+  --color: #ffffff;
+  --border-radius: 16px;
+  font-weight: bold;
+  text-transform: none;
+  margin: 8px 0 0 0;
 }
 
 @media (max-width: 480px) {
@@ -161,30 +403,19 @@ ion-header {
       font-size: 15px;
     }
   }
+}
 
-  .precio-item {
-    --background: #ffffff;
-    --border-radius: 12px;
-    --padding-start: 0;
-    --inner-padding-end: 0;
-    margin: 8px 0;
+@media (min-width: 768px) {
+  .modal-clientes::part(content) {
+    max-width: 460px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 28px;
+    bottom: 22px;
+  }
 
-    ion-label {
-      color: #607389;
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    ion-input {
-      border: 1px solid #d9e1ea;
-      border-radius: 12px;
-      margin-top: 6px;
-      --padding-start: 12px;
-      --padding-end: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      color: #1f2d3d;
-      background: #ffffff;
-    }
+  .modal-clientes-card {
+    max-width: 460px;
+    border-radius: 28px;
   }
 }

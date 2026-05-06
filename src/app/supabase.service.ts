@@ -1221,6 +1221,21 @@ export class SupabaseService {
     return data;
   }
 
+  async existeCierreDespuesDeFecha(fechaVenta: string): Promise<boolean> {
+    const { data, error } = await this.supabase
+      .from('cierre')
+      .select('cierre_id')
+      .gte('fecha', fechaVenta)
+      .limit(1);
+
+    if (error) {
+      console.error('Error al verificar cierre de caja:', error);
+      return false;
+    }
+
+    return (data || []).length > 0;
+  }
+
   async obtenerUltimoCierreAntesDe(fechaISO: string) {
     const { data, error } = await this.supabase
       .from('cierre')

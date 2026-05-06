@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NavController, AlertController, AlertInput } from '@ionic/angular';
+import { NavController, AlertController } from '@ionic/angular';
 import { SupabaseService } from '../../supabase.service';
 import { MensajeService } from 'src/app/mensaje.service';
 
@@ -18,7 +18,11 @@ export class PreviewPage implements OnInit {
   };
 
   clientes: any[] = [];
+  clientesFiltrados: any[] = [];
   clienteSeleccionado: any = null;
+
+  textoBusquedaCliente: string = '';
+  modalClientesAbierto: boolean = false;
 
   modoEditar: boolean = false;
   ventaIdEditar: number = 0;
@@ -53,6 +57,10 @@ export class PreviewPage implements OnInit {
         this.venta.totalVenta = Number(params['totalVenta']);
       }
 
+      if (params['cliente']) {
+        this.clienteSeleccionado = JSON.parse(params['cliente']);
+      }
+
       this.actualizarTotalVenta();
 
       const now = new Date();
@@ -70,42 +78,97 @@ export class PreviewPage implements OnInit {
     }, 0);
   }
 
-  private async cargarClientes() {
-    this.clientes = (await this.supabase.obtenerClientes()) || [];
+  eliminarProductoSeleccionado(index: number) {
+    this.venta.productos.splice(index, 1);
+    this.actualizarTotalVenta();
   }
 
-  async openClienteAlert() {
-    const inputs: AlertInput[] = this.clientes.map(c => ({
-      name: 'cliente',
-      type: 'radio',
-      label: `${c.nombre} ${c.apellido}`,
-      value: c,
-      checked: this.clienteSeleccionado?.cliente_id === c.cliente_id
-    }));
+  volverANuevaVenta() {
+    this.actualizarTotalVenta();
 
-    const alert = await this.alertCtrl.create({
-      header: 'Cliente',
-      inputs,
-      buttons: [
-        {
-          text: 'Nuevo',
-          handler: () => {
-            alert.dismiss();
-            this.promptNewClient();
-            return false;
-          }
-        },
-        { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'OK',
-          handler: (sel: any) => {
-            this.clienteSeleccionado = sel;
-          }
-        }
-      ]
+    this.navCtrl.navigateBack('/nueva-venta', {
+      queryParams: {
+        productos: JSON.stringify(this.venta.productos),
+        totalVenta: this.venta.totalVenta,
+        modo: this.modoEditar ? 'editar' : 'crear',
+        ventaId: this.ventaIdEditar
+      }
+    });
+  }
+
+  private async cargarClientes() {
+    this.clientes = (await this.supabase.obtenerClientes()) || [];
+    this.clientesFiltrados = [...this.clientes];
+
+    this.seleccionarClientePorDefecto();
+  }
+
+  seleccionarClientePorDefecto() {
+    if (this.clienteSeleccionado) {
+      return;
+    }
+
+    const clienteVarios = this.clientes.find((cliente: any) => {
+      return Number(cliente.cliente_id) === 1;
     });
 
-    await alert.present();
+    if (clienteVarios) {
+      this.clienteSeleccionado = clienteVarios;
+    }
+  }
+
+  abrirModalClientes() {
+    this.textoBusquedaCliente = '';
+    this.clientesFiltrados = [...this.clientes];
+    this.modalClientesAbierto = true;
+  }
+
+  cerrarModalClientes() {
+    this.modalClientesAbierto = false;
+  }
+
+  buscarClientes(event: any) {
+    this.textoBusquedaCliente = (event?.target?.value || '').toString();
+    this.aplicarFiltroClientes();
+  }
+
+  aplicarFiltroClientes() {
+    const texto = this.normalizarTexto(this.textoBusquedaCliente);
+
+    if (!texto) {
+      this.clientesFiltrados = [...this.clientes];
+      return;
+    }
+
+    const palabrasBusqueda = texto
+      .split(' ')
+      .filter((palabra: string) => palabra.trim() !== '');
+
+    this.clientesFiltrados = this.clientes.filter((cliente: any) => {
+      const textoCliente = this.normalizarTexto(`
+        ${cliente.nombre || ''}
+        ${cliente.apellido || ''}
+        ${cliente.telefono || ''}
+      `);
+
+      return palabrasBusqueda.every((palabra: string) => {
+        return textoCliente.includes(palabra);
+      });
+    });
+  }
+
+  normalizarTexto(texto: any): string {
+    return (texto || '')
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
+  seleccionarCliente(cliente: any) {
+    this.clienteSeleccionado = cliente;
+    this.cerrarModalClientes();
   }
 
   async promptNewClient() {
@@ -153,7 +216,9 @@ export class PreviewPage implements OnInit {
             }
 
             this.clientes.unshift(nuevo);
+            this.aplicarFiltroClientes();
             this.clienteSeleccionado = nuevo;
+            this.modalClientesAbierto = false;
 
             this.mensajeService.enviarMensaje('actualizar ingresos');
             return true;
@@ -167,6 +232,16 @@ export class PreviewPage implements OnInit {
 
   async irAMetodoPago() {
     this.actualizarTotalVenta();
+
+    if (this.venta.productos.length === 0) {
+      const a = await this.alertCtrl.create({
+        header: 'Sin productos',
+        message: 'Debes tener al menos un producto seleccionado para continuar.',
+        buttons: ['OK']
+      });
+      await a.present();
+      return;
+    }
 
     if (!this.clienteSeleccionado) {
       const a = await this.alertCtrl.create({

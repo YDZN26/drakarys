@@ -23,6 +23,8 @@ export class MetodoPagoPage implements OnInit {
   montoTransferencia: number = 0;
   montoTarjeta: number = 0;
 
+  numeroPagosSeleccionado: number = 1;
+
   modoEditar: boolean = false;
   ventaIdEditar: number = 0;
 
@@ -62,17 +64,73 @@ export class MetodoPagoPage implements OnInit {
       if (params['ventaId']) {
         this.ventaIdEditar = Number(params['ventaId']);
       }
+
+      this.seleccionarNumeroPagos(1);
     });
   }
 
+  seleccionarNumeroPagos(numero: number) {
+    this.numeroPagosSeleccionado = numero;
+
+    const total = Number(this.venta.totalVenta || 0);
+
+    if (numero === 1) {
+      this.montoEfectivo = this.redondearMonto(total);
+      this.montoTransferencia = 0;
+      this.montoTarjeta = 0;
+      return;
+    }
+
+    if (numero === 2) {
+      const montoDividido = this.dividirMonto(total, 2);
+
+      this.montoEfectivo = montoDividido[0];
+      this.montoTransferencia = montoDividido[1];
+      this.montoTarjeta = 0;
+      return;
+    }
+
+    if (numero === 3) {
+      const montoDividido = this.dividirMonto(total, 3);
+
+      this.montoEfectivo = montoDividido[0];
+      this.montoTransferencia = montoDividido[1];
+      this.montoTarjeta = montoDividido[2];
+      return;
+    }
+  }
+
+  dividirMonto(total: number, partes: number): number[] {
+    const montoBase = this.redondearMonto(total / partes);
+    const montos: number[] = [];
+    let totalAsignado = 0;
+
+    for (let i = 0; i < partes; i++) {
+      if (i === partes - 1) {
+        montos.push(this.redondearMonto(total - totalAsignado));
+      } else {
+        montos.push(montoBase);
+        totalAsignado = this.redondearMonto(totalAsignado + montoBase);
+      }
+    }
+
+    return montos;
+  }
+
+  redondearMonto(monto: number): number {
+    return Number(Number(monto || 0).toFixed(2));
+  }
+
   get totalPagado(): number {
-    return Number(this.montoEfectivo || 0)
+    return this.redondearMonto(
+      Number(this.montoEfectivo || 0)
       + Number(this.montoTransferencia || 0)
-      + Number(this.montoTarjeta || 0);
+      + Number(this.montoTarjeta || 0)
+    );
   }
 
   get diferencia(): number {
-    return Number(this.venta.totalVenta || 0) - this.totalPagado;
+    return this.redondearMonto(Number(this.venta.totalVenta || 0) - this.totalPagado);
   }
 
   private obtenerPagos() {
@@ -117,25 +175,6 @@ export class MetodoPagoPage implements OnInit {
     });
   }
 
-  private async mostrarAlertaStockBajo(productosStockBajo: any[]) {
-    if (productosStockBajo.length === 0) {
-      return;
-    }
-
-    const mensaje = productosStockBajo.map((producto: any) => {
-      const stockExhibicion = Number(producto.stock_exhibicion || 0);
-      return `• ${producto.nombre}: queda ${stockExhibicion} unidad(es) en exhibición.`;
-    }).join('<br>');
-
-    const alerta = await this.alertCtrl.create({
-      header: 'Stock bajo',
-      message: `${mensaje}<br><br>Se recomienda aumentar el stock de exhibición.`,
-      buttons: ['OK']
-    });
-
-    await alerta.present();
-  }
-
   async confirmarVenta() {
     if (!this.venta.cliente || !this.venta.cliente.cliente_id) {
       const alerta = await this.alertCtrl.create({
@@ -170,7 +209,7 @@ export class MetodoPagoPage implements OnInit {
       return;
     }
 
-    if (this.totalPagado !== Number(this.venta.totalVenta)) {
+    if (this.redondearMonto(this.totalPagado) !== this.redondearMonto(Number(this.venta.totalVenta))) {
       const alerta = await this.alertCtrl.create({
         header: 'Error',
         message: 'La suma de los montos debe ser igual al total de la venta.',
@@ -227,9 +266,11 @@ export class MetodoPagoPage implements OnInit {
       await this.loadingService.cerrarLoading();
       loadingCerrado = true;
 
-      await this.mostrarAlertaStockBajo(productosStockBajo);
-
-      this.navCtrl.navigateForward(['/recibo', res.venta.venta_id]);
+      this.navCtrl.navigateForward(['/recibo', res.venta.venta_id], {
+        queryParams: {
+          productosStockBajo: JSON.stringify(productosStockBajo)
+        }
+      });
 
     } catch (error) {
       console.error('Error al confirmar venta:', error);

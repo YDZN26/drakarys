@@ -27,6 +27,12 @@ export class ReciboPage implements OnInit {
     4: 'Tarjeta'
   };
 
+  ventaEditable: boolean = false;
+  mensajeVentaBloqueada: string = '';
+
+  productosStockBajo: any[] = [];
+  modalStockBajoAbierto: boolean = false;
+
   constructor(
     private route: ActivatedRoute,
     private navCtrl: NavController,
@@ -37,7 +43,17 @@ export class ReciboPage implements OnInit {
 
   ngOnInit() {
     const ventaParam = this.route.snapshot.paramMap.get('ventaId');
-    console.log('Recibo cargando con ID:', ventaParam);
+    const productosStockBajoParam = this.route.snapshot.queryParamMap.get('productosStockBajo');
+
+    if (productosStockBajoParam) {
+      this.productosStockBajo = JSON.parse(productosStockBajoParam);
+
+      if (this.productosStockBajo.length > 0) {
+        setTimeout(() => {
+          this.modalStockBajoAbierto = true;
+        }, 450);
+      }
+    }
 
     if (ventaParam) {
       const ventaId = Number(ventaParam);
@@ -106,9 +122,46 @@ export class ReciboPage implements OnInit {
       cliente: clienteStr,
       productos: detalles || []
     };
+
+    await this.validarSiVentaEsEditable(venta.fecha);
+  }
+
+  private async validarSiVentaEsEditable(fechaVenta: string) {
+    const fechaObj = new Date(fechaVenta + 'Z');
+    const hoy = new Date();
+
+    const ventaEsDeHoy =
+      fechaObj.getFullYear() === hoy.getFullYear() &&
+      fechaObj.getMonth() === hoy.getMonth() &&
+      fechaObj.getDate() === hoy.getDate();
+
+    if (!ventaEsDeHoy) {
+      this.ventaEditable = false;
+      this.mensajeVentaBloqueada = 'Venta de día anterior';
+      return;
+    }
+
+    const existeCierre = await this.supabase.existeCierreDespuesDeFecha(fechaVenta);
+
+    if (existeCierre) {
+      this.ventaEditable = false;
+      this.mensajeVentaBloqueada = 'Caja ya cerrada';
+      return;
+    }
+
+    this.ventaEditable = true;
+    this.mensajeVentaBloqueada = '';
+  }
+
+  cerrarModalStockBajo() {
+    this.modalStockBajoAbierto = false;
   }
 
   editarVenta() {
+    if (!this.ventaEditable) {
+      return;
+    }
+
     this.navCtrl.navigateForward('/nueva-venta', {
       queryParams: {
         ventaId: this.recibo.venta_id,
@@ -118,6 +171,10 @@ export class ReciboPage implements OnInit {
   }
 
   async eliminarVenta() {
+    if (!this.ventaEditable) {
+      return;
+    }
+
     const alerta = await this.alertCtrl.create({
       header: 'Eliminar venta',
       message: '¿Deseas eliminar esta venta? Los productos volverán a exhibición y la venta ya no contará en balance ni cierre de caja.',

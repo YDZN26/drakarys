@@ -13,6 +13,33 @@
         <span class="metodo-pago-titulo">SELECCIÓN DE MÉTODOS DE PAGO</span>
       </div>
 
+      <div class="numero-pago-container">
+        <h3>Selecciona el número de pagos:</h3>
+
+        <div class="numero-pago-botones">
+          <ion-button
+            class="numero-pago-button"
+            [class.numero-pago-activo]="numeroPagosSeleccionado === 1"
+            (click)="seleccionarNumeroPagos(1)">
+            1
+          </ion-button>
+
+          <ion-button
+            class="numero-pago-button"
+            [class.numero-pago-activo]="numeroPagosSeleccionado === 2"
+            (click)="seleccionarNumeroPagos(2)">
+            2
+          </ion-button>
+
+          <ion-button
+            class="numero-pago-button"
+            [class.numero-pago-activo]="numeroPagosSeleccionado === 3"
+            (click)="seleccionarNumeroPagos(3)">
+            3
+          </ion-button>
+        </div>
+      </div>
+
       <div class="metodo-pago-formulario">
         <ion-item lines="none" class="input-item">
           <ion-label position="stacked">Efectivo</ion-label>

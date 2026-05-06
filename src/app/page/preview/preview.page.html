@@ -1,7 +1,9 @@
 <ion-header>
   <ion-toolbar color="mycolor" class="top-toolbar">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/nueva-venta"></ion-back-button>
+      <ion-button (click)="volverANuevaVenta()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -14,9 +16,17 @@
       </div>
 
       <div class="productos-lista">
-        <div class="producto-item" *ngFor="let producto of venta.productos">
+        <div class="producto-item" *ngFor="let producto of venta.productos; let i = index">
           <div class="producto-info">
-            <h2>{{ producto.nombre }}</h2>
+            <div class="producto-titulo-row">
+              <h2>{{ producto.nombre }}</h2>
+
+              <ion-button
+                class="btn-eliminar-producto"
+                (click)="eliminarProductoSeleccionado(i)">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+            </div>
 
             <p>Cantidad: {{ producto.cantidadSeleccionada }}</p>
 
@@ -46,7 +56,7 @@
           <strong>{{ venta.fechaVenta }}</strong>
         </div>
 
-        <div class="resumen-item resumen-item-cliente" (click)="openClienteAlert()">
+        <div class="resumen-item resumen-item-cliente" (click)="abrirModalClientes()">
           <div class="cliente-texto">
             <span>Cliente</span>
             <strong>
@@ -62,8 +72,80 @@
   </div>
 
   <div class="acciones-inferiores">
-    <ion-button class="confirmar-venta-button" (click)="irAMetodoPago()">
+    <ion-button
+      class="confirmar-venta-button"
+      [disabled]="venta.productos.length === 0"
+      (click)="irAMetodoPago()">
       {{ modoEditar ? 'Actualizar venta' : 'Continuar' }}
     </ion-button>
   </div>
+
+  <ion-modal
+    class="modal-clientes"
+    [isOpen]="modalClientesAbierto"
+    (didDismiss)="cerrarModalClientes()">
+    <ng-template>
+      <div class="modal-clientes-wrapper">
+        <div class="modal-clientes-card">
+          <div class="modal-linea"></div>
+
+          <h2>Seleccionar cliente</h2>
+          <p class="modal-subtitulo">
+            Busca y selecciona el cliente para esta venta
+          </p>
+
+          <ion-searchbar
+            class="buscador-clientes"
+            placeholder="Buscar por nombre, apellido o teléfono"
+            [(ngModel)]="textoBusquedaCliente"
+            (ionInput)="buscarClientes($event)">
+          </ion-searchbar>
+
+          <div class="lista-clientes">
+            <button
+              type="button"
+              class="cliente-opcion"
+              *ngFor="let cliente of clientesFiltrados"
+              [class.cliente-opcion-activa]="clienteSeleccionado?.cliente_id === cliente.cliente_id"
+              (click)="seleccionarCliente(cliente)">
+
+              <div class="cliente-icono">
+                <ion-icon name="person-outline"></ion-icon>
+              </div>
+
+              <div class="cliente-info">
+                <strong>{{ cliente.nombre }} {{ cliente.apellido }}</strong>
+                <span>Teléfono: {{ cliente.telefono }}</span>
+              </div>
+
+              <ion-icon
+                class="cliente-check"
+                *ngIf="clienteSeleccionado?.cliente_id === cliente.cliente_id"
+                name="checkmark-circle-outline">
+              </ion-icon>
+
+              <ion-icon
+                class="cliente-flecha"
+                *ngIf="clienteSeleccionado?.cliente_id !== cliente.cliente_id"
+                name="chevron-forward-outline">
+              </ion-icon>
+            </button>
+
+            <div class="sin-clientes" *ngIf="clientesFiltrados.length === 0">
+              <ion-icon name="search-outline"></ion-icon>
+              <p>No se encontraron clientes</p>
+            </div>
+          </div>
+
+          <ion-button expand="block" class="btn-nuevo-cliente" (click)="promptNewClient()">
+            Nuevo cliente
+          </ion-button>
+
+          <ion-button expand="block" class="btn-cancelar-modal" (click)="cerrarModalClientes()">
+            Cerrar
+          </ion-button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
 </ion-content>

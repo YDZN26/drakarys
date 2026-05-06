@@ -52,6 +52,11 @@
           <span>Fecha de Venta</span>
           <strong>{{ recibo.fechaVenta }}</strong>
         </div>
+
+        <div class="resumen-item estado-edicion" *ngIf="!ventaEditable">
+          <span>Estado</span>
+          <strong>{{ mensajeVentaBloqueada }}</strong>
+        </div>
       </div>
     </div>
   </div>
@@ -61,12 +66,54 @@
       Listo
     </ion-button>
 
-    <ion-button class="editar-button" (click)="editarVenta()">
+    <ion-button class="editar-button" *ngIf="ventaEditable" (click)="editarVenta()">
       Editar
     </ion-button>
 
-    <ion-button class="eliminar-button" (click)="eliminarVenta()">
+    <ion-button class="eliminar-button" *ngIf="ventaEditable" (click)="eliminarVenta()">
       Eliminar
     </ion-button>
   </div>
+
+  <ion-modal
+    class="modal-stock-bajo"
+    [isOpen]="modalStockBajoAbierto"
+    [backdropDismiss]="false"
+    (didDismiss)="cerrarModalStockBajo()">
+    <ng-template>
+      <div class="modal-stock-wrapper">
+        <div class="modal-stock-card">
+          <div class="modal-linea"></div>
+
+          <div class="modal-stock-header">
+            <div class="modal-stock-icono">
+              <ion-icon name="warning-outline"></ion-icon>
+            </div>
+
+            <div>
+              <h2>Stock bajo</h2>
+              <p>Se recomienda reponer los siguientes productos.</p>
+            </div>
+          </div>
+
+          <div class="modal-stock-lista">
+            <div class="stock-item" *ngFor="let producto of productosStockBajo">
+              <div class="stock-item-icono">
+                <ion-icon name="cube-outline"></ion-icon>
+              </div>
+
+              <div class="stock-item-info">
+                <strong>{{ producto.nombre }}</strong>
+                <span>Queda {{ producto.stock_exhibicion }} unidad(es) en exhibición.</span>
+              </div>
+            </div>
+          </div>
+
+          <ion-button expand="block" class="btn-entendido-stock" (click)="cerrarModalStockBajo()">
+            Entendido
+          </ion-button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
 </ion-content>

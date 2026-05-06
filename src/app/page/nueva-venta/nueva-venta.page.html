@@ -38,14 +38,16 @@
 
   <div class="category-buttons">
     <ion-button
-      [color]="categoriaSeleccionada === null ? 'primary' : 'light'"
+      class="categoria-button"
+      [class.categoria-activa]="categoriaSeleccionada === null"
       (click)="filtrarPorCategoria(null)">
       Todos
     </ion-button>
 
     <ion-button
       *ngFor="let cat of categorias"
-      [color]="categoriaSeleccionada === cat.categoria_id ? 'primary' : 'light'"
+      class="categoria-button"
+      [class.categoria-activa]="categoriaSeleccionada === cat.categoria_id"
       (click)="filtrarPorCategoria(cat.categoria_id)">
       {{ cat.nombre }}
     </ion-button>
@@ -54,9 +56,14 @@
   <div class="productos-container">
     <ion-list lines="none">
       <ion-item *ngFor="let producto of productosFiltrados" class="producto-item">
-        <ion-avatar slot="start">
-          <img [src]="producto.imagen" />
-        </ion-avatar>
+        <ion-thumbnail slot="start" class="producto-thumbnail">
+          <img *ngIf="producto.imagen" [src]="producto.imagen" />
+
+          <div *ngIf="!producto.imagen" class="producto-sin-imagen">
+            <ion-icon name="image-outline"></ion-icon>
+            <span>Sin imagen</span>
+          </div>
+        </ion-thumbnail>
 
         <ion-label>
           <h2>{{ producto.nombre }}</h2>
@@ -94,27 +101,30 @@
   </div>
 
   <ion-modal
-    [isOpen]="scannerAbierto"
-    (didPresent)="iniciarLectura()"
-    (didDismiss)="cerrarScanner()">
-    <ng-template>
-      <ion-header>
-        <ion-toolbar color="mycolor">
-          <ion-title>Escanear código</ion-title>
-          <ion-buttons slot="end">
-            <ion-button (click)="cerrarScanner()">
-              Cerrar
-            </ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
+  class="modal-scanner"
+  [isOpen]="scannerAbierto"
+  [backdropDismiss]="false"
+  [canDismiss]="true"
+  (didPresent)="iniciarLectura()"
+  (didDismiss)="scannerCerradoDesdeModal()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="mycolor">
+        <ion-title>Escanear código</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="cerrarScanner()">
+            Cerrar
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
 
-      <ion-content class="scanner-content">
-        <div class="scanner-box">
-          <video #videoScanner class="scanner-video" autoplay playsinline></video>
-          <p class="scanner-text">Apunta al código de barras</p>
-        </div>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
+    <ion-content class="scanner-content">
+      <div class="scanner-box">
+        <video #videoScanner class="scanner-video" autoplay muted playsinline></video>
+        <p class="scanner-text">Apunta al código de barras</p>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
 </ion-content>

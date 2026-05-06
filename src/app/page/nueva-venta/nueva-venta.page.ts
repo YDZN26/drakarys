@@ -1,6 +1,6 @@
-import { Component, OnInit, OnDestroy, NgZone, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NavController } from '@ionic/angular';
+import { NavController, Platform } from '@ionic/angular';
 import { SupabaseService } from '../../supabase.service';
 import { MensajeService } from 'src/app/mensaje.service';
 import { Subscription } from 'rxjs';
@@ -29,17 +29,21 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
   private codeReader: BrowserMultiFormatReader | null = null;
   private streamActual: MediaStream | null = null;
   private mensajeSub!: Subscription;
+  private backButtonSub: any;
+  private cerrandoScanner: boolean = false;
 
   productosCargando: boolean = false;
 
   modoEditar: boolean = false;
   ventaIdEditar: number = 0;
   detallesVentaEditar: any[] = [];
+  productosRecibidosPreview: any[] = [];
 
   @ViewChild('videoScanner', { static: false }) videoScanner!: ElementRef<HTMLVideoElement>;
 
   constructor(
     private navCtrl: NavController,
+    private platform: Platform,
     private supabaseService: SupabaseService,
     private mensajeService: MensajeService,
     private zone: NgZone,
@@ -52,28 +56,68 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
         this.cargarProductos();
       }
     });
+
+    this.backButtonSub = this.platform.backButton.subscribeWithPriority(99999, () => {
+      if (this.scannerAbierto) {
+        this.zone.run(() => {
+          this.cerrarScanner();
+        });
+        return;
+      }
+    });
   }
 
   ionViewWillEnter() {
     const ventaIdParam = this.route.snapshot.queryParamMap.get('ventaId');
     const modoParam = this.route.snapshot.queryParamMap.get('modo');
+    const productosParam = this.route.snapshot.queryParamMap.get('productos');
 
     this.modoEditar = false;
     this.ventaIdEditar = 0;
     this.detallesVentaEditar = [];
+    this.productosRecibidosPreview = [];
 
     if (ventaIdParam && modoParam === 'editar') {
       this.modoEditar = true;
       this.ventaIdEditar = Number(ventaIdParam);
     }
 
+    if (productosParam) {
+      this.productosRecibidosPreview = JSON.parse(productosParam);
+    }
+
     this.cargarProductos();
     this.cargarCategorias();
   }
 
+  async ionViewWillLeave() {
+    await this.detenerCamaraScanner();
+    this.scannerAbierto = false;
+    this.cerrandoScanner = false;
+  }
+
   ngOnDestroy() {
+    this.detenerCamaraScanner();
+
     if (this.mensajeSub) {
       this.mensajeSub.unsubscribe();
+    }
+
+    if (this.backButtonSub) {
+      this.backButtonSub.unsubscribe();
+    }
+  }
+
+  @HostListener('window:popstate', ['$event'])
+  controlarBackDelSistema(event: any) {
+    if (this.scannerAbierto) {
+      history.pushState(null, '', window.location.href);
+
+      this.zone.run(() => {
+        this.cerrarScanner();
+      });
+
+      return;
     }
   }
 
@@ -98,14 +142,19 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
           return Number(detalle.producto_id) === Number(producto.producto_id);
         });
 
+        const productoRecibido = this.productosRecibidosPreview.find((productoPreview: any) => {
+          return Number(productoPreview.producto_id) === Number(producto.producto_id);
+        });
+
         const cantidadVendida = detalleEncontrado ? Number(detalleEncontrado.cantidad || 0) : 0;
+        const cantidadRecibida = productoRecibido ? Number(productoRecibido.cantidadSeleccionada || 0) : 0;
         const stockExhibicion = Number(producto.stock_exhibicion || 0);
 
         return {
           ...producto,
-          cantidadSeleccionada: cantidadVendida,
+          cantidadSeleccionada: productoRecibido ? cantidadRecibida : cantidadVendida,
           disponibles: this.modoEditar ? stockExhibicion + cantidadVendida : stockExhibicion,
-          precio: Number(producto.precio || 0),
+          precio: productoRecibido ? Number(productoRecibido.precio || 0) : Number(producto.precio || 0),
         };
       });
 
@@ -126,19 +175,18 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
     let lista = [...this.productos];
 
     if (this.categoriaSeleccionada !== null) {
-      lista = lista.filter((producto: any) => producto.categoria_id === this.categoriaSeleccionada);
+      lista = lista.filter((producto: any) => {
+        return Number(producto.categoria_id) === Number(this.categoriaSeleccionada);
+      });
     }
 
-    const searchTerm = (this.textoBusqueda || '').toString().toLowerCase().trim();
+    const palabrasBusqueda = this.normalizarTexto(this.textoBusqueda)
+      .split(' ')
+      .filter((palabra: string) => palabra.trim() !== '');
 
-    if (searchTerm) {
+    if (palabrasBusqueda.length > 0) {
       lista = lista.filter((producto: any) => {
-        const nombre = (producto.nombre || '').toString().toLowerCase();
-        const codigoBarras = producto.codigo_barras
-          ? producto.codigo_barras.toString().toLowerCase()
-          : '';
-
-        return nombre.includes(searchTerm) || codigoBarras.includes(searchTerm);
+        return this.productoCoincideBusqueda(producto, palabrasBusqueda);
       });
     }
 
@@ -150,6 +198,32 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
     this.aplicarFiltros();
   }
 
+  normalizarTexto(texto: any): string {
+    return (texto || '')
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
+  productoCoincideBusqueda(producto: any, palabrasBusqueda: string[]): boolean {
+    const categoriaEncontrada = this.categorias.find((cat: any) => {
+      return Number(cat.categoria_id) === Number(producto.categoria_id);
+    });
+
+    const textoProducto = this.normalizarTexto(`
+      ${producto.nombre || ''}
+      ${producto.codigo_barras || ''}
+      ${producto.descripcion || ''}
+      ${categoriaEncontrada?.nombre || ''}
+    `);
+
+    return palabrasBusqueda.every((palabra: string) => {
+      return textoProducto.includes(palabra);
+    });
+  }
+
   obtenerDisponibles(producto: any): number {
     const disponibles = Number(producto.disponibles || 0);
     const cantidadSeleccionada = Number(producto.cantidadSeleccionada || 0);
@@ -159,41 +233,91 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
   }
 
   async abrirScanner() {
+    await this.detenerCamaraScanner();
+
+    this.cerrandoScanner = false;
     this.scannerAbierto = true;
   }
 
   async cerrarScanner() {
-    this.scannerAbierto = false;
-    this.codeReader = null;
+    if (this.cerrandoScanner) {
+      return;
+    }
 
-    if (this.streamActual) {
-      this.streamActual.getTracks().forEach(t => t.stop());
-      this.streamActual = null;
+    this.cerrandoScanner = true;
+
+    await this.detenerCamaraScanner();
+
+    this.scannerAbierto = false;
+
+    setTimeout(() => {
+      this.cerrandoScanner = false;
+    }, 300);
+  }
+
+  async scannerCerradoDesdeModal() {
+    await this.detenerCamaraScanner();
+
+    this.scannerAbierto = false;
+    this.cerrandoScanner = false;
+  }
+
+  async detenerCamaraScanner() {
+    try {
+      this.codeReader = null;
+
+      if (this.videoScanner && this.videoScanner.nativeElement) {
+        const videoEl = this.videoScanner.nativeElement;
+        videoEl.pause();
+        videoEl.srcObject = null;
+        videoEl.load();
+      }
+
+      if (this.streamActual) {
+        this.streamActual.getTracks().forEach(track => {
+          track.stop();
+        });
+
+        this.streamActual = null;
+      }
+    } catch (error) {
+      console.error('Error al detener cámara:', error);
     }
   }
 
   async iniciarLectura() {
     try {
+      if (!this.scannerAbierto) return;
       if (!this.videoScanner || !this.videoScanner.nativeElement) return;
+
+      await this.detenerCamaraScanner();
+
+      if (!this.scannerAbierto) return;
 
       this.codeReader = new BrowserMultiFormatReader();
 
       this.streamActual = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: false
       });
 
       const videoEl = this.videoScanner.nativeElement;
       videoEl.srcObject = this.streamActual;
+      videoEl.setAttribute('playsinline', 'true');
+      videoEl.muted = true;
 
-      try {
-        await videoEl.play();
-      } catch (e) {}
+      await videoEl.play();
 
       this.codeReader.decodeFromStream(
         this.streamActual,
         videoEl,
         (result: Result | undefined, err: unknown) => {
+          if (!this.scannerAbierto || this.cerrandoScanner) return;
+
           if (result) {
             const codigo = (result.getText() || '').trim();
 
@@ -201,17 +325,15 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
               this.zone.run(() => {
                 this.textoBusqueda = codigo;
                 this.aplicarFiltros();
+                this.cerrarScanner();
               });
-
-              this.cerrarScanner();
             }
           }
         }
       );
-
     } catch (error) {
       console.error('Error al abrir cámara o escanear:', error);
-      this.cerrarScanner();
+      await this.cerrarScanner();
     }
   }
 
