@@ -21,6 +21,13 @@
 </ion-popover>
 
 <ion-content [fullscreen]="true" class="inventario-content">
+  <ion-refresher slot="fixed" (ionRefresh)="actualizarInventario($event)">
+    <ion-refresher-content
+      pullingText="Desliza para actualizar"
+      refreshingText="Actualizando inventario...">
+    </ion-refresher-content>
+  </ion-refresher>
+
   <div class="resumen-container">
     <div class="info-cards">
       <div class="card">

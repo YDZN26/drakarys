@@ -97,6 +97,19 @@ export class BalancePage implements OnInit {
     this.centrarPeriodoSeleccionado();
   }
 
+  async actualizarBalance(event: any) {
+    try {
+      await this.supabaseService.verificarYCerrarDiasPendientes();
+      await this.onDaySelected(this.selectedDay);
+      this.filtrarItems();
+      this.centrarPeriodoSeleccionado();
+    } catch (error) {
+      console.error('Error al actualizar balance:', error);
+    } finally {
+      event.target.complete();
+    }
+  }
+
   capitalize(nombre: string): string {
     return nombre.charAt(0).toUpperCase() + nombre.slice(1);
   }

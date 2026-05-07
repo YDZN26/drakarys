@@ -42,6 +42,13 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" class="balance-content">
+  <ion-refresher slot="fixed" (ionRefresh)="actualizarBalance($event)">
+    <ion-refresher-content
+      pullingText="Desliza para actualizar"
+      refreshingText="Actualizando balance...">
+    </ion-refresher-content>
+  </ion-refresher>
+
   <ion-header collapse="condense">
     <ion-toolbar>
       <ion-title size="large">Balance</ion-title>

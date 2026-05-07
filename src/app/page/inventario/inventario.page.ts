@@ -183,6 +183,17 @@ export class InventarioPage implements OnInit, OnDestroy {
     }
   }
 
+  async actualizarInventario(event: any) {
+    try {
+      await this.cargarCategorias();
+      await this.cargarProductos(this.categoriaSeleccionada);
+    } catch (error) {
+      console.error('Error al actualizar inventario:', error);
+    } finally {
+      event.target.complete();
+    }
+  }
+
   filtrarPorCategoria(categoriaId: number | null) {
     this.categoriaSeleccionada = categoriaId;
     this.cargarProductos(categoriaId);
