@@ -94,7 +94,48 @@ ion-header {
 .metodo-pago-formulario {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+}
+
+.pago-item {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 14px;
+  border: 1px solid #d9e1ea;
+
+  h3 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 800;
+    color: #2d3d55;
+  }
+}
+
+.metodo-botones {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.metodo-button {
+  flex: 1;
+  min-height: 42px;
+  --background: #edf2fa;
+  --color: #4f6178;
+  --border-radius: 14px;
+  --box-shadow: none;
+  font-size: 13px;
+  font-weight: bold;
+  text-transform: none;
+  margin: 0;
+  border: 1px solid #d9e1ea;
+  border-radius: 14px;
+}
+
+.metodo-button.metodo-activo {
+  --background: #001E87;
+  --color: #ffffff;
+  border: 1px solid #001E87;
 }
 
 .input-item {
@@ -143,6 +184,29 @@ ion-header {
   }
 }
 
+.resumen-correcto {
+  strong {
+    color: #2f8f46;
+  }
+}
+
+.resumen-error {
+  strong {
+    color: #d93636;
+  }
+}
+
+.mensaje-diferencia {
+  background: #fff2f2;
+  color: #b42318;
+  border: 1px solid #ffd1d1;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .resumen-cliente {
   align-items: flex-start;
 
@@ -177,11 +241,23 @@ ion-header {
   margin: 0;
 }
 
+.confirmar-pago-button[disabled] {
+  opacity: 0.55;
+}
+
 @media (max-width: 480px) {
   .metodo-pago-header {
     .metodo-pago-titulo {
       font-size: 19px;
     }
+  }
+
+  .metodo-botones {
+    flex-direction: column;
+  }
+
+  .metodo-button {
+    width: 100%;
   }
 
   .input-item {

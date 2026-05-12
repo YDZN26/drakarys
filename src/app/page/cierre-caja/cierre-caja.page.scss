@@ -115,6 +115,26 @@ ion-button {
   margin-top: 12px;
   font-size: 14px;
   font-weight: bold;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.mensaje-caja-correcto {
+  background: rgba(22, 163, 74, 0.12);
+  border: 1px solid rgba(22, 163, 74, 0.28);
+  color: #16a34a;
+}
+
+.mensaje-caja-faltante {
+  background: rgba(215, 0, 0, 0.10);
+  border: 1px solid rgba(215, 0, 0, 0.25);
+  color: #d70000;
+}
+
+.mensaje-caja-sobrante {
+  background: rgba(8, 47, 242, 0.10);
+  border: 1px solid rgba(8, 47, 242, 0.25);
+  color: #082FF2;
 }
 
 .acciones-inferiores {
@@ -140,6 +160,10 @@ ion-button {
   text-transform: none;
   font-size: 1rem;
   margin: 0;
+}
+
+.confirmar-cierre-button[disabled] {
+  opacity: 0.55;
 }
 
 .modal-cierre-exitoso {

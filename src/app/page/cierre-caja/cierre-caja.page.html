@@ -81,10 +81,13 @@
         </ion-input>
       </ion-item>
 
-      <div class="mensaje-caja" *ngIf="mensajeCaja">
-        <ion-text [style.color]="colorMensaje">
-          {{ mensajeCaja }}
-        </ion-text>
+      <div
+        class="mensaje-caja"
+        *ngIf="mensajeCaja"
+        [class.mensaje-caja-correcto]="diferenciaEfectivo === 0"
+        [class.mensaje-caja-faltante]="diferenciaEfectivo < 0"
+        [class.mensaje-caja-sobrante]="diferenciaEfectivo > 0">
+        {{ mensajeCaja }}
       </div>
     </div>
   </div>
@@ -92,7 +95,7 @@
   <div class="acciones-inferiores">
     <ion-button
       class="confirmar-cierre-button"
-      [disabled]="cierreYaRegistrado"
+      [disabled]="cierreYaRegistrado || !cajaListaParaCerrar"
       (click)="confirmarCierre()">
       Confirmar Cierre
     </ion-button>

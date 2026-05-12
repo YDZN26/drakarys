@@ -10,7 +10,10 @@
       <ion-label>Deudas</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="inventario" [class.selected]="isTabSelected('inventario')">
+    <ion-tab-button
+      *ngIf="rolUsuario === 'dueño'"
+      tab="inventario"
+      [class.selected]="isTabSelected('inventario')">
       <ion-icon name="file-tray-stacked-outline"></ion-icon>
       <ion-label>Inventario</ion-label>
     </ion-tab-button>

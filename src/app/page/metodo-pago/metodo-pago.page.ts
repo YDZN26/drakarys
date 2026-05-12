@@ -5,6 +5,8 @@ import { SupabaseService } from 'src/app/supabase.service';
 import { MensajeService } from 'src/app/mensaje.service';
 import { LoadingService } from 'src/app/services/loading.service';
 
+type MetodoPagoSeleccionado = 'efectivo' | 'transferencia' | 'tarjeta' | '';
+
 @Component({
   selector: 'app-metodo-pago',
   templateUrl: './metodo-pago.page.html',
@@ -24,6 +26,14 @@ export class MetodoPagoPage implements OnInit {
   montoTarjeta: number = 0;
 
   numeroPagosSeleccionado: number = 1;
+
+  pago1Metodo: MetodoPagoSeleccionado = '';
+  pago2Metodo: MetodoPagoSeleccionado = '';
+  pago3Metodo: MetodoPagoSeleccionado = '';
+
+  pago1Monto: number = 0;
+  pago2Monto: number = 0;
+  pago3Monto: number = 0;
 
   modoEditar: boolean = false;
   ventaIdEditar: number = 0;
@@ -72,32 +82,196 @@ export class MetodoPagoPage implements OnInit {
   seleccionarNumeroPagos(numero: number) {
     this.numeroPagosSeleccionado = numero;
 
-    const total = Number(this.venta.totalVenta || 0);
+    this.pago1Metodo = '';
+    this.pago2Metodo = '';
+    this.pago3Metodo = '';
 
-    if (numero === 1) {
-      this.montoEfectivo = this.redondearMonto(total);
-      this.montoTransferencia = 0;
-      this.montoTarjeta = 0;
+    this.pago1Monto = 0;
+    this.pago2Monto = 0;
+    this.pago3Monto = 0;
+
+    this.actualizarMontosPorMetodo();
+  }
+
+  seleccionarMetodoPago(numeroPago: number, metodo: MetodoPagoSeleccionado) {
+    if (this.metodoNoDisponible(metodo, numeroPago)) {
       return;
     }
 
-    if (numero === 2) {
-      const montoDividido = this.dividirMonto(total, 2);
-
-      this.montoEfectivo = montoDividido[0];
-      this.montoTransferencia = montoDividido[1];
-      this.montoTarjeta = 0;
-      return;
+    if (numeroPago === 1) {
+      this.pago1Metodo = metodo;
+      this.pago1Monto = this.calcularMontoAutomatico(1);
     }
 
-    if (numero === 3) {
-      const montoDividido = this.dividirMonto(total, 3);
-
-      this.montoEfectivo = montoDividido[0];
-      this.montoTransferencia = montoDividido[1];
-      this.montoTarjeta = montoDividido[2];
-      return;
+    if (numeroPago === 2) {
+      this.pago2Metodo = metodo;
+      this.pago2Monto = this.calcularMontoAutomatico(2);
     }
+
+    if (numeroPago === 3) {
+      this.pago3Metodo = metodo;
+      this.pago3Monto = this.calcularMontoAutomatico(3);
+    }
+
+    this.actualizarMontosPorMetodo();
+  }
+
+  metodoNoDisponible(metodo: MetodoPagoSeleccionado, numeroPago: number): boolean {
+    if (!metodo) {
+      return false;
+    }
+
+    if (numeroPago !== 1 && this.pago1Metodo === metodo) {
+      return true;
+    }
+
+    if (numeroPago !== 2 && this.numeroPagosSeleccionado >= 2 && this.pago2Metodo === metodo) {
+      return true;
+    }
+
+    if (numeroPago !== 3 && this.numeroPagosSeleccionado >= 3 && this.pago3Metodo === metodo) {
+      return true;
+    }
+
+    return false;
+  }
+
+  calcularMontoAutomatico(numeroPago: number): number {
+    const total = this.redondearMonto(Number(this.venta.totalVenta || 0));
+    const montosDivididos = this.dividirMonto(total, this.numeroPagosSeleccionado);
+
+    const pagosSeleccionados = this.contarPagosSeleccionados(numeroPago);
+    const faltante = this.redondearMonto(total - this.totalPagadoSinPago(numeroPago));
+
+    if (this.numeroPagosSeleccionado === 1) {
+      return total;
+    }
+
+    if (pagosSeleccionados + 1 === this.numeroPagosSeleccionado) {
+      return faltante > 0 ? faltante : 0;
+    }
+
+    const montoSugerido = montosDivididos[numeroPago - 1] || 0;
+
+    if (faltante < montoSugerido) {
+      return faltante > 0 ? faltante : 0;
+    }
+
+    return montoSugerido;
+  }
+
+  contarPagosSeleccionados(numeroPagoActual: number): number {
+    let cantidad = 0;
+
+    if (numeroPagoActual !== 1 && this.pago1Metodo) {
+      cantidad++;
+    }
+
+    if (numeroPagoActual !== 2 && this.numeroPagosSeleccionado >= 2 && this.pago2Metodo) {
+      cantidad++;
+    }
+
+    if (numeroPagoActual !== 3 && this.numeroPagosSeleccionado >= 3 && this.pago3Metodo) {
+      cantidad++;
+    }
+
+    return cantidad;
+  }
+
+  totalPagadoSinPago(numeroPago: number): number {
+    let total = 0;
+
+    if (numeroPago !== 1) {
+      total += Number(this.pago1Monto || 0);
+    }
+
+    if (numeroPago !== 2 && this.numeroPagosSeleccionado >= 2) {
+      total += Number(this.pago2Monto || 0);
+    }
+
+    if (numeroPago !== 3 && this.numeroPagosSeleccionado >= 3) {
+      total += Number(this.pago3Monto || 0);
+    }
+
+    return this.redondearMonto(total);
+  }
+
+  validarMontoPago(numeroPago: number) {
+    if (numeroPago === 1) {
+      this.pago1Monto = this.redondearMonto(Number(this.pago1Monto || 0));
+
+      if (this.pago1Monto < 0) {
+        this.pago1Monto = 0;
+      }
+    }
+
+    if (numeroPago === 2) {
+      this.pago2Monto = this.redondearMonto(Number(this.pago2Monto || 0));
+
+      if (this.pago2Monto < 0) {
+        this.pago2Monto = 0;
+      }
+    }
+
+    if (numeroPago === 3) {
+      this.pago3Monto = this.redondearMonto(Number(this.pago3Monto || 0));
+
+      if (this.pago3Monto < 0) {
+        this.pago3Monto = 0;
+      }
+    }
+
+    this.actualizarMontosPorMetodo();
+  }
+
+  actualizarMontosPorMetodo() {
+    this.montoEfectivo = 0;
+    this.montoTransferencia = 0;
+    this.montoTarjeta = 0;
+
+    if (this.pago1Metodo === 'efectivo') {
+      this.montoEfectivo += Number(this.pago1Monto || 0);
+    }
+
+    if (this.pago1Metodo === 'transferencia') {
+      this.montoTransferencia += Number(this.pago1Monto || 0);
+    }
+
+    if (this.pago1Metodo === 'tarjeta') {
+      this.montoTarjeta += Number(this.pago1Monto || 0);
+    }
+
+    if (this.numeroPagosSeleccionado >= 2) {
+      if (this.pago2Metodo === 'efectivo') {
+        this.montoEfectivo += Number(this.pago2Monto || 0);
+      }
+
+      if (this.pago2Metodo === 'transferencia') {
+        this.montoTransferencia += Number(this.pago2Monto || 0);
+      }
+
+      if (this.pago2Metodo === 'tarjeta') {
+        this.montoTarjeta += Number(this.pago2Monto || 0);
+      }
+    }
+
+    if (this.numeroPagosSeleccionado >= 3) {
+      if (this.pago3Metodo === 'efectivo') {
+        this.montoEfectivo += Number(this.pago3Monto || 0);
+      }
+
+      if (this.pago3Metodo === 'transferencia') {
+        this.montoTransferencia += Number(this.pago3Monto || 0);
+      }
+
+      if (this.pago3Metodo === 'tarjeta') {
+        this.montoTarjeta += Number(this.pago3Monto || 0);
+      }
+    }
+
+    this.montoEfectivo = this.redondearMonto(this.montoEfectivo);
+    this.montoTransferencia = this.redondearMonto(this.montoTransferencia);
+    this.montoTarjeta = this.redondearMonto(this.montoTarjeta);
   }
 
   dividirMonto(total: number, partes: number): number[] {
@@ -122,6 +296,8 @@ export class MetodoPagoPage implements OnInit {
   }
 
   get totalPagado(): number {
+    this.actualizarMontosPorMetodo();
+
     return this.redondearMonto(
       Number(this.montoEfectivo || 0)
       + Number(this.montoTransferencia || 0)
@@ -133,7 +309,39 @@ export class MetodoPagoPage implements OnInit {
     return this.redondearMonto(Number(this.venta.totalVenta || 0) - this.totalPagado);
   }
 
+  get ventaListaParaConfirmar(): boolean {
+    const totalVenta = this.redondearMonto(Number(this.venta.totalVenta || 0));
+
+    if (totalVenta <= 0) {
+      return false;
+    }
+
+    if (this.diferencia !== 0) {
+      return false;
+    }
+
+    if (!this.pago1Metodo || Number(this.pago1Monto || 0) <= 0) {
+      return false;
+    }
+
+    if (this.numeroPagosSeleccionado >= 2) {
+      if (!this.pago2Metodo || Number(this.pago2Monto || 0) <= 0) {
+        return false;
+      }
+    }
+
+    if (this.numeroPagosSeleccionado >= 3) {
+      if (!this.pago3Metodo || Number(this.pago3Monto || 0) <= 0) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   private obtenerPagos() {
+    this.actualizarMontosPorMetodo();
+
     const pagos = [];
 
     if (Number(this.montoEfectivo) > 0) {
@@ -176,6 +384,8 @@ export class MetodoPagoPage implements OnInit {
   }
 
   async confirmarVenta() {
+    this.actualizarMontosPorMetodo();
+
     if (!this.venta.cliente || !this.venta.cliente.cliente_id) {
       const alerta = await this.alertCtrl.create({
         header: 'Error',
@@ -191,6 +401,16 @@ export class MetodoPagoPage implements OnInit {
       const alerta = await this.alertCtrl.create({
         header: 'Error',
         message: 'No se encontró el usuario logueado.',
+        buttons: ['OK']
+      });
+      await alerta.present();
+      return;
+    }
+
+    if (!this.ventaListaParaConfirmar) {
+      const alerta = await this.alertCtrl.create({
+        header: 'Error',
+        message: 'Debes seleccionar los métodos de pago y la suma debe ser igual al total de la venta.',
         buttons: ['OK']
       });
       await alerta.present();

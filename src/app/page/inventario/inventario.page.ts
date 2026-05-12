@@ -60,6 +60,13 @@ export class InventarioPage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    const rolUsuario = localStorage.getItem('rolUsuario') || '';
+
+    if (rolUsuario !== 'dueño') {
+      this.navCtrl.navigateRoot('/tab-inicial/balance');
+      return;
+    }
+
     const usuarioGuardado = localStorage.getItem('usuario');
 
     if (usuarioGuardado) {
@@ -110,6 +117,13 @@ export class InventarioPage implements OnInit, OnDestroy {
   }
 
   async ionViewWillEnter() {
+    const rolUsuario = localStorage.getItem('rolUsuario') || '';
+
+    if (rolUsuario !== 'dueño') {
+      this.navCtrl.navigateRoot('/tab-inicial/balance');
+      return;
+    }
+
     await this.popoverCtrl.dismiss().catch(() => {});
 
     await this.cargarProductos(this.categoriaSeleccionada);

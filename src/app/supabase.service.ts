@@ -63,6 +63,7 @@ export class SupabaseService {
   cerrarSesion() {
     localStorage.removeItem('usuario');
     localStorage.removeItem('usuario_id');
+    localStorage.removeItem('rolUsuario');
   }
 
   async agregarProducto(producto: any) {
@@ -833,6 +834,37 @@ export class SupabaseService {
     }
     return { data, error: null };
   }
+
+  obtenerRolUsuario(): string {
+  try {
+    const rolGuardado = localStorage.getItem('rolUsuario');
+
+    if (rolGuardado) {
+      return rolGuardado;
+    }
+
+    const usuarioGuardado = localStorage.getItem('usuario');
+
+    if (!usuarioGuardado) {
+      return '';
+    }
+
+    const usuario = JSON.parse(usuarioGuardado);
+
+    return usuario?.rol || '';
+  } catch (error) {
+    console.error('Error al obtener rol del usuario:', error);
+    return '';
+  }
+}
+
+esDueno(): boolean {
+  return this.obtenerRolUsuario() === 'dueño';
+}
+
+esEmpleado(): boolean {
+  return this.obtenerRolUsuario() === 'empleado';
+}
 
   async obtenerTiposDePago() {
     const { data, error } = await this.supabase.from('tipo_de_pago').select('*');

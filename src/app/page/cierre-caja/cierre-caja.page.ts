@@ -26,6 +26,7 @@ export class CierreCajaPage implements OnInit {
 
   mensajeCaja: string = '';
   colorMensaje: string = 'primary';
+  diferenciaEfectivo: number = 0;
 
   usuarioId: number = 0;
   cierreYaRegistrado: boolean = false;
@@ -68,7 +69,27 @@ export class CierreCajaPage implements OnInit {
   }
 
   private obtenerEfectivoEsperado(): number {
-    return this.saldoInicial + this.ingresosEfectivo - this.egresosEfectivo;
+    return this.redondearMonto(this.saldoInicial + this.ingresosEfectivo - this.egresosEfectivo);
+  }
+
+  private redondearMonto(monto: number): number {
+    return Number(Number(monto || 0).toFixed(2));
+  }
+
+  get cajaListaParaCerrar(): boolean {
+    if (this.cierreYaRegistrado) {
+      return false;
+    }
+
+    if (this.diferenciaEfectivo !== 0) {
+      return false;
+    }
+
+    if (Number(this.efectivoFinal || 0) < 0) {
+      return false;
+    }
+
+    return true;
   }
 
   async validarSiYaExisteCierreDelDia() {
@@ -113,16 +134,13 @@ export class CierreCajaPage implements OnInit {
   calcularDiferenciaEfectivo() {
     const esperado = this.obtenerEfectivoEsperado();
     const ingresado = Number(this.efectivoFinal) || 0;
-    const diferencia = ingresado - esperado;
+    const diferencia = this.redondearMonto(ingresado - esperado);
 
-    if (ingresado <= 0) {
-      this.mensajeCaja = '';
-      return;
-    }
+    this.diferenciaEfectivo = diferencia;
 
     if (diferencia === 0) {
       this.mensajeCaja = `El efectivo coincide correctamente.`;
-      this.colorMensaje = 'success';
+      this.colorMensaje = '#16a34a';
     } else if (diferencia > 0) {
       this.mensajeCaja = `Sobran ${diferencia} Bs.`;
       this.colorMensaje = '#082FF2';
@@ -133,56 +151,33 @@ export class CierreCajaPage implements OnInit {
   }
 
   async confirmarCierre() {
-    if (this.cierreYaRegistrado) return;
+    if (this.cierreYaRegistrado) {
+      return;
+    }
+
+    this.calcularDiferenciaEfectivo();
 
     const efectivo = Number(this.efectivoFinal) || 0;
 
     if (efectivo < 0) {
+      await this.mostrarMensaje('El efectivo no puede ser menor a 0.');
       return;
     }
 
-    const diferencia = efectivo - this.obtenerEfectivoEsperado();
-
-    if (diferencia !== 0) {
-      await this.mostrarModalAdvertencia(diferencia);
-    } else {
-      await this.mostrarModalRetiro(diferencia);
+    if (this.diferenciaEfectivo !== 0) {
+      await this.mostrarMensaje('No se puede cerrar caja mientras exista faltante o sobrante. El efectivo debe coincidir exactamente.');
+      return;
     }
-  }
 
-  async mostrarModalAdvertencia(diferencia: number) {
-    const alerta = await this.alertCtrl.create({
-      header: 'Montos no coinciden',
-      message: `Diferencia: ${diferencia} Bs.`,
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'Continuar',
-          handler: () => this.mostrarModalAjuste(diferencia)
-        }
-      ]
-    });
-
-    await alerta.present();
-  }
-
-  async mostrarModalAjuste(diferencia: number) {
-    const alerta = await this.alertCtrl.create({
-      header: 'Ajuste de caja',
-      message: diferencia > 0 ? 'Se añadirá como ingreso.' : 'Se registrará como egreso.',
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'Aceptar',
-          handler: () => this.mostrarModalRetiro(diferencia)
-        }
-      ]
-    });
-
-    await alerta.present();
+    await this.mostrarModalRetiro(0);
   }
 
   async mostrarModalRetiro(diferencia: number) {
+    if (diferencia !== 0) {
+      await this.mostrarMensaje('No se puede continuar si el efectivo no coincide.');
+      return;
+    }
+
     const efectivo = Number(this.efectivoFinal) || 0;
 
     const alerta = await this.alertCtrl.create({
@@ -208,7 +203,7 @@ export class CierreCajaPage implements OnInit {
               return false;
             }
 
-            this.procesarRetiroYResumen(diferencia, retiro);
+            this.procesarRetiroYResumen(0, retiro);
             return true;
           }
         }
@@ -219,26 +214,9 @@ export class CierreCajaPage implements OnInit {
   }
 
   async procesarRetiroYResumen(diferencia: number, retiro: number) {
-    if (diferencia > 0) {
-      const ajuste = await this.supabaseService.registrarAjustePositivo({
-        total: diferencia,
-        tipo_pago_id: 2,
-        usuario_id: this.usuarioId,
-        descripcion: 'Sobrante de cierre de caja'
-      });
-
-      if (!ajuste) return;
-    }
-
-    if (diferencia < 0) {
-      const ajuste = await this.supabaseService.registrarAjusteNegativo({
-        total: Math.abs(diferencia),
-        tipo_pago_id: 2,
-        usuario_id: this.usuarioId,
-        descripcion: 'Faltante de cierre de caja'
-      });
-
-      if (!ajuste) return;
+    if (diferencia !== 0) {
+      await this.mostrarMensaje('No se puede registrar el cierre porque el efectivo no coincide.');
+      return;
     }
 
     if (retiro > 0) {
@@ -269,7 +247,7 @@ export class CierreCajaPage implements OnInit {
       egresos_tarjeta: this.egresosTarjeta,
       saldo_final: saldoFinal,
       efectivo_caja: efectivo,
-      diferencia: diferencia,
+      diferencia: 0,
       usuario_id: this.usuarioId,
       total_ingresos: this.totalIngresos,
       total_egresos: this.totalEgresos

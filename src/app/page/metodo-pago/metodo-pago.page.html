@@ -41,32 +41,128 @@
       </div>
 
       <div class="metodo-pago-formulario">
-        <ion-item lines="none" class="input-item">
-          <ion-label position="stacked">Efectivo</ion-label>
-          <ion-input
-            type="number"
-            min="0"
-            [(ngModel)]="montoEfectivo">
-          </ion-input>
-        </ion-item>
+        <div class="pago-item">
+          <h3>Pago 1</h3>
 
-        <ion-item lines="none" class="input-item">
-          <ion-label position="stacked">Transferencia</ion-label>
-          <ion-input
-            type="number"
-            min="0"
-            [(ngModel)]="montoTransferencia">
-          </ion-input>
-        </ion-item>
+          <div class="metodo-botones">
+            <ion-button
+              class="metodo-button"
+              [class.metodo-activo]="pago1Metodo === 'efectivo'"
+              [disabled]="metodoNoDisponible('efectivo', 1)"
+              (click)="seleccionarMetodoPago(1, 'efectivo')">
+              Efectivo
+            </ion-button>
 
-        <ion-item lines="none" class="input-item">
-          <ion-label position="stacked">Tarjeta</ion-label>
-          <ion-input
-            type="number"
-            min="0"
-            [(ngModel)]="montoTarjeta">
-          </ion-input>
-        </ion-item>
+            <ion-button
+              class="metodo-button"
+              [class.metodo-activo]="pago1Metodo === 'transferencia'"
+              [disabled]="metodoNoDisponible('transferencia', 1)"
+              (click)="seleccionarMetodoPago(1, 'transferencia')">
+              Transferencia
+            </ion-button>
+
+            <ion-button
+              class="metodo-button"
+              [class.metodo-activo]="pago1Metodo === 'tarjeta'"
+              [disabled]="metodoNoDisponible('tarjeta', 1)"
+              (click)="seleccionarMetodoPago(1, 'tarjeta')">
+              Tarjeta
+            </ion-button>
+          </div>
+
+          <ion-item lines="none" class="input-item">
+            <ion-label position="stacked">Monto pago 1</ion-label>
+            <ion-input
+              type="number"
+              min="0"
+              [disabled]="!pago1Metodo"
+              [(ngModel)]="pago1Monto"
+              (ionBlur)="validarMontoPago(1)">
+            </ion-input>
+          </ion-item>
+        </div>
+
+        <div class="pago-item" *ngIf="numeroPagosSeleccionado >= 2">
+          <h3>Pago 2</h3>
+
+          <div class="metodo-botones">
+            <ion-button
+              class="metodo-button"
+              [class.metodo-activo]="pago2Metodo === 'efectivo'"
+              [disabled]="metodoNoDisponible('efectivo', 2)"
+              (click)="seleccionarMetodoPago(2, 'efectivo')">
+              Efectivo
+            </ion-button>
+
+            <ion-button
+              class="metodo-button"
+              [class.metodo-activo]="pago2Metodo === 'transferencia'"
+              [disabled]="metodoNoDisponible('transferencia', 2)"
+              (click)="seleccionarMetodoPago(2, 'transferencia')">
+              Transferencia
+            </ion-button>
+
+            <ion-button
+              class="metodo-button"
+              [class.metodo-activo]="pago2Metodo === 'tarjeta'"
+              [disabled]="metodoNoDisponible('tarjeta', 2)"
+              (click)="seleccionarMetodoPago(2, 'tarjeta')">
+              Tarjeta
+            </ion-button>
+          </div>
+
+          <ion-item lines="none" class="input-item">
+            <ion-label position="stacked">Monto pago 2</ion-label>
+            <ion-input
+              type="number"
+              min="0"
+              [disabled]="!pago2Metodo"
+              [(ngModel)]="pago2Monto"
+              (ionBlur)="validarMontoPago(2)">
+            </ion-input>
+          </ion-item>
+        </div>
+
+        <div class="pago-item" *ngIf="numeroPagosSeleccionado >= 3">
+          <h3>Pago 3</h3>
+
+          <div class="metodo-botones">
+            <ion-button
+              class="metodo-button"
+              [class.metodo-activo]="pago3Metodo === 'efectivo'"
+              [disabled]="metodoNoDisponible('efectivo', 3)"
+              (click)="seleccionarMetodoPago(3, 'efectivo')">
+              Efectivo
+            </ion-button>
+
+            <ion-button
+              class="metodo-button"
+              [class.metodo-activo]="pago3Metodo === 'transferencia'"
+              [disabled]="metodoNoDisponible('transferencia', 3)"
+              (click)="seleccionarMetodoPago(3, 'transferencia')">
+              Transferencia
+            </ion-button>
+
+            <ion-button
+              class="metodo-button"
+              [class.metodo-activo]="pago3Metodo === 'tarjeta'"
+              [disabled]="metodoNoDisponible('tarjeta', 3)"
+              (click)="seleccionarMetodoPago(3, 'tarjeta')">
+              Tarjeta
+            </ion-button>
+          </div>
+
+          <ion-item lines="none" class="input-item">
+            <ion-label position="stacked">Monto pago 3</ion-label>
+            <ion-input
+              type="number"
+              min="0"
+              [disabled]="!pago3Metodo"
+              [(ngModel)]="pago3Monto"
+              (ionBlur)="validarMontoPago(3)">
+            </ion-input>
+          </ion-item>
+        </div>
       </div>
 
       <div class="resumen-pago">
@@ -80,9 +176,20 @@
           <strong>Bs. {{ totalPagado }}</strong>
         </div>
 
-        <div class="resumen-item">
+        <div
+          class="resumen-item"
+          [class.resumen-correcto]="diferencia === 0"
+          [class.resumen-error]="diferencia !== 0">
           <span>Diferencia</span>
           <strong>Bs. {{ diferencia }}</strong>
+        </div>
+
+        <div class="mensaje-diferencia" *ngIf="diferencia > 0">
+          Falta ingresar Bs. {{ diferencia }} para completar la venta.
+        </div>
+
+        <div class="mensaje-diferencia" *ngIf="diferencia < 0">
+          El monto ingresado supera el total de la venta por Bs. {{ diferencia * -1 }}.
         </div>
 
         <div class="resumen-item resumen-cliente">
@@ -96,7 +203,10 @@
   </div>
 
   <div class="acciones-inferiores">
-    <ion-button class="confirmar-pago-button" (click)="confirmarVenta()">
+    <ion-button
+      class="confirmar-pago-button"
+      [disabled]="!ventaListaParaConfirmar"
+      (click)="confirmarVenta()">
       {{ modoEditar ? 'Actualizar Venta' : 'Confirmar Venta' }}
     </ion-button>
   </div>

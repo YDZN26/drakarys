@@ -9,12 +9,16 @@ import { filter } from 'rxjs/operators';
 })
 export class TabInicialPage {
   rutaActual: string = '';
+  rolUsuario: string = '';
 
   constructor(private router: Router) {
+    this.rolUsuario = localStorage.getItem('rolUsuario') || '';
+
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: any) => {
         this.rutaActual = event.urlAfterRedirects;
+        this.rolUsuario = localStorage.getItem('rolUsuario') || '';
       });
 
     this.rutaActual = this.router.url;

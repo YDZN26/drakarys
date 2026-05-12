@@ -41,8 +41,14 @@ export class LoginPage {
         return;
       }
 
+      if (!data) {
+        this.errorMsg = 'Usuario o contraseña incorrectos';
+        return;
+      }
+
       localStorage.setItem('usuario_id', data.usuario_id.toString());
       localStorage.setItem('usuario', JSON.stringify(data));
+      localStorage.setItem('rolUsuario', data.rol);
 
       this.router.navigate(['tab-inicial/balance']);
 
