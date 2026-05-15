@@ -1,24 +1,13 @@
 <ion-header>
   <ion-toolbar color="mycolor" class="top-toolbar">
     <ion-buttons slot="start">
-      <ion-button [id]="'usuarioPopoverTriggerDeuda'" class="usuario-btn">
+      <ion-button class="usuario-btn" (click)="abrirModalCerrarSesion()">
         <ion-icon name="person-circle" slot="start" size="large"></ion-icon>
         <ion-label>{{ nombreUsuario }}</ion-label>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
-
-<ion-popover trigger="usuarioPopoverTriggerDeuda" triggerAction="click">
-  <ng-template>
-    <ion-content class="ion-padding">
-      <ion-item button (click)="cerrarSesion()">
-        <ion-icon slot="start" name="log-out-outline"></ion-icon>
-        <ion-label>Cerrar sesión</ion-label>
-      </ion-item>
-    </ion-content>
-  </ng-template>
-</ion-popover>
 
 <ion-content [fullscreen]="true" class="deuda-content">
 
@@ -142,4 +131,37 @@
       Nueva Deuda
     </ion-button>
   </div>
+
+  <ion-modal
+    [isOpen]="mostrarModalCerrarSesion"
+    cssClass="modal-cerrar-sesion"
+    (didDismiss)="alCerrarModalCerrarSesion()">
+
+    <ng-template>
+      <div class="modal-sesion-wrapper">
+        <div class="modal-sesion-card">
+          <div class="modal-icono-sesion">
+            <ion-icon name="log-out-outline"></ion-icon>
+          </div>
+
+          <h2>Cerrar sesión</h2>
+
+          <p class="modal-subtitulo">
+            ¿Estás seguro que deseas cerrar sesión?
+          </p>
+
+          <div class="modal-sesion-botones">
+            <ion-button class="btn-cancelar-sesion" (click)="cerrarModalCerrarSesion()">
+              Cancelar
+            </ion-button>
+
+            <ion-button class="btn-confirmar-sesion" (click)="confirmarCerrarSesion()">
+              Cerrar sesión
+            </ion-button>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
 </ion-content>

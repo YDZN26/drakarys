@@ -1,5 +1,5 @@
-import { Component, OnInit, NgZone, ViewChild, ElementRef, OnDestroy, HostListener } from '@angular/core';
-import { NavController, PopoverController, Platform } from '@ionic/angular';
+import { Component, OnInit, NgZone, ViewChild, ElementRef, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
+import { NavController, Platform } from '@ionic/angular';
 import { SupabaseService } from '../../supabase.service';
 import { MensajeService } from 'src/app/mensaje.service';
 import { Subscription } from 'rxjs';
@@ -39,6 +39,9 @@ export class InventarioPage implements OnInit, OnDestroy {
   modalStockBajoAbierto: boolean = false;
   scannerAbierto: boolean = false;
 
+  mostrarModalCerrarSesion: boolean = false;
+  cerrarSesionConfirmado: boolean = false;
+
   private mensajeSub!: Subscription;
   private backButtonSub: any;
 
@@ -52,11 +55,11 @@ export class InventarioPage implements OnInit, OnDestroy {
 
   constructor(
     private navCtrl: NavController,
-    private popoverCtrl: PopoverController,
     private supabaseService: SupabaseService,
     private mensajeService: MensajeService,
     private zone: NgZone,
-    private platform: Platform
+    private platform: Platform,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -67,16 +70,7 @@ export class InventarioPage implements OnInit, OnDestroy {
       return;
     }
 
-    const usuarioGuardado = localStorage.getItem('usuario');
-
-    if (usuarioGuardado) {
-      try {
-        const usuarioObj = JSON.parse(usuarioGuardado);
-        this.nombreUsuario = this.capitalize(usuarioObj.username);
-      } catch (error) {
-        this.nombreUsuario = 'Usuario';
-      }
-    }
+    this.cargarUsuarioSesion();
 
     this.cargarProductos();
     this.cargarCategorias();
@@ -97,6 +91,11 @@ export class InventarioPage implements OnInit, OnDestroy {
 
       if (this.modalStockBajoAbierto) {
         this.cerrarModalStockBajo();
+        return;
+      }
+
+      if (this.mostrarModalCerrarSesion) {
+        this.cerrarModalCerrarSesion();
         return;
       }
 
@@ -124,13 +123,12 @@ export class InventarioPage implements OnInit, OnDestroy {
       return;
     }
 
-    await this.popoverCtrl.dismiss().catch(() => {});
+    this.cargarUsuarioSesion();
 
     await this.cargarProductos(this.categoriaSeleccionada);
   }
 
   async ionViewWillLeave() {
-    await this.popoverCtrl.dismiss().catch(() => {});
     await this.detenerCamaraScanner();
   }
 
@@ -147,16 +145,63 @@ export class InventarioPage implements OnInit, OnDestroy {
       this.cerrarModalStockBajo();
       return;
     }
+
+    if (this.mostrarModalCerrarSesion) {
+      history.pushState(null, '', window.location.href);
+      this.cerrarModalCerrarSesion();
+      return;
+    }
+  }
+
+  cargarUsuarioSesion() {
+    const usuario = this.supabaseService.obtenerUsuario();
+
+    let nombre = 'Usuario';
+
+    if (usuario) {
+      nombre =
+        usuario.username ||
+        usuario.usuario ||
+        usuario.nombre ||
+        usuario.nombre_usuario ||
+        usuario.nombreUsuario ||
+        'Usuario';
+    }
+
+    this.zone.run(() => {
+      this.nombreUsuario = this.capitalize(nombre);
+      this.cdr.detectChanges();
+    });
   }
 
   capitalize(nombre: string): string {
+    if (!nombre) {
+      return 'Usuario';
+    }
+
     return nombre.charAt(0).toUpperCase() + nombre.slice(1);
   }
 
-  async cerrarSesion() {
-    await this.popoverCtrl.dismiss().catch(() => {});
-    localStorage.clear();
-    this.navCtrl.navigateRoot('/login');
+  abrirModalCerrarSesion() {
+    this.mostrarModalCerrarSesion = true;
+  }
+
+  cerrarModalCerrarSesion() {
+    this.mostrarModalCerrarSesion = false;
+  }
+
+  confirmarCerrarSesion() {
+    this.cerrarSesionConfirmado = true;
+    this.mostrarModalCerrarSesion = false;
+  }
+
+  alCerrarModalCerrarSesion() {
+    if (this.cerrarSesionConfirmado) {
+      this.cerrarSesionConfirmado = false;
+      this.supabaseService.cerrarSesion();
+      this.nombreUsuario = 'Usuario';
+      this.navCtrl.navigateRoot('/login');
+    }
   }
 
   async cargarCategorias() {
@@ -199,6 +244,7 @@ export class InventarioPage implements OnInit, OnDestroy {
 
   async actualizarInventario(event: any) {
     try {
+      this.cargarUsuarioSesion();
       await this.cargarCategorias();
       await this.cargarProductos(this.categoriaSeleccionada);
     } catch (error) {

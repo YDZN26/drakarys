@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { NavController } from '@ionic/angular';
 import { SupabaseService } from '../../supabase.service';
 import { Router } from '@angular/router';
@@ -56,20 +56,13 @@ export class BalancePage implements OnInit {
     private navCtrl: NavController,
     private supabaseService: SupabaseService,
     private router: Router,
-    private mensajeService: MensajeService
+    private mensajeService: MensajeService,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {}
 
   async ngOnInit() {
-    const usuarioGuardado = localStorage.getItem('usuario');
-
-    if (usuarioGuardado) {
-      try {
-        const usuarioObj = JSON.parse(usuarioGuardado);
-        this.nombreUsuario = this.capitalize(usuarioObj.username);
-      } catch (error) {
-        this.nombreUsuario = 'Usuario';
-      }
-    }
+    this.cargarUsuarioSesion();
 
     this.generarDiasHistoricos(365);
     this.seleccionarUltimaOpcionDisponible();
@@ -92,13 +85,44 @@ export class BalancePage implements OnInit {
   }
 
   async ionViewWillEnter() {
+    this.cargarUsuarioSesion();
     await this.supabaseService.verificarYCerrarDiasPendientes();
     await this.onDaySelected(this.selectedDay);
     this.centrarPeriodoSeleccionado();
   }
 
+  ionViewDidEnter() {
+    this.cargarUsuarioSesion();
+
+    setTimeout(() => {
+      this.cargarUsuarioSesion();
+    }, 200);
+  }
+
+  cargarUsuarioSesion() {
+    const usuario = this.supabaseService.obtenerUsuario();
+
+    let nombre = 'Usuario';
+
+    if (usuario) {
+      nombre =
+        usuario.username ||
+        usuario.usuario ||
+        usuario.nombre ||
+        usuario.nombre_usuario ||
+        usuario.nombreUsuario ||
+        'Usuario';
+    }
+
+    this.ngZone.run(() => {
+      this.nombreUsuario = this.capitalize(nombre);
+      this.cdr.detectChanges();
+    });
+  }
+
   async actualizarBalance(event: any) {
     try {
+      this.cargarUsuarioSesion();
       await this.supabaseService.verificarYCerrarDiasPendientes();
       await this.onDaySelected(this.selectedDay);
       this.filtrarItems();
@@ -111,6 +135,10 @@ export class BalancePage implements OnInit {
   }
 
   capitalize(nombre: string): string {
+    if (!nombre) {
+      return 'Usuario';
+    }
+
     return nombre.charAt(0).toUpperCase() + nombre.slice(1);
   }
 
@@ -130,8 +158,9 @@ export class BalancePage implements OnInit {
   alCerrarModalCerrarSesion() {
     if (this.cerrarSesionConfirmado) {
       this.cerrarSesionConfirmado = false;
-      localStorage.clear();
-      this.router.navigate(['/login']);
+      this.supabaseService.cerrarSesion();
+      this.nombreUsuario = 'Usuario';
+      this.router.navigateByUrl('/login', { replaceUrl: true });
     }
   }
 

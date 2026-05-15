@@ -31,6 +31,8 @@ export class LoginPage {
     await this.loadingService.mostrarLoading('Iniciando sesión...');
 
     try {
+      this.supabaseService.cerrarSesion();
+
       const { data, error } = await this.supabaseService.obtenerLogin(
         this.usuario.trim(),
         this.contrasena.trim()
@@ -50,7 +52,7 @@ export class LoginPage {
       localStorage.setItem('usuario', JSON.stringify(data));
       localStorage.setItem('rolUsuario', data.rol);
 
-      this.router.navigate(['tab-inicial/balance']);
+      await this.router.navigateByUrl('/tab-inicial/balance', { replaceUrl: true });
 
     } catch (error) {
       this.errorMsg = 'Ocurrió un error al iniciar sesión';

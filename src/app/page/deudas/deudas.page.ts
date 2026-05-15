@@ -1,6 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
 import { Router } from '@angular/router';
-import { PopoverController } from '@ionic/angular';
 import { SupabaseService } from 'src/app/supabase.service';
 import { MensajeService } from 'src/app/mensaje.service';
 import { Subscription } from 'rxjs';
@@ -35,26 +34,21 @@ export class DeudasPage implements OnInit, OnDestroy {
   clientesFiltrados: ClienteDeudaView[] = [];
   textoBusqueda: string = '';
 
+  mostrarModalCerrarSesion: boolean = false;
+  cerrarSesionConfirmado: boolean = false;
+
   private mensajeSub!: Subscription;
 
   constructor(
     private router: Router,
-    private popoverCtrl: PopoverController,
     private supabase: SupabaseService,
-    private mensajeService: MensajeService
+    private mensajeService: MensajeService,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {}
 
   async ngOnInit() {
-    const usuarioGuardado = localStorage.getItem('usuario');
-
-    if (usuarioGuardado) {
-      try {
-        const usuarioObj = JSON.parse(usuarioGuardado);
-        this.nombreUsuario = this.capitalize(usuarioObj.username);
-      } catch (error) {
-        this.nombreUsuario = 'Usuario';
-      }
-    }
+    this.cargarUsuarioSesion();
 
     this.tiposDePago = await this.supabase.obtenerTiposDePago();
 
@@ -72,22 +66,67 @@ export class DeudasPage implements OnInit, OnDestroy {
   }
 
   async ionViewWillEnter() {
-    await this.popoverCtrl.dismiss().catch(() => {});
+    this.cargarUsuarioSesion();
     await this.cargarDeudas();
   }
 
-  async ionViewWillLeave() {
-    await this.popoverCtrl.dismiss().catch(() => {});
+  ionViewDidEnter() {
+    this.cargarUsuarioSesion();
+
+    setTimeout(() => {
+      this.cargarUsuarioSesion();
+    }, 200);
+  }
+
+  cargarUsuarioSesion() {
+    const usuario = this.supabase.obtenerUsuario();
+
+    let nombre = 'Usuario';
+
+    if (usuario) {
+      nombre =
+        usuario.username ||
+        usuario.usuario ||
+        usuario.nombre ||
+        usuario.nombre_usuario ||
+        usuario.nombreUsuario ||
+        'Usuario';
+    }
+
+    this.ngZone.run(() => {
+      this.nombreUsuario = this.capitalize(nombre);
+      this.cdr.detectChanges();
+    });
   }
 
   capitalize(nombre: string): string {
+    if (!nombre) {
+      return 'Usuario';
+    }
+
     return nombre.charAt(0).toUpperCase() + nombre.slice(1);
   }
 
-  async cerrarSesion() {
-    await this.popoverCtrl.dismiss().catch(() => {});
-    localStorage.clear();
-    this.router.navigate(['/login']);
+  abrirModalCerrarSesion() {
+    this.mostrarModalCerrarSesion = true;
+  }
+
+  cerrarModalCerrarSesion() {
+    this.mostrarModalCerrarSesion = false;
+  }
+
+  confirmarCerrarSesion() {
+    this.cerrarSesionConfirmado = true;
+    this.mostrarModalCerrarSesion = false;
+  }
+
+  alCerrarModalCerrarSesion() {
+    if (this.cerrarSesionConfirmado) {
+      this.cerrarSesionConfirmado = false;
+      this.supabase.cerrarSesion();
+      this.nombreUsuario = 'Usuario';
+      this.router.navigateByUrl('/login', { replaceUrl: true });
+    }
   }
 
   async cargarDeudas() {
