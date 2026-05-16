@@ -281,6 +281,23 @@ export class InventarioPage implements OnInit, OnDestroy {
       .trim();
   }
 
+  escaparRegExp(valor: string): string {
+    return valor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  coincidePalabraBusqueda(texto: string, palabra: string): boolean {
+    if (/^\d+$/.test(palabra)) {
+      const regex = new RegExp(`(^|[^a-z0-9])${this.escaparRegExp(palabra)}([^a-z0-9]|$)`);
+      return regex.test(texto);
+    }
+
+    return texto.includes(palabra);
+  }
+
+  coincideTextoBusqueda(texto: string, palabrasBusqueda: string[]): boolean {
+    return palabrasBusqueda.every(palabra => this.coincidePalabraBusqueda(texto, palabra));
+  }
+
   aplicarFiltros() {
     let productosBase = [...this.productos];
 
@@ -297,8 +314,8 @@ export class InventarioPage implements OnInit, OnDestroy {
         const descripcion = this.normalizarTexto(producto.descripcion);
         const codigoBarras = producto.codigo_barras ? producto.codigo_barras.toString().toLowerCase() : '';
 
-        const coincideNombre = palabrasBusqueda.every(palabra => nombre.includes(palabra));
-        const coincideDescripcion = palabrasBusqueda.every(palabra => descripcion.includes(palabra));
+        const coincideNombre = this.coincideTextoBusqueda(nombre, palabrasBusqueda);
+        const coincideDescripcion = this.coincideTextoBusqueda(descripcion, palabrasBusqueda);
         const coincideCodigo = codigoBarras.includes(searchTerm);
 
         return coincideNombre || coincideDescripcion || coincideCodigo;

@@ -207,6 +207,25 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
       .trim();
   }
 
+  escaparRegExp(valor: string): string {
+    return valor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  coincidePalabraBusqueda(texto: string, palabra: string): boolean {
+    if (/^\d+$/.test(palabra)) {
+      const regex = new RegExp(`(^|[^a-z0-9])${this.escaparRegExp(palabra)}([^a-z0-9]|$)`);
+      return regex.test(texto);
+    }
+
+    return texto.includes(palabra);
+  }
+
+  coincideTextoBusqueda(texto: string, palabrasBusqueda: string[]): boolean {
+    return palabrasBusqueda.every((palabra: string) => {
+      return this.coincidePalabraBusqueda(texto, palabra);
+    });
+  }
+
   productoCoincideBusqueda(producto: any, palabrasBusqueda: string[]): boolean {
     const categoriaEncontrada = this.categorias.find((cat: any) => {
       return Number(cat.categoria_id) === Number(producto.categoria_id);
@@ -219,9 +238,7 @@ export class NuevaVentaPage implements OnInit, OnDestroy {
       ${categoriaEncontrada?.nombre || ''}
     `);
 
-    return palabrasBusqueda.every((palabra: string) => {
-      return textoProducto.includes(palabra);
-    });
+    return this.coincideTextoBusqueda(textoProducto, palabrasBusqueda);
   }
 
   obtenerDisponibles(producto: any): number {

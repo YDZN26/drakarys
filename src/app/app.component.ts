@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
-import { AlertController, Platform } from '@ionic/angular';
+import { Platform } from '@ionic/angular';
 import { SwUpdate } from '@angular/service-worker';
 
 @Component({
@@ -12,10 +12,10 @@ import { SwUpdate } from '@angular/service-worker';
 export class AppComponent implements OnInit {
 
   alertaActualizacionAbierta = false;
+  modalActualizacionAbierto = false;
 
   constructor(
     private swUpdate: SwUpdate,
-    private alertController: AlertController,
     private platform: Platform
   ) {}
 
@@ -32,7 +32,7 @@ export class AppComponent implements OnInit {
       });
 
       await StatusBar.setBackgroundColor({
-        color: '#4b0082'
+        color: '#001E87'
       });
 
       await StatusBar.setStyle({
@@ -53,31 +53,22 @@ export class AppComponent implements OnInit {
     }
   }
 
-  async mostrarAlertaNuevaVersion() {
+  mostrarAlertaNuevaVersion() {
     if (this.alertaActualizacionAbierta) {
       return;
     }
 
     this.alertaActualizacionAbierta = true;
+    this.modalActualizacionAbierto = true;
+  }
 
-    const alert = await this.alertController.create({
-      header: 'Nueva versión disponible',
-      message: 'Se detectó una nueva actualización de la app. Actualiza para usar la última versión.',
-      backdropDismiss: false,
-      buttons: [
-        {
-          text: 'Actualizar',
-          handler: async () => {
-            await this.swUpdate.activateUpdate();
-            window.location.reload();
-          }
-        }
-      ]
-    });
+  async actualizarApp() {
+    await this.swUpdate.activateUpdate();
+    window.location.reload();
+  }
 
-    await alert.present();
-
-    await alert.onDidDismiss();
+  alCerrarModalActualizacion() {
+    this.modalActualizacionAbierto = false;
     this.alertaActualizacionAbierta = false;
   }
 

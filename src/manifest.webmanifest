@@ -1,8 +1,8 @@
 {
   "name": "Drakarys App",
   "short_name": "Drakarys",
-  "theme_color": "#4b0082",
-  "background_color": "#4b0082",
+  "theme_color": "#001E87",
+  "background_color": "#001E87",
   "display": "standalone",
   "scope": "./",
   "start_url": "./",

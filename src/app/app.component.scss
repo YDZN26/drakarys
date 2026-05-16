@@ -1,0 +1,95 @@
+/* MODAL ACTUALIZACIÓN APP */
+
+.modal-actualizacion-app {
+  --width: 100%;
+  --height: 100%;
+  --background: transparent;
+  --box-shadow: none;
+  --border-radius: 0;
+}
+
+.modal-actualizacion-app::part(content) {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  box-shadow: none;
+}
+
+.modal-actualizacion-wrapper {
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  box-sizing: border-box;
+}
+
+.modal-actualizacion-card {
+  width: 100%;
+  max-width: 390px;
+  background: #ffffff;
+  border-radius: 26px;
+  padding: 24px 18px 18px 18px;
+  text-align: center;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
+
+  h2 {
+    margin: 12px 0 6px 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #2d3d55;
+  }
+
+  .modal-subtitulo {
+    margin: 0 0 18px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #607389;
+    line-height: 1.45;
+  }
+}
+
+.modal-icono-actualizacion {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: rgba(0, 30, 135, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ion-icon {
+    font-size: 42px;
+    color: #001E87;
+  }
+}
+
+.modal-actualizacion-botones {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-confirmar-actualizacion {
+  width: 100%;
+  height: 46px;
+  --background: #001E87;
+  --color: #ffffff;
+  --border-radius: 16px;
+  font-weight: bold;
+  text-transform: none;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .modal-actualizacion-card {
+    max-width: 390px;
+  }
+
+  .btn-confirmar-actualizacion {
+    width: 220px;
+  }
+}

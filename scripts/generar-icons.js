@@ -29,7 +29,7 @@ function generarIcono(tamano) {
           width: tamano,
           height: tamano,
           channels: 4,
-          background: '#4b0082'
+          background: '#001E87'
         }
       })
         .composite([

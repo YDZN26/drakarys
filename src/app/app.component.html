@@ -1,3 +1,38 @@
 <ion-app>
   <ion-router-outlet></ion-router-outlet>
+
+  <ion-modal
+    class="modal-actualizacion-app"
+    [isOpen]="modalActualizacionAbierto"
+    [backdropDismiss]="false"
+    [canDismiss]="false"
+    (didDismiss)="alCerrarModalActualizacion()">
+    <ng-template>
+      <div class="modal-actualizacion-wrapper">
+        <div class="modal-actualizacion-card">
+
+          <div class="modal-icono-actualizacion">
+            <ion-icon name="cloud-download-outline"></ion-icon>
+          </div>
+
+          <h2>Nueva versión disponible</h2>
+
+          <p class="modal-subtitulo">
+            Se detectó una nueva actualización de la app.
+            Actualiza para usar la última versión.
+          </p>
+
+          <div class="modal-actualizacion-botones">
+            <ion-button
+              expand="block"
+              class="btn-confirmar-actualizacion"
+              (click)="actualizarApp()">
+              Actualizar ahora
+            </ion-button>
+          </div>
+
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
 </ion-app>
